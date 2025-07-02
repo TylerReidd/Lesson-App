@@ -13,6 +13,9 @@ const TeacherDashboard = () => {
   const[videoMsg, setVideoMsg] = useState('')
   const [videoErr, setVideoErr] = useState('')
 
+  const [publicVideos,  setPublicVideos]  = useState([]);
+  const [privateVideos, setPrivateVideos] = useState([]);
+
   const [pdfFile, setPdfFile] = useState(null)
   const [pdfEmail, setPdfEmail] = useState('')
   const [pdfMsg, setPdfMsg] = useState('')
@@ -26,7 +29,16 @@ const TeacherDashboard = () => {
     axios.get('/questions')
     .then(res=> setQuestions(res.data))
     .catch(() => console.error("failed to load questions"))
+
+    axios.get('/videos/public')
+    .then(res => setPublicVideos(res.data))
+    .catch(() => console.error('failed to load public videos'));
+
+    axios.get('/videos/private')
+    .then(res => setPrivateVideos(res.data))
+    .catch(() => console.error('failed to load private videos'));
   }, [])
+
 
 
   const handleAssignmentSubmit = async (e) => {
@@ -136,6 +148,32 @@ const TeacherDashboard = () => {
         </form>
       </section>
 
+      <section>
+  <h2 className="text-2xl font-semibold mb-2">Public Videos</h2>
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    {publicVideos.map(v => (
+      <video key={v._id} controls className="w-full rounded shadow">
+        <source src={`http://localhost:5001/${v.path}`} type="video/mp4" />
+      </video>
+    ))}
+    {!publicVideos.length && (
+      <p className="text-gray-500">No public videos yet.</p>
+    )}
+  </div>
+
+  <h2 className="mt-6 text-2xl font-semibold mb-2">Private Videos</h2>
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    {privateVideos.map(v => (
+      <video key={v._id} controls className="w-full rounded shadow">
+        <source src={`http://localhost:5001/${v.path}`} type="video/mp4" />
+      </video>
+    ))}
+    {!privateVideos.length && (
+      <p className="text-gray-500">No private videos yet.</p>
+    )}
+  </div>
+</section>
+
       {/* Upload Videos */}
       <section>
         <h2 className="text-2xl font-semibold mb-2">Upload Videos</h2>
@@ -224,3 +262,15 @@ const TeacherDashboard = () => {
 }
 
 export default TeacherDashboard;
+
+
+// src/pages/TeacherDashboard.jsx
+// import React from 'react';
+
+// export default function TeacherDashboard() {
+//   return (
+//     <div style={{ padding: '2rem', background: '#f0f0f0' }}>
+//       <h1>🛠 Teacher Dashboard Loaded</h1>
+//     </div>
+//   );
+// }

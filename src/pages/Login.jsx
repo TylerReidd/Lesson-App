@@ -1,68 +1,70 @@
-import React, {useState} from 'react'
-import axios from 'axios'
-import { useNavigate } from 'react-router-dom'
+import React, { useState } from 'react';
+import axios from '../axios';
+import { useNavigate } from 'react-router-dom';
 
-function Login() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
-  const navigate = useNavigate()
+export default function Login() {
+  const [form, setForm] = useState({ email: '', password: '' });
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const navigate = useNavigate();
 
-  const handleLogin = async (e) => {
+  const handleChange = e => {
+    const { name, value } = e.target;
+    setForm(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleLogin = async e => {
     e.preventDefault();
-  
+    setError('');
     try {
       const res = await axios.post(
-        'http://localhost:5001/api/auth/login',
-        { email, password },
+        '/auth/login',
+        form,
         { withCredentials: true }
       );
-  
-      // pull role from res.data.user
-      const userRole = res.data.user.role;
-  
-      if (userRole === 'teacher') {
-        navigate('/teacher-dashboard');
-      } else {
-        navigate('/student-dashboard');
-      }
+      setSuccess(res.data.message);
+      setTimeout(() => {
+        const role = res.data.user.role;
+        navigate(role === 'teacher' ? '/teacher' : '/student');
+      }, 1000);
     } catch (err) {
-      alert(err.response?.data?.message || 'Login failed');
+      setError(err.response?.data?.message || 'Login failed');
     }
   };
 
-  const handleLogout = async () => {
-    try {
-      await axios.post('http://localhost:5001/api/auth/logout', {}, {
-        withCredentials: true
-      })
-      window.loction.href = '/login';
-    } catch (err) {
-      console.error('Logout failed', err)
-    }
-  } 
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <form onSubmit={handleLogin} className="bg-white p-6 rounded shadow-md w-96">
+      <form onSubmit={handleLogin} className="bg-white p-6 rounded shadow-md w-96 space-y-4">
         <h2 className="text-2xl font-bold mb-4">Login</h2>
-        {error && <p className="text-red-500 mb-3">{error}</p>}
 
-        <label className="block mb-2">Email:</label>
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="w-full border px-3 py-2 mb-4 rounded"
-        />
+        {error && <p className="text-red-500">{error}</p>}
+        {success && <p className="text-green-500">{success}</p>}
 
-        <label className="block mb-2">Password:</label>
-        <input
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="w-full border px-3 py-2 mb-4 rounded"
-        />
+        <div>
+          <label htmlFor="email" className="block mb-1">Email:</label>
+          <input
+            id="email"
+            name="email"
+            type="email"
+            value={form.email}
+            onChange={handleChange}
+            required
+            className="w-full border px-3 py-2 rounded"
+          />
+        </div>
+
+        <div>
+          <label htmlFor="password" className="block mb-1">Password:</label>
+          <input
+            id="password"
+            name="password"
+            type="password"
+            value={form.password}
+            onChange={handleChange}
+            required
+            className="w-full border px-3 py-2 rounded"
+          />
+        </div>
 
         <button
           type="submit"
@@ -72,7 +74,5 @@ function Login() {
         </button>
       </form>
     </div>
-  )
+  );
 }
-
-export default Login
