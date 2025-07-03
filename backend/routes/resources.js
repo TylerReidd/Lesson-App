@@ -1,12 +1,16 @@
 const express = require('express');
-const { isAuthenticated, isStudent } = require('../middleware/auth');
-const { getAssignments } = require('../controllers/resourceController');
+const { isAuthenticated, isStudent, isTeacher } = require('../middleware/auth');
+const { getAssignments, uploadAssignment } = require('../controllers/resourceController');
+const {getPrivateVideos, uploadVideo} = require('../controllers/resourceController');
+const multer = require('multer')
 
 const router = express.Router();
 
+const upload = multer({dest: 'uploads/'})
+
 // only students should fetch their assignments
 router.get(
-  '/assignments',
+  '/assignments/upload',
   isAuthenticated,
   isStudent,
   getAssignments
@@ -18,6 +22,25 @@ router.post(
   isTeacher,
   upload.single('file'),
   uploadAssignment
+)
+
+
+// Post private video for student
+router.post(
+  '/videos/upload',
+  isAuthenticated,
+  isTeacher,
+  upload.single('file'),
+  uploadVideo
+)
+
+
+// Students can GET video
+router.get(
+  '/videos/private',
+  isAuthenticated,
+  isStudent,
+  getPrivateVideos
 )
 
 module.exports = router;

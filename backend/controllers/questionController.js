@@ -1,4 +1,5 @@
-const Question = require('./models/Question')
+const Question = require('../models/Question')
+console.log('Looking for model at:', require('path').resolve(__dirname, '../models/Question.js'));
 
 
 exports.postQuestion = async (req, res, next) => {

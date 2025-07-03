@@ -5,6 +5,7 @@ require('dotenv').config()
 const cookieParser = require('cookie-parser')
 
 
+
 const questionRoutes = require('./routes/questions')
 
 const authRoutes = require('./routes/auth')
@@ -19,6 +20,7 @@ const PORT = process.env.PORT || 5001
 app.use(cookieParser())
 app.use('/api/questions', questionRoutes)
 app.use('./api/resources', resourceRoutes)
+app.use('/api/resources', resourceRoutes)
 
 app.use(cors({
   origin: 'http://localhost:5173', 
