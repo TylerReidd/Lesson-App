@@ -73,3 +73,15 @@ exports.getAssignments = async (req, res, next) => {
     next(err);
   }
 };
+
+exports.getPublicVideos = async (req, res, next) => {
+  try {
+    const videos = await Resource.find({
+      type: 'video',
+      visibility: 'public'
+    }).sort('-createdAt')
+    res.json({videos})
+  } catch (err) {
+    next(err)
+  }
+}
