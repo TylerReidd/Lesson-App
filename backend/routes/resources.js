@@ -2,6 +2,7 @@ const express = require('express');
 const { isAuthenticated, isStudent, isTeacher } = require('../middleware/auth');
 const { getAssignments, uploadAssignment } = require('../controllers/resourceController');
 const {getPrivateVideos, uploadVideo} = require('../controllers/resourceController');
+const {getPublicVideos} = require('../controllers/resourceController')
 const multer = require('multer')
 
 const router = express.Router();
@@ -41,6 +42,12 @@ router.get(
   isAuthenticated,
   isStudent,
   getPrivateVideos
+)
+
+
+router.get(
+  '/videos/public',
+  getPublicVideos
 )
 
 module.exports = router;
