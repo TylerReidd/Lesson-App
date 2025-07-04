@@ -1,12 +1,16 @@
 import React, { useState } from 'react';
 import axios from '../axios';
 import { useNavigate } from 'react-router-dom';
+import { useContext } from 'react';
+import { AuthContext } from '../AuthContext';
 
-export default function Login() {
+
+export default function Login({onLogin}) {
   const [form, setForm] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const navigate = useNavigate();
+  const {setUser} = useContext(AuthContext)
 
   const handleChange = e => {
     const { name, value } = e.target;
@@ -24,20 +28,26 @@ export default function Login() {
       );
       setSuccess(res.data.message);
 
-      const role = res.data.user.role
-      if (role === 'teacher') {
-        navigate('/teacher', {replace: true})
-      } else {
-        navigate('/student', {replace: true})
-      }
+      onLogin(res.data.user)
+
+      const route = res.data.user.role === 'teacher' ? '/teacer' : '/student'
+
+      navigate(route, {
+        replace: true
+      })
+
+      const role = res.data.user.role;
+      navigate(role === "teacher" ? "/teacher" : "/student", {
+        replace: true
+      });
     } catch (err) {
-      setError(err.response?.data?.message || 'Login failed');
+      setError(err.response?.data?.message || "Login failed");
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <form onSubmit={handleLogin} className="bg-white p-6 rounded shadow-md w-96 space-y-4">
+    <div>
+      <form onSubmit={handleLogin}>
         <h2 className="text-2xl font-bold mb-4">Login</h2>
 
         {error && <p className="text-red-500">{error}</p>}
@@ -50,9 +60,8 @@ export default function Login() {
             name="email"
             type="email"
             value={form.email}
-            onChange={handleChange}
+            onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
             required
-            className="w-full border px-3 py-2 rounded"
           />
         </div>
 
@@ -63,18 +72,13 @@ export default function Login() {
             name="password"
             type="password"
             value={form.password}
-            onChange={handleChange}
+            onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
             required
-            className="w-full border px-3 py-2 rounded"
           />
         </div>
 
         <button
-          type="submit"
-          className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600"
-        >
-          Login
-        </button>
+          type="submit">Login</button>
       </form>
     </div>
   );

@@ -6,11 +6,11 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      // any request to /api/* will be forwarded to your backend
+      // forward any /api/* calls to your backend on port 5001
       "/api": {
-        target: "http://localhost:5001",  // ← your Express port
+        target: "http://localhost:5001",
         changeOrigin: true,
-        secure: false
+        secure: false,
       }
     }
   }
