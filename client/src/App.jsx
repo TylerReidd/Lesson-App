@@ -1,45 +1,51 @@
 import {
-  BrowserRouter as Router,
   Routes,
   Route,
-  Navigate
+  Navigate,
+  useNavigate
 } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import axios from './axios'; // use your configured axios instance
-
 import Signup from './pages/Signup';
 import Login from './pages/Login';
 import StudentDashboard from './pages/StudentDashboard';
 import TeacherDashboard from './pages/TeacherDashboard';
 
-// function App() {
-//   return (
-//     <div className="min-h-screen bg-red-500 flex items-center justify-center">
-//       <h1 className="text-white text-3xl">🌵 Tailwind Is Working! 🌵</h1>
-//     </div>
-//   );
-// }
+
 
 function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate()
 
   useEffect(() => {
     axios
       .get('/auth/me', { withCredentials: true })
-      .then(res => setUser(res.data.user))
-      .catch(() => setUser(null))
+      .then(res => {
+        console.log('[App] /auth/me ', res.data.user )
+        setUser(res.data.user)})
+      .catch(err => {
+        console.log('[App] /auth/me error or 401')
+        setUser(null)
+      })
       .finally(() => setLoading(false));
   }, []);
 
+  useEffect(() => {
+    if(loading) return;
+    if (user === null) {
+      navigate( '/login', {replace: true})
+    } else {
+      const home = user.role === 'teacher' ? '/teacher' : '/student';
+      if (location.pathname !== home) {
+        navigate(home, {replace: true})
+      }
+    }
+  }, [loading, user, navigate, location.pathname])
+
   if (loading) return <div>Loading…</div>;
 
-
-
   return (
-
-    
-    <Router>
       <Routes>
         <Route
           path="/signup"
@@ -52,11 +58,7 @@ function App() {
 
         <Route
           path="/login"
-          element={
-            user
-              ? <Navigate to={user.role === 'teacher' ? '/teacher' : '/student'} replace />
-              : <Login />
-          }
+          element={<Login onLogin={user => setUser(user)} />}
         />
 
         <Route
@@ -70,11 +72,7 @@ function App() {
 
         <Route
           path="/teacher"
-          element={
-            user?.role === 'teacher'
-              ? <TeacherDashboard />
-              : <Navigate to="/login" replace />
-          }
+         element={<TeacherDashboard onLogout={() => setUser(null)} />}
         />
 
         <Route
@@ -91,7 +89,8 @@ function App() {
           }
         />
       </Routes>
-    </Router>
+
+    
   );
 }
 

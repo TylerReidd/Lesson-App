@@ -17,8 +17,9 @@ router.post("/", (req, res) => {
     }
 
     try {
+
       const studentEmail = req.body.recipientEmail
-      const student = await User.findOne({email: req.body.recipient, role: "student"});
+      const student = await User.findOne({ email: studentEmail, role: 'student'})
       if (!student) {
         return res.status(404).json({error: "Student not found"})
       }
