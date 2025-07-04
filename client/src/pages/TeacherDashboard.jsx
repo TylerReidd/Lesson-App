@@ -1,10 +1,14 @@
 import React, {useState, useEffect} from 'react'
+import { useNavigate } from 'react-router-dom';
 import axios from '../axios'
+import Accordion from '../components/Accordion';
 import { FiEdit2, FiVideo, FiFileText, FiMessageCircle } from 'react-icons/fi';
+import FileUpload from '../components/FileUpload';
 
 
 
 const TeacherDashboard = () => {
+  
   const [studentEmail, setStudentEmail] = useState('')
   const [assignmentText, setAssignmentText] = useState('')
   const [assignMsg, setAssignMsg] = useState('')
@@ -27,298 +31,183 @@ const TeacherDashboard = () => {
   const [responseText, setResponseText] = useState({})
   const [respErr, setRespErr] = useState('')
 
-  useEffect(() => {
-    axios.get('/questions')
-    .then(res=> setQuestions(res.data))
-    .catch(() => console.error("failed to load questions"))
+  const navigate = useNavigate();
 
-    axios.get('/videos/public')
-    .then(res => setPublicVideos(res.data))
-    .catch(() => console.error('failed to load public videos'));
+  // useEffect(() => {
+    // axios.get('/questions/me')
+    // .then(res=> setQuestions(res.data))
+    // .catch(() => console.error("failed to load questions"))
 
-    axios.get('/videos/private')
-    .then(res => setPrivateVideos(res.data))
-    .catch(() => console.error('failed to load private videos'));
-  }, [])
+    // axios.get('/videos/public')
+    // .then(res => setPublicVideos(res.data))
+    // .catch(() => console.error('failed to load public videos'));
+
+    // axios.get('/videos/private')
+    // .then(res => setPrivateVideos(res.data))
+    // .catch(() => console.error('failed to load private videos'));
+  // }, [])
 
 
 
-  const handleAssignmentSubmit = async (e) => {
-    e.preventDefault()
-    setAssignErr(''); setAssignMsg('');
-    if(!studentEmail.trim() || !assignmentText.trim()) {
-      setAssignErr("Email an assignment content are required")
-      return;
-    }
+  // const handleAssignmentSubmit = async (e) => {
+  //   e.preventDefault()
+  //   setAssignErr(''); setAssignMsg('');
+  //   if(!studentEmail.trim() || !assignmentText.trim()) {
+  //     setAssignErr("Email an assignment content are required")
+  //     return;
+  //   }
 
-    try {
-      await axios.post('/assignments', {studentEmail, content: assignmentText})
-      setAssignMsg("Assignment savedd successfully")
-      setStudentEmail('')
-      setAssignmentText('')
-    } catch {
-      setAssignErr("failed to save assignment")
-    }
-  }
+  //   try {
+  //     await axios.post('/assignments', {studentEmail, content: assignmentText})
+  //     setAssignMsg("Assignment savedd successfully")
+  //     setStudentEmail('')
+  //     setAssignmentText('')
+  //   } catch {
+  //     setAssignErr("failed to save assignment")
+  //   }
+  // }
 
-  const handleVideoUpload = async (e) => {
-    e.preventDefault()
-    setVideoErr(''); setVideoMsg('');
-    if(!videoFile) {
-      setVideoErr('Please select video file')
-      return;
-    }
-    const formData = new FormData();
-    formData.append('video', videoFile)
-    if(videoEmail) formData.append('studentEmail', videoEmail);
-    try {
-      await axios.post('/uploads/video', formData, {
-        headers: {'Content-Type' : 'multipart/form-data'}
-      })
-      setVideoMsg("video uploaded successfully");
-      setVideoFile(null)
-      setVideoEmail('')
-    } catch {
-      setVideoErr("Video upload failed")
-    }
-  } 
-
-  const handlePdfUpload = async (e) => {
+  const handleVideoUpload = async e => {
     e.preventDefault();
-    setPdfErr('');setPdfMsg('')
-    if(!pdfFile) {
-      setPdfErr('Please select a pdf file')
-      return;
-    }
-    const formData = new FormData()
-    formData.append('pdf', pdfFile)
-    if(pdfEmail) formData.append('studentEmail', pdfEmail);
-    try {
-      await axios.post('/uploads/pdf', formData, {
-        headers: {'Content-Type' :'multipart/form-data'}
-      })
-      setPdfMsg('PDF uploaded successfully')
-      setPdfFile(null)
-      setPdfEmail('')
-    } catch {
-      setPdfErr("PDF upload failed ")
-    }
-  } 
+    if (!videoFile) return setVideoErr('Select a video');
 
-  const handleRespond = async (id) => {
-    if (!responseText[id]?.trim()) {
-      setRespErr('Response cannot be empty')
-      return;
-    }
+    const formData = new FormData();
+    console.log(videoFile)
+    formData.append("file", videoFile);
+    if (videoEmail) formData.append('recipient', videoEmail);
+    formData.append("recipientEmail", videoEmail)
+  
     try {
-      await axios.put(`/questions/${id}/respond`, {response: responseText[id]})
-      const {data} =await axios.get('/questions');
-      setQuestions(data)
-      setRespErr('')
+     const res = await axios.post(
+      "/resources/videos/upload",
+      formData,
+
+      {
+        headers: {"Content-Type": "multipart/form-data"}
+      }
+     )
+      setVideoMsg(res.data.message);
+      setVideoErr('');
+      setVideoFile(null);
+      setVideoEmail('');
+    } catch (err){
+      console.error("upload error: ", err.response || err)
+      setVideoErr('Video upload failed');
+    }
+  };
+  
+  const handlePdfUpload = async e => {
+    e.preventDefault();
+    if (!pdfFile) return setPdfErr('Select a PDF');
+    const formData = new FormData();
+    formData.append('file', pdfFile);
+    if (pdfEmail) formData.append('recipient', pdfEmail);
+  
+    try {
+      const res = await axios.post(
+        '/resources/assignments/upload',
+        formData,
+        { headers: { 'Content-Type': 'multipart/form-data' } }
+      );
+      setPdfMsg(res.data.message);
+      setPdfErr('');
+      setPdfFile(null);
+      setPdfEmail('');
     } catch {
-      setRespErr('Failed to send response')
+      setPdfErr('PDF upload failed');
+    }
+  };
+
+
+  const handleLogout = async () => {
+    try {
+      await axios.post('/auth/logout')
+      navigate('/login', {replace: true})
+    } catch (err){
+      console.error("Logout Failed", err)
     }
   }
+  
 
-  return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <h1 className="text-3xl font-bold text-indigo-600 mb-8">Teacher Dashboard</h1>
-      <div className="space-y-8">
-        {/* Create or Update Assignments */}
-        <section className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center mb-4">
-            <FiEdit2 className="text-indigo-500 mr-2" size={24} />
-            <h2 className="text-2xl font-semibold text-gray-800">
-              Create or Update Assignments
-            </h2>
-          </div>
-          {assignErr && <p className="text-red-500 mb-2">{assignErr}</p>}
-          {assignMsg && <p className="text-green-500 mb-2">{assignMsg}</p>}
-          <form onSubmit={handleAssignmentSubmit} className="space-y-4">
+  // const handleRespond = async (id) => {
+  //   if (!responseText[id]?.trim()) {
+  //     setRespErr('Response cannot be empty')
+  //     return;
+  //   }
+  //   try {
+  //     await axios.put(`/questions/${id}/respond`, {response: responseText[id]})
+  //     const {data} =await axios.get('/questions');
+  //     setQuestions(data)
+  //     setRespErr('')
+  //   } catch {
+  //     setRespErr('Failed to send response')
+  //   }
+  // }
+
+    return (
+      <div className="min-h-screen bg-beige py-8">
+        <h1 className="text-3xl text-stormcloud font-bold text-center mb-8">
+          Teacher Dashboard
+        </h1>
+        {/* <FileUpload onUpload={handleVideoUpload} /> */}
+    
+        <Accordion title="🎥 Upload Video">
+          {videoErr && <p className="text-red-500">{videoErr}</p>}
+          {videoMsg && <p className="text-green-500">{videoMsg}</p>}
+          <form onSubmit={handleVideoUpload} className="space-y-4" encType="multipart/form-data">
             <input
               type="email"
-              placeholder="Student Email"
-              value={studentEmail}
-              onChange={e => setStudentEmail(e.target.value)}
-              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-300"
+              placeholder="Student Email (optional)"
+              value={videoEmail}
+              onChange={e => setVideoEmail(e.target.value)}
+              className="w-full border rounded px-3 py-2 focus:ring focus:outline-none"
             />
-            <textarea
-              placeholder="Assignment details..."
-              value={assignmentText}
-              onChange={e => setAssignmentText(e.target.value)}
-              rows={4}
-              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-300"
+            <input
+              type="file"
+              accept="video/*,video/quicktime"
+              onChange={e => setVideoFile(e.target.files[0])}
+              className="w-full"
             />
             <button
               type="submit"
-              className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-300"
+              className="bg-sunset text-white px-4 py-2 rounded hover:bg-sunset/90"
             >
-              Save Assignment
+              Upload Video
             </button>
           </form>
-        </section>
-  
-        {/* Public & Private Videos */}
-        <section className="bg-white rounded-lg shadow p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div>
-              <div className="flex items-center mb-4">
-                <FiVideo className="text-indigo-500 mr-2" size={24} />
-                <h2 className="text-2xl font-semibold text-gray-800">
-                  Public Videos
-                </h2>
-              </div>
-              <div className="space-y-4">
-                {publicVideos.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {publicVideos.map(v => (
-                      <video key={v._id} controls className="w-full rounded shadow">
-                        <source src={v.url} type="video/mp4" />
-                      </video>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-gray-500">No public videos yet.</p>
-                )}
-              </div>
-            </div>
-            <div>
-              <div className="flex items-center mb-4">
-                <FiVideo className="text-indigo-500 mr-2" size={24} />
-                <h2 className="text-2xl font-semibold text-gray-800">
-                  Private Videos
-                </h2>
-              </div>
-              <div className="space-y-4">
-                {privateVideos.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {privateVideos.map(v => (
-                      <video key={v._id} controls className="w-full rounded shadow">
-                        <source src={v.url} type="video/mp4" />
-                      </video>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-gray-500">No private videos yet.</p>
-                )}
-              </div>
-            </div>
-          </div>
-        </section>
-  
-        {/* Upload Video & PDF */}
-        <section className="bg-white rounded-lg shadow p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div>
-            <div className="flex items-center mb-4">
-              <FiVideo className="text-indigo-500 mr-2" size={24} />
-              <h2 className="text-2xl font-semibold text-gray-800">
-                Upload Video
-              </h2>
-            </div>
-            {videoErr && <p className="text-red-500 mb-2">{videoErr}</p>}
-            {videoMsg && <p className="text-green-500 mb-2">{videoMsg}</p>}
-            <form onSubmit={handleVideoUpload} className="space-y-4" encType="multipart/form-data">
-              <input
-                type="email"
-                placeholder="Student Email (optional)"
-                value={videoEmail}
-                onChange={e => setVideoEmail(e.target.value)}
-                className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-300"
-              />
-              <input
-                type="file"
-                accept="video/*"
-                onChange={e => setVideoFile(e.target.files[0])}
-                className="w-full"
-              />
-              <button
-                type="submit"
-                className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-300"
-              >
-                Upload Video
-              </button>
-            </form>
-          </div>
-          <div>
-            <div className="flex items-center mb-4">
-              <FiFileText className="text-indigo-500 mr-2" size={24} />
-              <h2 className="text-2xl font-semibold text-gray-800">
-                Upload PDF
-              </h2>
-            </div>
-            {pdfErr && <p className="text-red-500 mb-2">{pdfErr}</p>}
-            {pdfMsg && <p className="text-green-500 mb-2">{pdfMsg}</p>}
-            <form onSubmit={handlePdfUpload} className="space-y-4" encType="multipart/form-data">
-              <input
-                type="email"
-                placeholder="Student Email (optional)"
-                value={pdfEmail}
-                onChange={e => setPdfEmail(e.target.value)}
-                className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-300"
-              />
-              <input
-                type="file"
-                accept="application/pdf"
-                onChange={e => setPdfFile(e.target.files[0])}
-                className="w-full"
-              />
-              <button
-                type="submit"
-                className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-300"
-              >
-                Upload PDF
-              </button>
-            </form>
-          </div>
-        </section>
-  
-        {/* Q&A Responses */}
-        <section className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center mb-4">
-            <FiMessageCircle className="text-indigo-500 mr-2" size={24} />
-            <h2 className="text-2xl font-semibold text-gray-800">Q&A Responses</h2>
-          </div>
-          {respErr && <p className="text-red-500 mb-4">{respErr}</p>}
-          <div className="space-y-4">
-            {questions.map(q => (
-              <div key={q._id} className="border border-gray-200 rounded p-4">
-                <p className="mb-2"><strong>Q:</strong> {q.text}</p>
-                {q.response ? (
-                  <p><strong>A:</strong> {q.response}</p>
-                ) : (
-                  <form
-                    onSubmit={e => {
-                      e.preventDefault();
-                      handleRespond(q._id);
-                    }}
-                    className="space-y-2"
-                  >
-                    <textarea
-                      value={responseText[q._id] || ''}
-                      onChange={e =>
-                        setResponseText(prev => ({
-                          ...prev,
-                          [q._id]: e.target.value
-                        }))
-                      }
-                      placeholder="Your answer..."
-                      className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-300 h-24"
-                    />
-                    <button
-                      type="submit"
-                      className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-300"
-                    >
-                      Submit Response
-                    </button>
-                  </form>
-                )}
-              </div>
-            ))}
-          </div>
-        </section>
+        </Accordion>
+    
+        <Accordion title="📄 Upload PDF">
+          {pdfErr && <p className="text-red-500">{pdfErr}</p>}
+          {pdfMsg && <p className="text-green-500">{pdfMsg}</p>}
+          <form onSubmit={handlePdfUpload} className="space-y-4" encType="multipart/form-data">
+            <input
+              type="email"
+              placeholder="Student Email (optional)"
+              value={pdfEmail}
+              onChange={e => setPdfEmail(e.target.value)}
+              className="w-full border rounded px-3 py-2 focus:ring focus:outline-none"
+            />
+            <input
+              type="file"
+              accept="application/pdf"
+              onChange={e => setPdfFile(e.target.files[0])}
+              className="w-full"
+            />
+            <button
+              type="submit"
+              className="bg-sunset text-white px-4 py-2 rounded hover:bg-sunset/90"
+            >
+              Upload PDF
+            </button>
+          </form>
+        </Accordion>
+
+        <button onClick={handleLogout} className='px-3 py-1'>Logout</button>
       </div>
-    </div>
-  )
+    );
+    
+
 }
 
 
