@@ -12,6 +12,14 @@ import Login from './pages/Login';
 import StudentDashboard from './pages/StudentDashboard';
 import TeacherDashboard from './pages/TeacherDashboard';
 
+// function App() {
+//   return (
+//     <div className="min-h-screen bg-red-500 flex items-center justify-center">
+//       <h1 className="text-white text-3xl">🌵 Tailwind Is Working! 🌵</h1>
+//     </div>
+//   );
+// }
+
 function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -26,7 +34,11 @@ function App() {
 
   if (loading) return <div>Loading…</div>;
 
+
+
   return (
+
+    
     <Router>
       <Routes>
         <Route

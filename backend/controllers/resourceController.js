@@ -15,6 +15,9 @@ exports.getPrivateVideos = async (req, res, next) => {
 }
 
 exports.uploadVideo = async (req,res,next) => {
+  console.log("UploadVideo was Called")
+  console.log('req.file = ', req.file)
+  console.log('req.body =', req.body)
   try {
     const file = req.file;
     const {recipient} = req.body;

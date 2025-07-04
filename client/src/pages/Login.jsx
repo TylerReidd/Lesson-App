@@ -23,10 +23,13 @@ export default function Login() {
         { withCredentials: true }
       );
       setSuccess(res.data.message);
-      setTimeout(() => {
-        const role = res.data.user.role;
-        navigate(role === 'teacher' ? '/teacher' : '/student');
-      }, 1000);
+
+      const role = res.data.user.role
+      if (role === 'teacher') {
+        navigate('/teacher', {replace: true})
+      } else {
+        navigate('/student', {replace: true})
+      }
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed');
     }
