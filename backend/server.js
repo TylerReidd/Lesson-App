@@ -1,13 +1,20 @@
-const express = require('express')
-const mongoose = require('mongoose')
-const cors = require('cors')
-require('dotenv').config()
-const cookieParser = require('cookie-parser')
-const path = require('path')
-const uploadRoute = require('./routes/uploads')
-const questionRoutes = require('./routes/questions')
-const authRoutes = require('./routes/auth')
-const resourceRoutes = require('./routes/resources')
+
+import path from 'path'
+import { fileURLToPath } from 'url'
+import cookieParser  from 'cookie-parser'
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+import express       from 'express'
+import cors          from 'cors'
+import mongoose from 'mongoose'
+import authRoutes    from './routes/auth.js'
+import resourceRoutes from './routes/resources.js'
+import questionRoutes from './routes/questions.js'
+import dontenv from 'dotenv'
+
+dontenv.config()
+
+
 
 const app = express()
 const PORT = process.env.PORT || 5001
@@ -25,13 +32,16 @@ app.use(cors({
 
 // Route mounting
 app.use('/api/questions', questionRoutes)
-app.use('/api/resources/videos/upload', uploadRoute)
 app.use('/api/resources', resourceRoutes)
 app.use('/api/auth', authRoutes)
 
 
-
-mongoose.connect(process.env.MONGO_URI, {
+const uri = process.env.MONGO_URI;
+if(!uri) {
+  console.error('MONGO_URI not set')
+  process.exit(1)
+}
+mongoose.connect(uri, {
   useNewUrlParser: true,
   useUnifiedTopology: true
 })

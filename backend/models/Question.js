@@ -1,5 +1,5 @@
-const mongoose = require('mongoose')
-
+import mongoose from 'mongoose'
+const {Schema, model} = mongoose
 
 const questionSchema = new mongoose.Schema({
   student: {
@@ -14,4 +14,5 @@ const questionSchema = new mongoose.Schema({
 }, {timestamps: true})
 
 
-module.exports = mongoose.model('Question', questionSchema)
+const Question = model("Question", questionSchema)
+export default Question

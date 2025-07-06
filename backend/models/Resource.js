@@ -1,6 +1,7 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose'
+const {Schema} = mongoose
 
-const resourceSchema = new mongoose.Schema({
+const resourceSchema = new Schema({
   owner: {                           // who this resource belongs to
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
@@ -30,4 +31,9 @@ const resourceSchema = new mongoose.Schema({
   }
 }, { timestamps: true });
 
-module.exports = mongoose.model('Resource', resourceSchema);
+const Resource = mongoose.models.Resource
+? mongoose.model("Resource")
+: mongoose.model('Resource', resourceSchema)
+
+export default Resource
+

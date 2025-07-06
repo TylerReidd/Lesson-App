@@ -10,6 +10,7 @@ import Signup from './pages/Signup';
 import Login from './pages/Login';
 import StudentDashboard from './pages/StudentDashboard';
 import TeacherDashboard from './pages/TeacherDashboard';
+import PrivateRoute from './components/PrivateRoute';
 
 
 
@@ -17,6 +18,8 @@ function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate()
+
+  console.log('App.jsx render', {loading, user})
 
   useEffect(() => {
     axios
@@ -31,17 +34,28 @@ function App() {
       .finally(() => setLoading(false));
   }, []);
 
+  // useEffect(() => {
+  //   if(loading) return;
+  //   if (user === null) {
+  //     navigate( '/login', {replace: true})
+  //   } else {
+  //     const home = user.role === 'teacher' ? '/teacher' : '/student';
+  //     if (location.pathname !== home) {
+  //       navigate(home, {replace: true})
+  //     }
+  //   }
+  // }, [loading, user, navigate, location.pathname])
   useEffect(() => {
-    if(loading) return;
-    if (user === null) {
-      navigate( '/login', {replace: true})
-    } else {
-      const home = user.role === 'teacher' ? '/teacher' : '/student';
-      if (location.pathname !== home) {
-        navigate(home, {replace: true})
-      }
-    }
-  }, [loading, user, navigate, location.pathname])
+      if (loading) return;
+       if (user === null) {
+         navigate('/login', { replace: true });
+       } else {
+         const home = user.role === 'teacher' ? '/teacher' : '/student';
+         if (location.pathname !== home) {
+           navigate(home, { replace: true });
+         }
+       }
+     }, [loading, user, navigate, location.pathname]);
 
   if (loading) return <div>Loading…</div>;
 
@@ -64,17 +78,20 @@ function App() {
         <Route
           path="/student"
           element={
-            user?.role === 'student'
-              ? <StudentDashboard />
-              : <Navigate to="/login" replace />
+           <PrivateRoute user={user} role="student">
+            <StudentDashboard onLogout={() => setUser(null)} />
+           </PrivateRoute>
           }
         />
 
         <Route
           path="/teacher"
-         element={<TeacherDashboard onLogout={() => setUser(null)} />}
+         element={
+          <PrivateRoute user={user} role="teacher">
+            <TeacherDashboard onLogout={() => setUser(null)} />
+          </PrivateRoute>}
         />
-
+{/* 
         <Route
           path="*"
           element={
@@ -87,7 +104,20 @@ function App() {
               replace
             />
           }
-        />
+        /> */}
+        +<Route
+          path="*"
+          element={
+            <div style={{
+              padding: 20,
+              background: '#fee',
+              color: '#900',
+              fontSize: '1.2rem'
+            }}>
+              ❗️ No matching route — this is your “catch-all” debug page.
+            </div>
+          }
+/>
       </Routes>
 
     

@@ -1,90 +1,110 @@
-const Resource = require('../models/Resource');
+// controllers/resourceController.js
+import Resource from '../models/Resource.js';
 
-
-exports.getPrivateVideos = async (req, res, next) => {
+// 📥 Get assignments for a student
+export async function getAssignments(req, res, next) {
   try {
-    const videos = await Resource.find({
-      recipient: req.user._id,
-      type: 'video',
+    const list = await Resource.find({
+      type:       'assignment',
+      visibility: 'private',
+      recipient:  req.user.userId
+    }).sort('-createdAt');
+
+    const host = `${req.protocol}://${req.get('host')}`;
+    const out  = list.map(r => ({
+      id:           r._id,
+      originalName: r.filename,
+      url:          `${host}${r.url}`,
+      uploadedAt:   r.createdAt
+    }));
+    res.json(out);
+  } catch (err) { next(err) }
+}
+
+// 📤 Upload a PDF assignment
+export async function uploadAssignment(req, res, next) {
+  try {
+    const file      = req.file;
+    const { recipient } = req.body;
+    if (!file)      return res.status(400).json({ message: "No PDF provided" });
+    if (!recipient) return res.status(400).json({ message: "No recipient" });
+
+    const { originalname, filename } = file;
+    const url = `/uploads/pdfs/${filename}`;
+
+    const assignment = await Resource.create({
+      owner:      req.user.userId,
+      recipient,
+      filename:   originalname,
+      url,
+      type:       'assignment',
+      visibility: 'private'
+    });
+
+    return res.status(201).json({
+      id:           assignment._id,
+      originalName: assignment.filename,
+      url:          `${req.protocol}://${req.get('host')}${assignment.url}`,
+      uploadedAt:   assignment.createdAt,
+      message:      "Assignment uploaded!"
+    });
+  } catch (err) { next(err) }
+}
+
+// 🎥 Get private videos
+export async function getPrivateVideos(req, res, next) {
+  try {
+    const list = await Resource.find({
+      recipient:  req.user.userId,
+      type:       'video',
       visibility: 'private'
     }).sort('-createdAt');
-    res.json({videos})
-  } catch (err) {
-    next(err)
-  }
+
+    const host = `${req.protocol}://${req.get('host')}`;
+    const out  = list.map(r => ({
+      id:           r._id,
+      originalName: r.filename,
+      url:          `${host}${r.url}`,
+      uploadedAt:   r.createdAt
+    }));
+    res.json({ videos: out });
+  } catch (err) { next(err) }
 }
 
-exports.uploadVideo = async (req,res,next) => {
-  console.log("UploadVideo was Called")
-  console.log('req.file = ', req.file)
-  console.log('req.body =', req.body)
+// 🎥 Upload a private video
+export async function uploadVideo(req, res, next) {
   try {
-    const file = req.file;
-    const {recipient} = req.body;
-    if(!file) return res.status(400).json({message: "no file provided"})
+    const file      = req.file;
+    const { recipient } = req.body;
+    if (!file)      return res.status(400).json({ message: "No video provided" });
+    if (!recipient) return res.status(400).json({ message: "No recipient" });
 
-    const url = `/uploads/${file.filename}`;
+    const { originalname, filename } = file;
+    const url = `/uploads/videos/${filename}`;
+
     const video = await Resource.create({
-      owner: req.user._id,
+      owner:      req.user.userId,
       recipient,
-      filename: file.originalName,
+      filename:   originalname,
       url,
-      type: 'video',
+      type:       'video',
       visibility: 'private'
-    })
-    res.status(201).json({message: 'Video Uploaded', video});
-  } catch (err) {
-    next(err)
-  }
+    });
+    res.status(201).json({ message: 'Video uploaded', video });
+  } catch (err) { next(err) }
 }
 
-exports.uploadAssignment = async (req,res, next) => {
+// 🎥 Get public videos
+export async function getPublicVideos(_req, res, next) {
   try {
-    const file = req.file;
-    if(!file) return res.status(400).json({message: 'No file provided '})
-
-    const url = `/uploads/${file.filename}`
-
-    const resource = await Resource.create({
-      owner: req.body.studentId,
-      filename : file.originalName,
-      url,
-      type: 'assignment',
-      visibility: 'private'
-
-    })
-
-    res.status(201).json({message: 'Assignment uploaded', resource});
-  } catch(err){
-    next(err)
-  }
-}
-
-// GET /api/resources/assignments
-exports.getAssignments = async (req, res, next) => {
-  try {
-    // fetch only PDFs marked as assignments for this student
-    const assignments = await Resource
-      .find({
-        owner: req.user._id,
-        type: 'assignment',
-        visibility: 'private'
-      })
-      .sort('-createdAt');
-    res.json({ assignments });
-  } catch (err) {
-    next(err);
-  }
-};
-
-exports.getPublicVideos = async (req, res, next) => {
-  try {
-    const videos = await Resource.find({
-      type: 'video',
-      visibility: 'public'
-    }).sort('-createdAt')
-    res.json({videos})
-  } catch (err) {
-    next(err)
-  }
+    const list = await Resource.find({ type: 'video', visibility: 'public' }).sort('-createdAt');
+    const host = `${_req.protocol}://${_req.get('host')}`;
+    const out  = list.map(r => ({
+      id:           r._id,
+      originalName: r.filename,
+      url:          `${host}${r.url}`,
+      uploadedAt:   r.createdAt
+    }));
+    res.json({ videos: out });
+  } catch (err) { next(err) }
 }

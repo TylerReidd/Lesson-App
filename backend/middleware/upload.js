@@ -1,21 +1,50 @@
-const multer = require("multer");
-const path   = require("path");
+import multer from 'multer'
+import path from 'path'
+import fs from 'fs'
+import { fileURLToPath } from 'url'
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) =>
-    cb(null, path.join(__dirname, "../uploads")),
-  filename: (req, file, cb) =>
-    cb(null, `${Date.now()}-${file.originalname}`)
-});
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename);
 
-const fileFilter = (req, file, cb) => {
-  const allowed = ["video/mp4", "video/quicktime"];
-  if (allowed.includes(file.mimetype)) cb(null, true);
-  else cb(new Error("Only MP4 or MOV videos allowed"), false);
-};
 
-module.exports = multer({
-  storage,
-  limits: { fileSize: 200 * 1024 * 1024 },
-  fileFilter
-});
+
+const UPLOADS_ROOT = path.join(__dirname, '../uploads')
+const PDF_DIR = path.join(UPLOADS_ROOT, 'pdfs')
+const VIDEO_DIR = path.join(UPLOADS_ROOT, 'videos')
+
+fs.mkdirSync(UPLOADS_ROOT, {recursive: true})
+fs.mkdirSync(PDF_DIR, {recursive: true})
+fs.mkdirSync(VIDEO_DIR, {recursive: true})
+
+const videoStorage = multer.diskStorage({
+  destination: (_req, _file, cb) => 
+    cb(null, VIDEO_DIR),
+  filename: (_req,file, cb) => {
+    cb(null, Date.now() + '-' + file.originalname)
+  }
+})
+
+// PDF stuff
+
+const pdfStorage = multer.diskStorage({
+  destination: (_req,_file, cb) => cb(null, PDF_DIR),
+  filename: (_req, file, cb) => {
+    cb(null, Date.now() + '-' + file.originalname)
+  }
+})
+
+const pdfFilter = (_req,file, cb) => {
+  if (file.mimetype === 'application/pdf') cb (null, true)
+  else cb(new Error("Only PDF files please"), false)
+}
+
+const videoFilter = (_req, file, cb) => {
+  if(file.mimetype.startsWith('video/')) cb(null, true)
+  else cb(new Error('Only video files allowed'), false)
+}
+
+
+
+export const uploadVideo = multer({storage: videoStorage, fileFilter: videoFilter})
+export const uploadPdf = multer({storage: pdfStorage, fileFilter: pdfFilter})
+

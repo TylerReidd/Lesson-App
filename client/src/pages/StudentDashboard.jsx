@@ -1,23 +1,28 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import axios from "../axios";
 import { useNavigate } from "react-router-dom";
+import { AuthContext } from "../AuthContext";
 
 
-export default function StudentDashboard() {
+
+export default function StudentDashboard({onLogout}) {
   const navigate = useNavigate()
+  const {setUser} = useContext(AuthContext)
   const [email, setEmail]   = useState("");
   const [videos, setVideos] = useState([]);
   const [err, setErr]       = useState("");
 
+  const [assignments, setAssignments] = useState([])
+
+
   const fetchVideos = async () => {
-    if (!email) return setErr("Enter your email");
     try {
-      const userRes = await axios.get("/auth/user", { params: { email } });
-      const userId  = userRes.data._id;
-      const res     = await axios.get("/resources/videos", {
-        params: { userId }
+      const res     = await axios.get("/resources/videos/private", {
+        withCredentials: true
       });
-      setVideos(res.data);
+      setVideos(res.data.videos);
+      const {data: pdfs} = await axios.get('/resources/assignments', {withCredentials: true})
+      setAssignments(pdfs)
       setErr("");
     } catch (e) {
       console.error("Fetch Videos Error:", e);
@@ -28,16 +33,30 @@ export default function StudentDashboard() {
 
   const handleLogout = async () => {
     try {
-      await axios.post(
-        '/auth/logout', 
-        {}, 
-        {withCredentials: true}
-        )
-      navigate('/login', {replace: true})
-    } catch (err) {
-      console.error("Logout Failed", err)
+      await axios.post('/auth/logout', {}, {withCredentials: true})
+      onLogout()
+      navigate('/login')
+    } catch(err){
+      console.error('logout failed', err)
     }
   }
+
+  useEffect(() => {
+    const loadPdfs = async () => {
+      try {
+        const {data} = await axios.get(
+          "/resources/assignments/",
+          {withCredentials: true}
+        )
+        setAssignments(data)
+        setErr("")
+      } catch(e) {
+        setErr("Failed to load assignments")
+        console.error(e)
+      }
+    }
+    loadPdfs()
+  }, [])
 
   return (
     <>
@@ -61,12 +80,30 @@ export default function StudentDashboard() {
       <ul className="video-list spaced">
         {videos.map(v => (
           <li key={v.id}>
-            <p className="video-title">{v.name}</p>
+            <p className="video-title">{v.originalName}</p>
             <video controls width="100%" src={v.url} />
           </li>
         ))}
       </ul>
-      <button onClick={handleLogout}>Logout</button>
+
+      <h3>Your PDF Assignments</h3>
+      <ul>
+        {assignments.map(f => (
+          <li key={f.id}>
+            <a 
+              href={f.url}
+              target='_blank'
+              rel="noopener noreferrer">
+                {f.originalName || f.filename}
+              </a>
+              <span className="text-sm text-gray-500 ml-2">
+                {new Date(f.uploadedAt).toLocaleDateString()}
+              </span>
+          </li>
+        ))}
+      </ul>
+
+      <button className="btn" onClick={handleLogout}>Logout</button>
     </>
   );
 }
