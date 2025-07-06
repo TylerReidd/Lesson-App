@@ -1,7 +1,7 @@
-// /backend/models/Video.js
-const mongoose = require('mongoose');
+import mongoose from 'mongoose'
+const {Schema} = mongoose
 
-const videoSchema = new mongoose.Schema({
+const videoSchema = new Schema({
   filename:   String,      // e.g. "1688491200000-IMG_3044.MOV"
   path:       String,      // e.g. "uploads/1688491200000-IMG_3044.MOV"
   size:       Number,
@@ -10,4 +10,9 @@ const videoSchema = new mongoose.Schema({
   uploadedAt: { type: Date, default: Date.now }
 });
 
-module.exports = mongoose.model('Video', videoSchema);
+const Video = mongoose.models.Video
+? mongoose.model("Video")
+: mongoose.model('Video', videoSchema)
+
+export default Video
+

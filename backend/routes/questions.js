@@ -1,6 +1,6 @@
-const express = require('express')
-const {isAuthenticated, isStudent} = require('../middleware/auth')
-const {postQuestion, getMyQuestions} = require('../controllers/questionController')
+import express from 'express'
+import  {isAuthenticated, isStudent} from '../middleware/auth.js'
+import {postQuestion, getMyQuestions} from '../controllers/questionController.js'
 
 const router = express.Router()
 
@@ -19,4 +19,4 @@ router.get(
   getMyQuestions
 )
 
-module.exports = router;
+export default router

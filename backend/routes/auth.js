@@ -1,15 +1,16 @@
 // routes/auth.js
-const express    = require('express');
-const jwt        = require('jsonwebtoken');
-const bcrypt     = require('bcrypt');
-const User       = require('../models/User');
-const { signup, logout, me } = require('../controllers/authController');
-const { isAuthenticated }    = require('../middleware/auth');
+import express from 'express'
+import jwt from 'jsonwebtoken'
+import bcrypt from 'bcrypt'
+import User from '../models/User.js';
+import { signup, logout, me, getMe, getUserByEmail } from '../controllers/authController.js';
+import { isAuthenticated } from '../middleware/auth.js';
 
 const router = express.Router();
 
 // 1) Signup (already working)
 router.post('/signup', signup);
+router.get('/user', getUserByEmail)
 
 // 2) Login
 router.post('/login', async (req, res) => {
@@ -54,7 +55,7 @@ router.post('/login', async (req, res) => {
 router.post('/logout', logout);
 
 // 4) “Who am I?” protected route
-router.get('/me', isAuthenticated, me);
+router.get('/me', isAuthenticated, getMe);
 
 // 5) Any other helper routes
 router.get('/user', async (req, res) => {
@@ -76,4 +77,4 @@ router.get('/user', async (req, res) => {
 });
 
 // 6) Finally, export the router
-module.exports = router;
+export default router

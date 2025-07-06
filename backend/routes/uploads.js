@@ -1,12 +1,13 @@
-const express = require("express");
-const upload  = require("../middleware/upload");
-const User = require("../models/User")
-const Video = require('../models/Video')
+import express from 'express'
+import { uploadVideo } from '../middleware/upload.js';
+import User from '../models/User.js';
+import Video from '../models/Video.js';
+
 
 const router  = express.Router();
 
 router.post("/", (req, res) => {
-  upload.single("file")(req, res, async err => {
+  uploadVideo.single("file")(req, res, async err => {
     if (err) {
       console.error("⚠️ Multer threw:", err);
       return res.status(400).json({ error: err.message });
@@ -41,4 +42,4 @@ router.post("/", (req, res) => {
   })
 });
 
-module.exports = router
+export default router
