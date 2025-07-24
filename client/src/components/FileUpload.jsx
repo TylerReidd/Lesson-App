@@ -7,7 +7,7 @@ export default function FileUpload({ onUpload }) {
     if (!file) return;
 
     try {
-    await handleVideoUpload(file)
+    await onUpload(file)
     } catch (err) {
       console.log("upload failed in FileUpload.jsx", err)
     }

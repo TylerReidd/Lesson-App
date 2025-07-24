@@ -5,42 +5,35 @@ import { useContext } from 'react';
 import { AuthContext } from '../AuthContext';
 
 
-export default function Login({onLogin}) {
+export default function Login() {
   const [form, setForm] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const navigate = useNavigate();
   const {setUser} = useContext(AuthContext)
 
-  const handleChange = e => {
-    const { name, value } = e.target;
-    setForm(prev => ({ ...prev, [name]: value }));
-  };
 
   const handleLogin = async e => {
     e.preventDefault();
     setError('');
+    setSuccess('')
     try {
       const res = await axios.post(
         '/auth/login',
         form,
         { withCredentials: true }
       );
-      setSuccess(res.data.message);
+      setUser(res.data.user)
+      setSuccess("Logged In!");
 
-      onLogin(res.data.user)
-
-      const route = res.data.user.role === 'teacher' ? '/teacer' : '/student'
+      const route = res.data.user.role === 'teacher' ? '/teacher' : '/student'
 
       navigate(route, {
         replace: true
       })
 
-      const role = res.data.user.role;
-      navigate(role === "teacher" ? "/teacher" : "/student", {
-        replace: true
-      });
     } catch (err) {
+      setSuccess('')
       setError(err.response?.data?.message || "Login failed");
     }
   };

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from "react";
-import axios from "../axios";
+import axios from "../axios.js";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../AuthContext";
 
@@ -35,6 +35,7 @@ export default function StudentDashboard({onLogout}) {
     try {
       await axios.post('/auth/logout', {}, {withCredentials: true})
       onLogout()
+      setUser(null)
       navigate('/login')
     } catch(err){
       console.error('logout failed', err)
@@ -60,17 +61,19 @@ export default function StudentDashboard({onLogout}) {
 
   return (
     <>
+      <div className="container">
+
       <h1>Student Video Dashboard</h1>
       {err && <p style={{ color: "red" }}>{err}</p>}
 
       <form onSubmit={e => { e.preventDefault(); fetchVideos(); }} className="spaced">
         <div className="form-group">
-          <label>Your school email</label>
+          {/* <label>Your school email</label>
           <input
-            type="email"
-            value={email}
-            onChange={e => setEmail(e.target.value)}
-          />
+          type="email"
+          value={email}
+          onChange={e => setEmail(e.target.value)}
+        /> */}
         </div>
         <button type="submit" className="button">
           Load My Videos
@@ -80,7 +83,7 @@ export default function StudentDashboard({onLogout}) {
       <ul className="video-list spaced">
         {videos.map(v => (
           <li key={v.id}>
-            <p className="video-title">{v.originalName}</p>
+            <p className="video-title">{v.filename}</p>
             <video controls width="100%" src={v.url} />
           </li>
         ))}
@@ -90,20 +93,22 @@ export default function StudentDashboard({onLogout}) {
       <ul>
         {assignments.map(f => (
           <li key={f.id}>
-            <a 
+            <a
               href={f.url}
               target='_blank'
-              rel="noopener noreferrer">
-                {f.originalName || f.filename}
-              </a>
-              <span className="text-sm text-gray-500 ml-2">
-                {new Date(f.uploadedAt).toLocaleDateString()}
-              </span>
+              rel="noopener noreferrer"
+              >
+              {f.filename}
+            </a>
+            <span className="text-sm text-gray-500 ml-2">
+              {new Date(f.uploadedAt).toLocaleDateString()}
+            </span>
           </li>
         ))}
       </ul>
 
       <button className="btn" onClick={handleLogout}>Logout</button>
+        </div>
     </>
   );
 }

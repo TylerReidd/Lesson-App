@@ -21,49 +21,41 @@ export default function TeacherDashboard({onLogout}) {
 
   useEffect(() => {
     axios
-    .get('/resources/assignments/teacher')
-    .then(res => setAssignments(res.data))
-    .catch(err => console.error("fetch Assignments failed", err))
-  }, [])
+      .get('/resources/assignments')
+      .then(res => setAssignments(res.data))
+      .catch(err => console.error('fetch assignments failed', err));
+  }, []);
 
-  // TeacherDashboard.jsx
-const handlePdfUpload = async e => {
+  // Handle PDF upload
+  const handlePdfUpload = async e => {
   e.preventDefault();
   if (!pdfFile) return setPdfErr("Must select a PDF");
   if (!pdfEmail) return setPdfErr("Enter student email");
-  let studentId;
-  try {
-    const userRes = await axios.get('/auth/user', {
-      params: { email: pdfEmail },
-      withCredentials: true
-    });
-    studentId = userRes.data._id;
-  } catch {
-    return setPdfErr("Student not found");
-  }
-
 
   const formData = new FormData();
   formData.append('file', pdfFile);            // matches upload.single('file')
-  formData.append('recipient', studentId);     // matches req.body.recipient
+  formData.append('recipientEmail', pdfEmail);     // matches req.body.recipient
 
 
   try {
-    const res = await axios.post(
-      '/resources/assignments/upload',
-      formData,
-      { headers: { 'Content-Type': 'multipart/form-data' } }
-    );
-    setPdfMsg(res.data.message);
-    setPdfErr("");
-    setAssignments(a => [res.data, ...a]);
-    setPdfFile(null);
-    setPdfEmail("");
-  } catch (err) {
-    console.error("PDF upload failed", err.response?.data || err);
-    setPdfErr(err.response?.data?.message || "Upload failed");
-  }
-};
+      const res = await axios.post(
+        '/uploads/pdf',
+        formData,
+        { headers: { 'Content-Type': 'multipart/form-data' } }
+      );
+      setPdfMsg(res.data.message);
+      setPdfErr('');
+      // Prepend the new assignment returned from the API
+      if (res.data.assignment) {
+        setAssignments(a => [res.data.assignment, ...a]);
+      }
+      setPdfFile(null);
+      setPdfEmail('');
+    } catch (err) {
+      console.error('PDF upload failed', err.response?.data || err);
+      setPdfErr(err.response?.data?.error || 'Upload failed');
+    }
+  };
 
 
   const handleVideoUpload = async e => {
@@ -117,84 +109,94 @@ const handlePdfUpload = async e => {
   }
 
   return (
-    <div className="spaced">
+  <div className="container">
+    <div className="card">
       <h1>Teacher Dashboard</h1>
+
       {videoErr && <p style={{ color: "red" }}>{videoErr}</p>}
       {videoMsg && <p style={{ color: "green" }}>{videoMsg}</p>}
 
-      <form onSubmit={handleVideoUpload} className="spaced">
-        <div className="form-group">
-          <label>Student Email (optional)</label>
-          <input
-            type="email"
-            value={videoEmail}
-            onChange={e => setVideoEmail(e.target.value)}
-          />
-        </div>
-        <div className="form-group">
-          <label>Select Video</label>
-          <input
-            type="file"
-            accept="video/*"
-            onChange={e => setVideoFile(e.target.files[0])}
-          />
-        </div>
-        <button type="submit" className="button">
-          Upload Video
-        </button>
-      </form>
+      <div className="dashboard-section">
+        <h2>Upload video</h2>
+        <form onSubmit={handleVideoUpload}>
+          <div className="form-group">
+            <label>Student Email</label>
+            <input
+              type="email"
+              value={videoEmail}
+              onChange={e => setVideoEmail(e.target.value)}
+              />
+          </div>
+          <div className="form-group">
+            <label>Select Video</label>
+            <input
+              type="file"
+              accept="video/*"
+              onChange={e => setVideoFile(e.target.files[0])}
+              />
+          </div>
+          <button type="submit" className="button">
+            Upload Video
+          </button>
+        </form>
+      </div>
 
-      <hr className='my-4' />
+      <div className="dashboard-section">
+        <h2>Upload Assignment (PDF Only)</h2>
+          {pdfErr && <p style={{ color: 'red' }}>{pdfErr}</p>}
+          {pdfMsg && <p style={{ color: 'green' }}>{pdfMsg}</p>}
 
-      <h2>
-        Upload Assignment (PDF Only--For now)
-      </h2>
-        {pdfErr && <p style={{color: 'red' }}>{pdfErr}</p>}
-        {pdfMsg && <p style={{color: 'green' }}>{pdfMsg}</p>}
+        <form onSubmit={handlePdfUpload} className='spaced'>
+          <div className="form-group">
+            <label>Student Email</label>
+            <input
+              type="email"
+              value={pdfEmail}
+              onChange={e => setPdfEmail(e.target.value)}
+              required
+              />
+            </div>
 
-
-
-
-      <form onSubmit={handlePdfUpload} classname='spaced'>
-        <div className="form-group">
-          <label>Student Email</label>
-          <input 
-            type="email"
-            value={pdfEmail}
-            onChange={e => setPdfEmail(e.target.value)}
-            required
-            />
-          <label>Select PDF</label>
-          <input 
-            type='file'
-            accept='application/pdf'
-            onChange={e => setPdfFile(e.target.files[0])}
-          />
+            <div className="form-group">
+            <label>Select PDF</label>
+            <input
+              type='file'
+              accept='application/pdf'
+              onChange={e => setPdfFile(e.target.files[0])}
+              />
+          </div>
           <button type='submit' className="button">
             Upload PDF
           </button>
-        </div>
-      </form>
+        </form>
+      </div>
 
-
-      <h3 className="mt-6 text-lg">Available Assignments</h3>
-      <ul className="list-disc pl-5">
-        {assignments.map(f => (
-          <li key={f._id || f.id}>
-            <a 
-              href={f.url}
-              target="_blank"
-              rel='noopener noreferror'>
-                {f.originalName || f.filename}
+      <div className="dashboard-selection">
+        <h3 >Available Assignments</h3>
+        <ul>
+          {assignments.map(f => (
+            <li key={f.id}>
+              <a
+                href={f.url}
+                target="_blank"
+                rel='noopener noreferrer'
+                >
+                {f.filename}
               </a>
               <span className="text-sm text-gray-500 ml-2">
-                {new Date(f.uploadedAt).toLocaleDateString()}  
-              </span> 
-          </li>
-        ))}
-      </ul>
+                {new Date(f.uploadedAt).toLocaleDateString()}
+              </span>
+            </li>
+          ))}
+        </ul>
 
-      <button onClick={handleLogout} className='px-3 py-1'>Logout</button>
+      </div>
+
+
+      
+
+      <button onClick={handleLogout} className='button-logout'>Logout</button>
+        </div>
 
     </div>
   );
