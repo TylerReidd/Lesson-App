@@ -56,8 +56,8 @@ export async function getMyQuestions(req,res,next) {
 
 export async function getAllQuestions (req,res, next)  {
   try {
-    if(req.user.role !=='teacer') return res.status(403).end();
-    const questions = await Question.find({teacher: req.user._id})
+    if(req.user.role !=='teacher') return res.status(403).end();
+    const questions = await Question.find({teacher: req.user.id})
       .populate('student', 'name')
       .sort('-createdAt')
     res.json(questions.map(q =>({

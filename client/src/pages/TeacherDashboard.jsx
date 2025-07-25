@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "../axios";
 import { useNavigate } from "react-router-dom";
+import TeacherDashboardQuestions from "../components/TeacherDashboardQuestions";
 
 
 // Fetch assignments and PDFs
@@ -207,16 +208,7 @@ export default function TeacherDashboard({onLogout}) {
       </div>
 
       <div className="dashboard-section">
-        {questions.map(q => (
-          <div key={q.id}>
-            <p><strong>{q.student.name} asks: </strong>{q.text}</p>
-            {q.answer ? (
-              <p><strong>Your answer:</strong>{q.answer}</p>
-            ) : (
-              <AnswerForm questionId={q.id} onRespond={respond} />
-             )}
-          </div>
-        ))}
+        <TeacherDashboardQuestions />
       </div>
 
         <button onClick={handleLogout} className='button-logout'>Logout</button>
