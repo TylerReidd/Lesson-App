@@ -10,7 +10,7 @@ import StudentQuestionsList from "../components/StudentQuestionsList.jsx";
 
 export default function StudentDashboard({onLogout}) {
   const navigate = useNavigate()
-  const {user, loading} = useContext(AuthContext)
+  const {user, setUser, loading} = useContext(AuthContext)
   const [videos, setVideos] = useState([]);
   const [err, setErr]       = useState("");
   const [reload, setReload] = useState(0)
@@ -134,7 +134,7 @@ export default function StudentDashboard({onLogout}) {
           )}
 
           
-          <button className="btn" onClick={handleLogout}>Logout</button>
+          <button className="button-logout" onClick={handleLogout}>Logout</button>
         </div>
       </div>
     </>

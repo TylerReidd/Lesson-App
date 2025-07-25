@@ -8,16 +8,27 @@ export const AuthContext = createContext({
   loading: true,
 });
 
+
+
 export function AuthProvider({ children }) {
   const [user, setUser]       = useState(null);
   const [loading, setLoading] = useState(true);
 
+
+
   useEffect(() => {
-    axios
-      .get('/auth/me', { withCredentials: true })
-      .then(res => setUser(res.data.user))
-      .catch(() => setUser(null))
-      .finally(() => setLoading(false));
+    async function fetchCurrentUser() {
+      try {
+        const {data} = await axios.get('/auth/me', {withCredentials: true})
+        setUser(data.user)
+      } catch (err) {
+        setUser(null);
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchCurrentUser()
   }, []);
 
   if (loading) {

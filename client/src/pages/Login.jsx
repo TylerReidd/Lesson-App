@@ -17,27 +17,32 @@ export default function Login() {
   const handleLogin = async e => {
     e.preventDefault();
     setError('');
-    setSuccess('')
+    setSuccess('');
     try {
-      const res = await axios.post(
+      // 1) Perform the login
+      await axios.post(
         '/auth/login',
         form,
         { withCredentials: true }
       );
-      setUser(res.data.user)
-      setSuccess("Logged In!");
-
-      const route = res.data.user.role === 'teacher' ? '/teacher' : '/student'
-
-      navigate(route, {
-        replace: true
-      })
-
+      // 2) Immediately fetch the full user (including assignedTeacher)
+      const { data: meData } = await axios.get(
+        '/auth/me',
+        { withCredentials: true }
+      );
+      setUser(meData.user);
+      setSuccess('Logged In!');
+  
+      // 3) Navigate based on role
+      const route = meData.user.role === 'teacher' ? '/teacher' : '/student';
+      navigate(route, { replace: true });
+  
     } catch (err) {
-      setSuccess('')
-      setError(err.response?.data?.message || "Login failed");
+      setSuccess('');
+      setError(err.response?.data?.message || 'Login failed');
     }
   };
+  
 
   return (
     <div className='container'>

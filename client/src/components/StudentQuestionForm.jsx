@@ -18,7 +18,7 @@ export default function StudentQuestionForm({ onSent }) {
 
   return (
     <>
-    <form onSubmit={submit} className="space-y-2">
+    <form onSubmit={submit} className="form-group">
       <textarea
         value={text}
         onChange={e => setText(e.target.value)}

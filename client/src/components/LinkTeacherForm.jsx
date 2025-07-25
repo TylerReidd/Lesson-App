@@ -17,7 +17,7 @@ export default function LinkTeacherForm() {
         { withCredentials: true }
       );
       console.log('linkTeacher response:', data);
-      setUser(u => ({ ...u, assignedTeacher: data.assignedTeacher }));
+      setUser(data.user);
       setError(null);
       setSuccess('Teacher linked!');   // add a success message
     } catch (err) {

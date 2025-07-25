@@ -4,11 +4,6 @@ import axios from '../axios.js';
 export default function StudentQuestionsList({reload}) {
   const [questions, setQuestions] = useState([]);
 
-  const fetch = async () => {
-    const { data } = await axios.get('/questions/me');
-    setQuestions(data);
-  };
-
   useEffect(() => {
     axios.get(
       '/questions/me',
