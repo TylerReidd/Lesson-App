@@ -4,15 +4,32 @@ import jwt from "jsonwebtoken";
 
 // 1. Verify there’s a valid JWT → attach req.user
 export function isAuthenticated(req, res, next) {
-  const token = req.cookies.token;
-  if (!token) return res.status(401).json({ message: 'Unauthorized' });
+  console.log("🔥 [Auth] Incoming to isAuthenticated for", req.method, req.originalUrl);
+  console.log("🔥 [Auth] Raw cookie header:", req.headers.cookie);
+  console.log("🔥 [Auth] Parsed req.cookies:", req.cookies);
+
+
+  const token = req.cookies?.token;
+  if (!token) {
+    console.log("NO TOKEN FOUND -- rejecting")
+    return res.status(401).json({ message: 'Unauthorized: no token' })
+};
+
+  const secret = process.env.JWT_SECRET;
+  if(!secret) {
+    console.error("JWT_SECRET not set!")
+    return res.status(500).json({message: "Server Misconfiguration"})
+  }
   try {
-    req.user = jwt.verify(token, process.env.JWT_SECRET);
+    const payload = jwt.verify(token, secret);
+    console.log("token payload = ", payload)
+    req.user = payload
     next();
   } catch {
     res.status(401).json({ message: 'Invalid token' });
   }
 }
+
 
 // 2. Ensure the user has the “student” role
 export function isStudent(req, res, next) {
@@ -24,7 +41,7 @@ export function isStudent(req, res, next) {
 
 // (Optional) If you want teacher-only routes later:
 export function isTeacher(req, res, next) {
-  if (!req.user || req.user.role !== 'teacher') {
+  if (req.user.role !== 'teacher') {
     return res.status(403).json({ message: 'Forbidden: teachers only' });
   }
   next();

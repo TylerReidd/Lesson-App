@@ -1,4 +1,6 @@
 
+import dotenv from 'dotenv'
+dotenv.config()
 import path from 'path'
 import { fileURLToPath } from 'url'
 import cookieParser  from 'cookie-parser'
@@ -10,13 +12,12 @@ import mongoose from 'mongoose'
 import authRoutes    from './routes/auth.js'
 import resourceRoutes from './routes/resources.js'
 import questionRoutes from './routes/questions.js'
-import dontenv from 'dotenv'
-
-dontenv.config()
-
+import uploadsRoutes from './routes/uploads.js'
 
 
 const app = express()
+app.use(cookieParser())
+app.use(express.json())
 const PORT = process.env.PORT || 5001
 
 app.use(cors({
@@ -25,16 +26,19 @@ app.use(cors({
   }
 ));
   
-  app.use(cookieParser())
   
-  app.use(express.json())
-  app.use('/uploads', express.static(path.join(__dirname, 'uploads')))
-
-// Route mounting
+  // Route mounting
+app.use('/uploads',      express.static(path.join(__dirname, 'uploads')))
+app.use('/api/uploads', uploadsRoutes)
+// app.post('/uploads/pdf', formData)
 app.use('/api/questions', questionRoutes)
 app.use('/api/resources', resourceRoutes)
 app.use('/api/auth', authRoutes)
 
+app.use((err, req,res,next) => {
+  console.error(err);
+  res.status(err.status || 500).json({message: err.message})
+})
 
 const uri = process.env.MONGO_URI;
 if(!uri) {

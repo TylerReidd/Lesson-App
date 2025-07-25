@@ -1,19 +1,25 @@
 // controllers/resourceController.js
+import Pdf from '../models/Pdf.js';
 import Resource from '../models/Resource.js';
 
 // 📥 Get assignments for a student
 export async function getAssignments(req, res, next) {
   try {
-    const list = await Resource.find({
-      type:       'assignment',
-      visibility: 'private',
-      recipient:  req.user.userId
-    }).sort('-createdAt');
+    const query = {
+      type: 'assignment',
+      visibility: 'private'
+    };
+    if (req.user.role === 'teacher') {
+      query.owner = req.user.id
+    } else {
+      query.recipient = req.user.id
+    }
 
+    const list = await Resource.find(query).sort('-createdAt')
     const host = `${req.protocol}://${req.get('host')}`;
     const out  = list.map(r => ({
       id:           r._id,
-      originalName: r.filename,
+      filename: r.filename,
       url:          `${host}${r.url}`,
       uploadedAt:   r.createdAt
     }));
@@ -29,13 +35,12 @@ export async function uploadAssignment(req, res, next) {
     if (!file)      return res.status(400).json({ message: "No PDF provided" });
     if (!recipient) return res.status(400).json({ message: "No recipient" });
 
-    const { originalname, filename } = file;
-    const url = `/uploads/pdfs/${filename}`;
+    const url = `/uploads/pdf/${file.filename}`;
 
     const assignment = await Resource.create({
-      owner:      req.user.userId,
+      owner:      req.user.id,
       recipient,
-      filename:   originalname,
+      filename:   file.originalname,
       url,
       type:       'assignment',
       visibility: 'private'
@@ -43,10 +48,9 @@ export async function uploadAssignment(req, res, next) {
 
     return res.status(201).json({
       id:           assignment._id,
-      originalName: assignment.filename,
+      filename: assignment.filename,
       url:          `${req.protocol}://${req.get('host')}${assignment.url}`,
-      uploadedAt:   assignment.createdAt,
-      message:      "Assignment uploaded!"
+      uploadedAt:   assignment.createdAt
     });
   } catch (err) { next(err) }
 }
@@ -55,7 +59,7 @@ export async function uploadAssignment(req, res, next) {
 export async function getPrivateVideos(req, res, next) {
   try {
     const list = await Resource.find({
-      recipient:  req.user.userId,
+      recipient:  req.user.id,
       type:       'video',
       visibility: 'private'
     }).sort('-createdAt');
@@ -63,7 +67,7 @@ export async function getPrivateVideos(req, res, next) {
     const host = `${req.protocol}://${req.get('host')}`;
     const out  = list.map(r => ({
       id:           r._id,
-      originalName: r.filename,
+      filename: r.filename,
       url:          `${host}${r.url}`,
       uploadedAt:   r.createdAt
     }));
@@ -79,13 +83,11 @@ export async function uploadVideo(req, res, next) {
     if (!file)      return res.status(400).json({ message: "No video provided" });
     if (!recipient) return res.status(400).json({ message: "No recipient" });
 
-    const { originalname, filename } = file;
-    const url = `/uploads/videos/${filename}`;
-
+    const url = `/uploads/videos/${file.filename}`;
     const video = await Resource.create({
-      owner:      req.user.userId,
+      owner:      req.user.id,
       recipient,
-      filename:   originalname,
+      filename:   file.originalname,
       url,
       type:       'video',
       visibility: 'private'
@@ -101,7 +103,7 @@ export async function getPublicVideos(_req, res, next) {
     const host = `${_req.protocol}://${_req.get('host')}`;
     const out  = list.map(r => ({
       id:           r._id,
-      originalName: r.filename,
+      filename: r.filename,
       url:          `${host}${r.url}`,
       uploadedAt:   r.createdAt
     }));

@@ -21,10 +21,14 @@ ul {
   list-style-type: none;
 }
 
+input {
+  width: 35%;
+}
+
 .container {
   display: flex;
   justify-content: center;
-
+  align-items: center;
   padding: 2rem;
   min-height: 100vh;
   /* width: 100vw; */
@@ -32,6 +36,7 @@ ul {
 .card {
   background: #fff;
   border-radius: 8px;
+
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
   padding: 2rem;
   width: 100%;
@@ -54,25 +59,30 @@ ul {
 .form-group {
   display: flex;
   flex-direction: column;
+  align-items: center;
   width: 100%;
   margin-top: 1rem;
 }
 
 .form-group label {
   margin-bottom: 0.5rem;
+  align-items: center;
   font-weight: bold;
 }
 .form-group input {
   padding: 0.5rem;
+  align-items: center;
   border: 1px solid #ccc;
   border-radius: 4px;
 }
 .button {
   display: inline-block;
   background: #2563eb;
+  ;
   color: #fff;
   border: none;
   padding: 0.75rem 1.5rem;
+  margin-top: 10px;
   border-radius: 4px;
   cursor: pointer;
   text-align: center;

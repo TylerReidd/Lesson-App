@@ -1,30 +1,41 @@
 import User from '../models/User.js';
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
-const {JWT_SECRET} =process.env
 
-const createToken = (user) =>
-  jwt.sign(
+const JWT_SECRET = process.env.JWT_SECRET
+
+
+const createToken = (user) => {
+  if (!JWT_SECRET) throw new Error('JWT_SECRTE environment variable not set')
+  return jwt.sign(
     { id: user._id, role: user.role },
-    process.env.JWT_SECRET,
+    JWT_SECRET,
     { expiresIn: '1d' }
   );
+}
 
 export async function signup (req, res) {
   try {
     const { name, email, password, role } = req.body;
+    if(!name || !email || !password) {
+      return req.status(400).json({message: 'Name, email, and password are required'})
+    }
     if (await User.findOne({ email }))
       return res.status(400).json({ message: 'Email already in use' });
 
     const hashed = await bcrypt.hash(password, 10);
     const user   = await new User({ name, email, password: hashed, role }).save();
-    const token  = createToken(user);
+    const payload = {id: user._id, role: userrole, assignedTeacher: user.assignedTeacher}
+    const token  = jwt.sign(payload, process.env.JWT_SECRET, {expiresIn: '1d'});
+    res.cookie('token', token, {httpOnly: true}).status(201).json({
+      id: user._id, name: user.name, email: user.email, assignedTeacher: user.assignedTeacher
+    })
 
     res
       .cookie('token', token, {
         httpOnly: true,
         secure:false,
-        sameSite: 'none',
+        sameSite: 'lax',
         maxAge: 24 * 60 * 60 * 1000,
       })
       .status(201)
@@ -46,12 +57,21 @@ export async function login (req, res) {
     if (!(await bcrypt.compare(password, user.password)))
       return res.status(400).json({ message: 'Invalid credentials' });
 
-    const token = createToken(user);
+    if(!process.env.JWT_SECRET) {
+      console.error("Missing JWT secret")
+      return res.status(500).json({message: "server misconfig"})
+    } 
+    const token = jwt.sign(
+      {id: user._id, role: user.role},
+      process.env.JWT_SECRET,
+      {expiresIn: '1d'}
+    )
     res
       .cookie('token', token, {
         httpOnly: true,
-        secure: false,
-        sameSite: 'none',
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/',
         maxAge: 24 * 60 * 60 * 1000,
       })
       .status(200)
@@ -70,30 +90,51 @@ export async function logout (req, res)  {
     .clearCookie('token', {
       httpOnly: true,
       secure: false,
-      sameSite: 'none',
+      sameSite: 'lax',
     })
     .status(200)
     .json({ message: 'Logged out successfully' });
 };
 
 // return the logged-in user (req.user set by middleware)
-export async function me  (req, res) {
-  res.json({ user: req.user });
-};
-
-export async function getMe  (req,res,next) {
+export async function me  (req, res, next) {
   try {
-    const token = req.cookie.token
-    if(!token) return res.status(401).json({message: "Not authenticated"})
+    if (!req.user)
+    return res.status(401).json({message: "not authenticated"})
   
-    const payload = jwt.verify(token, JWT_SECRET)
-    res.json({userId: payload.userId, role: payload.role})
+    const user = await User.findById(req.user.id).select('-password')
+    res.json({user})
+  } catch(err) {
+      next(err)
+  }
+}; 
 
+export async function linkTeacher(req, res, next) {
+  try {
+    const { teacherEmail } = req.body;
+    if (!teacherEmail) {
+      return res.status(400).json({ message: 'Teacher email is required.' });
+    }
+    const teacher = await User.findOne({ email: teacherEmail, role: 'teacher' });
+    if (!teacher) {
+      return res.status(404).json({ message: 'No teacher found with that email.' });
+    }
 
+    // UPDATE the student record in the DB
+    await User.findByIdAndUpdate(req.user.id, {
+      assignedTeacher: teacher._id
+    });
+
+    // Optionally, fetch back the updated user:
+    const updated = await User.findById(req.user.id).select('-password');
+    res.json({ user: updated });
   } catch (err) {
-    next(err)
+    next(err);
   }
 }
+
+
+
 
 export async function getUserByEmail(req, res, next) {
   try {

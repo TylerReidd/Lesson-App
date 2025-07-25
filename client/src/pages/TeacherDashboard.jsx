@@ -19,6 +19,20 @@ export default function TeacherDashboard({onLogout}) {
   const [pdfMsg, setPdfMsg] = useState('')
   const [assignments, setAssignments] = useState([])
 
+  const [questions, setQuestions] = useState([])
+
+  const fetchQs = async () => {
+    const {data} = await axios.get('/api/questions/teacher');
+    setQuestions(data)
+  }
+
+  useEffect(()=> {fetchQs()}, [])
+
+  const respond = async (id, answer) => {
+    await axios.put(`/api/questions/${id}/respond`, {answer})
+    fetchQs()
+  }
+
   useEffect(() => {
     axios
       .get('/resources/assignments')
@@ -171,7 +185,7 @@ export default function TeacherDashboard({onLogout}) {
         </form>
       </div>
 
-      <div className="dashboard-selection">
+      <div className="dashboard-section">
         <h3 >Available Assignments</h3>
         <ul>
           {assignments.map(f => (
@@ -192,12 +206,39 @@ export default function TeacherDashboard({onLogout}) {
 
       </div>
 
+      <div className="dashboard-section">
+        {questions.map(q => (
+          <div key={q.id}>
+            <p><strong>{q.student.name} asks: </strong>{q.text}</p>
+            {q.answer ? (
+              <p><strong>Your answer:</strong>{q.answer}</p>
+            ) : (
+              <AnswerForm questionId={q.id} onRespond={respond} />
+             )}
+          </div>
+        ))}
+      </div>
 
-      
-
-      <button onClick={handleLogout} className='button-logout'>Logout</button>
-        </div>
+        <button onClick={handleLogout} className='button-logout'>Logout</button>
+      </div>
 
     </div>
   );
+}
+
+function AnswerForm ({questionId, onRespond}) {
+  const [ans,setAns] = useState('');
+  return (
+    <form
+      onSubmit={e => {e.preventDefault(); onRespond(questionId,ans); setAns('')}}
+    >
+      <textarea
+       value={ans} 
+       onChange={e=> setAns(e.target.value)} 
+       placeholder="type your response..." 
+       required />
+
+       <button type="submit" >Send Response</button>
+    </form>
+  )
 }

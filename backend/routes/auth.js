@@ -3,16 +3,15 @@ import express from 'express'
 import jwt from 'jsonwebtoken'
 import bcrypt from 'bcrypt'
 import User from '../models/User.js';
-import { signup, logout, me, getMe, getUserByEmail } from '../controllers/authController.js';
-import { isAuthenticated } from '../middleware/auth.js';
+import { signup, logout, me, getUserByEmail, linkTeacher } from '../controllers/authController.js';
+import { isAuthenticated, isStudent } from '../middleware/auth.js';
+
 
 const router = express.Router();
 
-// 1) Signup (already working)
-router.post('/signup', signup);
+// PUBLIC ROUTES
 router.get('/user', getUserByEmail)
 
-// 2) Login
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -24,16 +23,17 @@ router.post('/login', async (req, res) => {
     if (!ok)   return res.status(401).json({ message: 'Invalid credentials' });
 
     // sign & set cookie
-    const token = jwt.sign(
-      { userId: user._id, role: user.role },
-      process.env.JWT_SECRET,
-      { expiresIn: '1d' }
-    );
+    const token = jwt.sign({ id: user._id, role: user.role },
+                             process.env.JWT_SECRET,
+                           { expiresIn: '1d' }
+                        );
+    
     res.cookie('token', token, {
-      httpOnly: true,
-      sameSite: 'lax',   // or 'none' in prod over HTTPS
-      secure: false      // false for dev HTTP
-    });
+                httpOnly: true,
+                secure: false,
+                sameSite: 'lax',
+                maxAge: 24*60*60*1000
+              })
 
     // return user
     return res.json({
@@ -49,32 +49,16 @@ router.post('/login', async (req, res) => {
     console.error('Login error:', err);
     return res.status(500).json({ message: 'Server error' });
   }
-}); // ← this closes router.post('/login', …)
-
-// 3) Logout (controller or custom)
-router.post('/logout', logout);
-
-// 4) “Who am I?” protected route
-router.get('/me', isAuthenticated, getMe);
-
-// 5) Any other helper routes
-router.get('/user', async (req, res) => {
-  const { email } = req.query;
-  if (!email) return res.status(400).json({ error: 'email query is required' });
-  try {
-    const user = await User.findOne({ email });
-    if (!user) return res.status(404).json({ error: 'User not found' });
-    return res.json({
-      _id:   user._id,
-      email: user.email,
-      role:  user.role,
-      name:  user.name
-    });
-  } catch (err) {
-    console.error('Auth user lookup failed', err);
-    return res.status(500).json({ error: 'Server error' });
-  }
 });
 
-// 6) Finally, export the router
+router.put('/me/teacher', isAuthenticated, isStudent, linkTeacher)
+
+
+router.post('/signup', signup);
+
+// PROTECTED ROUTES
+router.get('/me', isAuthenticated, me)
+router.post('/logout', logout);
+
+
 export default router

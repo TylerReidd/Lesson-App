@@ -15,7 +15,9 @@ const router = express.Router();
 // PDF routes
 router.get(
   '/assignments',
-  isAuthenticated, isStudent,
+  isAuthenticated, 
+  // isStudent,
+
   getAssignments
 );
 router.post(

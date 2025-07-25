@@ -7,12 +7,18 @@ const questionSchema = new mongoose.Schema({
     ref: 'User',
     required: true
   },
+  teacher: {type: Schema.Types.ObjectId, ref: 'User', required: true},
   text: {
     type: String,
+    required: true,
+  },
+  answer: {
+    type: String,
     default: ''
-  }
+  },
+  answeredAt: {type: Date}
 }, {timestamps: true})
 
 
-const Question = model("Question", questionSchema)
-export default Question
+
+export default model("Question", questionSchema)

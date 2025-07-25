@@ -2,17 +2,23 @@ import React, { useState, useEffect, useContext } from "react";
 import axios from "../axios.js";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../AuthContext";
+import LinkTeacherForm from "../components/LinkTeacherForm.jsx";
+import StudentQuestionForm from "../components/StudentQuestionForm.jsx";
+import StudentQuestionsList from "../components/StudentQuestionsList.jsx";
 
 
 
 export default function StudentDashboard({onLogout}) {
   const navigate = useNavigate()
-  const {setUser} = useContext(AuthContext)
-  const [email, setEmail]   = useState("");
+  const {user, loading} = useContext(AuthContext)
   const [videos, setVideos] = useState([]);
   const [err, setErr]       = useState("");
-
+  const [reload, setReload] = useState(0)
   const [assignments, setAssignments] = useState([])
+
+  // useEffect (() => {fetch()}, [reload])
+
+  const onQuestionSent = () => setReload(r => r+1)
 
 
   const fetchVideos = async () => {
@@ -42,6 +48,7 @@ export default function StudentDashboard({onLogout}) {
     }
   }
 
+  // PDFs
   useEffect(() => {
     const loadPdfs = async () => {
       try {
@@ -59,36 +66,36 @@ export default function StudentDashboard({onLogout}) {
     loadPdfs()
   }, [])
 
+  if (loading) return <div>Loading...</div>
+
   return (
     <>
       <div className="container">
+        <div className="card">
+          <h1>Student Dashboard</h1>
+    
+          <form onSubmit={e => { e.preventDefault(); fetchVideos(); }}>
+          <div className="form-group">
+      
+            <button type="submit" className="button">
+              Load My Videos
+            </button>
+            </div>
+          </form>
+      
+      <div className="form-group">
+        <ul>
+          {videos.map(v => (
+            <li key={v.id}>
+              <p className="video-title">{v.filename}</p>
+              <video controls width="100%" src={v.url} />
+            </li>
+          ))}
+        </ul>
 
-      <h1>Student Video Dashboard</h1>
-      {err && <p style={{ color: "red" }}>{err}</p>}
-
-      <form onSubmit={e => { e.preventDefault(); fetchVideos(); }} className="spaced">
-        <div className="form-group">
-          {/* <label>Your school email</label>
-          <input
-          type="email"
-          value={email}
-          onChange={e => setEmail(e.target.value)}
-        /> */}
-        </div>
-        <button type="submit" className="button">
-          Load My Videos
-        </button>
-      </form>
-
-      <ul className="video-list spaced">
-        {videos.map(v => (
-          <li key={v.id}>
-            <p className="video-title">{v.filename}</p>
-            <video controls width="100%" src={v.url} />
-          </li>
-        ))}
-      </ul>
-
+      </div>
+      
+      <div className="form-group">
       <h3>Your PDF Assignments</h3>
       <ul>
         {assignments.map(f => (
@@ -106,9 +113,30 @@ export default function StudentDashboard({onLogout}) {
           </li>
         ))}
       </ul>
+      </div>
 
-      <button className="btn" onClick={handleLogout}>Logout</button>
+
+      {!user.assignedTeacher ? (
+            <LinkTeacherForm />
+          ) : (
+            <>
+            <section className="form-group">
+              <h2>Ask Your Teacher</h2>
+              {console.log(user)}
+              <StudentQuestionForm onSent={onQuestionSent} />
+            </section>
+
+            <section className="form-group">
+              <h2>My Questions & Answers</h2>
+              <StudentQuestionsList reload={reload} />
+            </section>
+            </>
+          )}
+
+          
+          <button className="btn" onClick={handleLogout}>Logout</button>
         </div>
+      </div>
     </>
   );
 }

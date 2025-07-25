@@ -5,6 +5,7 @@ import { useContext } from 'react';
 import { AuthContext } from '../AuthContext';
 
 
+
 export default function Login() {
   const [form, setForm] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
@@ -39,40 +40,42 @@ export default function Login() {
   };
 
   return (
-    <div>
-      <form onSubmit={handleLogin}>
-        <h2 className="text-2xl font-bold mb-4">Login</h2>
+    <div className='container'>
+      <div className="card">
+        <form onSubmit={handleLogin}>
 
-        {error && <p className="text-red-500">{error}</p>}
-        {success && <p className="text-green-500">{success}</p>}
+          {error && <p className="text-red-500">{error}</p>}
+          {success && <p className="text-green-500">{success}</p>}
 
-        <div>
-          <label htmlFor="email" className="block mb-1">Email:</label>
-          <input
-            id="email"
-            name="email"
-            type="email"
-            value={form.email}
-            onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-            required
-          />
-        </div>
+          <div className='form-group'>
+            <h2 style={{marginBottom: '10px'}}>Login</h2>
+            <label htmlFor="email" className="block mb-1">Email:</label>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              value={form.email}
+              onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+              required
+            />
+          </div>
 
-        <div>
-          <label htmlFor="password" className="block mb-1">Password:</label>
-          <input
-            id="password"
-            name="password"
-            type="password"
-            value={form.password}
-            onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
-            required
-          />
-        </div>
+          <div className='form-group'>
+            <label htmlFor="password" className>Password:</label>
+            <input
+              id="password"
+              name="password"
+              type="password"
+              value={form.password}
+              onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
+              required
+            />
+            <button type="submit" className='button'>Login</button>
+          </div>
 
-        <button
-          type="submit">Login</button>
-      </form>
+        </form>
+
+      </div>
     </div>
   );
 }
