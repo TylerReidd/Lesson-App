@@ -44,27 +44,31 @@ export default function TeacherDashboardQuestions() {
 
 
   return (
-    <div>
+    <div className='container'>
+      <div className="card">
       <h2>Student Q&amp;A</h2>
+      <div className="dashboard-section">
+        <div className="form-group">
+
       {questions.length === 0 ? (
         <p>No questions yet</p>
       ): (
         questions.map(q => (
-          <div key={q.id} >
+          <div className='question-card'  key={q.id} >
             <p>
-              <strong>{q.student.name} asks</strong> {q.text}
+              <strong>{q.student.name} asks:</strong> {q.text}
             </p>
 
             {q.answer ? (
               <p><strong>Your Answer:</strong>{q.answer} </p>
             ) : (
-              <form onSubmit={e => {
+              <form className='form-group' onSubmit={e => {
                 e.preventDefault()
                 const answer = e.target.elements.answer.value;
                 sendResponse(q.id, answer)
                 e.target.reset()
               }}
-              className=''
+             
               >
                 <textarea name='answer' placeholder='type your response...' required  />
                 <button type='submit' className='button'>Send Response</button>
@@ -73,6 +77,10 @@ export default function TeacherDashboardQuestions() {
           </div>
         ))
       )}
+        </div>
+      </div>
+
+      </div>
     </div>
   )
 }

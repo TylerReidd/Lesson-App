@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "../axios";
 import { useNavigate } from "react-router-dom";
 import TeacherDashboardQuestions from "../components/TeacherDashboardQuestions";
+import Accordion from "../components/Accordion";
 
 
 // Fetch assignments and PDFs
@@ -131,8 +132,9 @@ export default function TeacherDashboard({onLogout}) {
       {videoErr && <p style={{ color: "red" }}>{videoErr}</p>}
       {videoMsg && <p style={{ color: "green" }}>{videoMsg}</p>}
 
-      <div className="dashboard-section">
+      <div className="section">
         <h2>Upload video</h2>
+
         <form onSubmit={handleVideoUpload}>
           <div className="form-group">
             <label>Student Email</label>
@@ -149,20 +151,20 @@ export default function TeacherDashboard({onLogout}) {
               accept="video/*"
               onChange={e => setVideoFile(e.target.files[0])}
               />
-          </div>
           <button type="submit" className="button">
             Upload Video
           </button>
+          </div>
         </form>
       </div>
 
       <div className="dashboard-section">
-        <h2>Upload Assignment (PDF Only)</h2>
           {pdfErr && <p style={{ color: 'red' }}>{pdfErr}</p>}
           {pdfMsg && <p style={{ color: 'green' }}>{pdfMsg}</p>}
 
-        <form onSubmit={handlePdfUpload} className='spaced'>
+        <form onSubmit={handlePdfUpload}>
           <div className="form-group">
+            <h2>Upload Assignment (PDF Only)</h2>
             <label>Student Email</label>
             <input
               type="email"
@@ -179,14 +181,14 @@ export default function TeacherDashboard({onLogout}) {
               accept='application/pdf'
               onChange={e => setPdfFile(e.target.files[0])}
               />
-          </div>
           <button type='submit' className="button">
             Upload PDF
           </button>
+          </div>
         </form>
       </div>
 
-      <div className="dashboard-section">
+      <div className="section">
         <h3 >Available Assignments</h3>
         <ul>
           {assignments.map(f => (

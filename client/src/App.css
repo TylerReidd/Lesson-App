@@ -127,3 +127,22 @@ input {
   width: 100%;
   flex-direction: column;
 }
+
+.chevron {
+  width: 500px;
+  background: transparent;
+}
+
+
+.question-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  padding: 2rem;
+  width: 100%;
+  max-width: 800px;
+  margin-top: 2rem;
+}
