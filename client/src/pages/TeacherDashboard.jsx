@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "../axios";
+import axios from "../axios.js";
 import { useNavigate } from "react-router-dom";
 import TeacherDashboardQuestions from "../components/TeacherDashboardQuestions";
 import Accordion from "../components/Accordion";
@@ -23,15 +23,15 @@ export default function TeacherDashboard({onLogout}) {
 
   const [questions, setQuestions] = useState([])
 
-  const fetchQs = async () => {
-    const {data} = await axios.get('/api/questions/teacher');
-    setQuestions(data)
-  }
+  // const fetchQs = async () => {
+  //   const {data} = await axios.get('/questions/teacher');
+  //   setQuestions(data)
+  // }
 
-  useEffect(()=> {fetchQs()}, [])
+  // useEffect(()=> {fetchQs()}, [])
 
   const respond = async (id, answer) => {
-    await axios.put(`/api/questions/${id}/respond`, {answer})
+    await axios.put(`/questions/${id}/respond`, {answer})
     fetchQs()
   }
 
@@ -188,7 +188,7 @@ export default function TeacherDashboard({onLogout}) {
         </form>
       </div>
 
-      <div className="section">
+      <div className="dashboard-section">
         <h3 >Available Assignments</h3>
         <ul>
           {assignments.map(f => (

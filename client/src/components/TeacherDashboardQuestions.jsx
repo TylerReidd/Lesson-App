@@ -35,7 +35,7 @@ export default function TeacherDashboardQuestions() {
       )
       fetchQuestions()
     } catch (err) {
-      console.error("fauled to send response:", err)
+      console.error("failed to send response:", err)
     }
   }
 
@@ -53,7 +53,11 @@ export default function TeacherDashboardQuestions() {
       {questions.length === 0 ? (
         <p>No questions yet</p>
       ): (
-        questions.map(q => (
+        <>
+
+        
+        <h2>Student Questions</h2>
+        {questions.map(q => (
           <div className='question-card'  key={q.id} >
             <p>
               <strong>{q.student.name} asks:</strong> {q.text}
@@ -62,6 +66,7 @@ export default function TeacherDashboardQuestions() {
             {q.answer ? (
               <p><strong>Your Answer:</strong>{q.answer} </p>
             ) : (
+              // <AnswerForm questionId={questions.id} onSend={sendResponse} />
               <form className='form-group' onSubmit={e => {
                 e.preventDefault()
                 const answer = e.target.elements.answer.value;
@@ -75,12 +80,35 @@ export default function TeacherDashboardQuestions() {
               </form>
             )}
           </div>
-        ))
+        ))}
+      </>
       )}
         </div>
       </div>
-
+      
       </div>
     </div>
+  )
+}
+
+function AnswerForm({questionId, onsend}) {
+  const [text, setText] = useState('')
+  return (
+    <form 
+      onSubmit={e => {
+        e.preventDefault()
+        onsend(questionId, text)
+        setText('')
+      }}
+      className='form-group'
+      >
+        <textarea 
+          value={text}
+          onChange={e=> setText(e.target.value)}
+          placeholder="Type Your Answer..."
+          required
+          />
+          <button type='submit' className='button'></button>
+      </form>
   )
 }

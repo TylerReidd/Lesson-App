@@ -82,8 +82,9 @@ export async function respondToQuestion (req,res,next) {
     if(req.user.role != 'teacher') return res.status(403).end()
     if(!answer) return res.status(400).json({message: 'Answer text is required'})
 
+    // const teacherId = req.user.id
     const question = await Question.findOneAndUpdate(
-      {_id: id, teacher: req.user._id}, 
+      {_id: id, teacher: req.user.id}, 
       {answer, answeredAt: new Date()},
       {new:true}
     )
