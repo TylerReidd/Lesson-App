@@ -7,7 +7,7 @@ export default defineConfig({
     proxy: {
       // Proxy API calls to Express on 5001
       '/api': {
-        target:   'http://localhost:5001',
+        target:   'Lesson-App',
         changeOrigin: true,
         secure:   false
       }
