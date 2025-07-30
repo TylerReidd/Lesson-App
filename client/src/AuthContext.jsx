@@ -1,6 +1,6 @@
 // AuthContext.js
 import React, { createContext, useState, useEffect } from 'react';
-import api from './axios.js';
+import axios from './axios.js';
 
 export const AuthContext = createContext({
   user: null,
@@ -19,7 +19,7 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     async function fetchCurrentUser() {
       try {
-        const {data} = await api.get('/auth/me',)
+        const {data} = await axios.get('/auth/me',)
         setUser(data.user)
       } catch (err) {
         setUser(null);

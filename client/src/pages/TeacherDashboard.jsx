@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import api from "../axios.js";
+import axios from "../axios.js";
 import { useNavigate } from "react-router-dom";
 import TeacherDashboardQuestions from "../components/TeacherDashboardQuestions";
 import Accordion from "../components/Accordion";
@@ -30,13 +30,13 @@ export default function TeacherDashboard({onLogout}) {
 
   // useEffect(()=> {fetchQs()}, [])
 
-  const respond = async (id, answer) => {
-    await api.put(`/questions/${id}/respond`, {answer})
-    fetchQs()
-  }
+  // const respond = async (id, answer) => {
+  //   await axios.put(`/questions/${id}/respond`, {answer})
+  //   fetchQs()
+  // }
 
   useEffect(() => {
-    api
+    axios
       .get('/resources/assignments')
       .then(res => setAssignments(res.data))
       .catch(err => console.error('fetch assignments failed', err));
@@ -54,7 +54,7 @@ export default function TeacherDashboard({onLogout}) {
 
 
   try {
-      const res = await api.post(
+      const res = await axios.post(
         '/uploads/pdf',
         formData,
         { headers: { 'Content-Type': 'multipart/form-data' } }
@@ -83,7 +83,7 @@ export default function TeacherDashboard({onLogout}) {
 
     let studentId
     try {
-      const userRes = await api.get('/auth/user', {
+      const userRes = await axios.get('/auth/user', {
         params: {email: videoEmail}
       })
       studentId = userRes.data._id
@@ -97,7 +97,7 @@ export default function TeacherDashboard({onLogout}) {
  
 
     try {
-      const res = await api.post(
+      const res = await axios.post(
         "/resources/videos/upload",
         formData,
         { headers: { "Content-Type": "multipart/form-data" } }
@@ -115,7 +115,7 @@ export default function TeacherDashboard({onLogout}) {
 
   const handleLogout = async () => {
     try {
-      await api.post('/auth/logout')
+      await axios.post('/auth/logout')
       onLogout()
       navigate('/login', {replace: true})
     } catch (err){
