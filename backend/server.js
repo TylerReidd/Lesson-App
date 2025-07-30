@@ -20,11 +20,21 @@ app.use(cookieParser())
 app.use(express.json())
 const PORT = process.env.PORT || 5001
 
+const corsOptions = {
+  origin: 'http://tylerreidd.github.io', 
+  credentials:true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', "OPTIONS"],
+  allowedHeaders: ["Content-type, 'Authorization"]
+}
+
 app.use(cors({
   origin: 'http://tylerreidd.github.io', 
-  credentials:true
+  credentials:true,
   }
 ));
+
+app.use(cors(corsOptions))
+app.options('*', cors(corsOptions))
   
   
   // Route mounting
