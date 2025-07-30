@@ -7,7 +7,6 @@ import cookieParser  from 'cookie-parser'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 import express       from 'express'
-import cors          from 'cors'
 import mongoose from 'mongoose'
 import authRoutes    from './routes/auth.js'
 import resourceRoutes from './routes/resources.js'
