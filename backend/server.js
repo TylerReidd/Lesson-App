@@ -7,7 +7,7 @@ import cookieParser  from 'cookie-parser'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 import express       from 'express'
-import cors          from 'cors'
+// import cors          from 'cors'
 import mongoose from 'mongoose'
 import authRoutes    from './routes/auth.js'
 import resourceRoutes from './routes/resources.js'
@@ -16,18 +16,23 @@ import uploadsRoutes from './routes/uploads.js'
 
 
 const app = express()
-app.use(cookieParser())
-app.use(express.json())
+
 const PORT = process.env.PORT || 5001
 
-const corsOptions = {
-  origin: 'https://tylerreidd.github.io', 
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-type', 'Authorization']
-}
+app.use((req,res,next) => {
+  res.header('Access-Control-Allow-Origin', 'https://tylerreidd.github.io')
+  res.header('Access-Control-Allow-Credentials', 'true')
+  res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS')
+  res.header('Access-Control-Allow-Headers', 'Content-Type,Authorization')
 
-app.use(cors(corsOptions))
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(204)
+  }
+  next()
+})
+
+app.use(cookieParser())
+app.use(express.json())
 
   
   // Route mounting
