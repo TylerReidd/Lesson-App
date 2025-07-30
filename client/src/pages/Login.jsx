@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import axios from '../axios';
+import api from '../axios';
 import { useNavigate } from 'react-router-dom';
 import { useContext } from 'react';
 import { AuthContext } from '../AuthContext';
@@ -20,15 +20,13 @@ export default function Login() {
     setSuccess('');
     try {
       // 1) Perform the login
-      await axios.post(
+      await api.post(
         '/auth/login',
-        form,
-        { withCredentials: true }
+        form
       );
       // 2) Immediately fetch the full user (including assignedTeacher)
-      const { data: meData } = await axios.get(
-        '/auth/me',
-        { withCredentials: true }
+      const { data: meData } = await api.get(
+        '/auth/me'
       );
       setUser(meData.user);
       setSuccess('Logged In!');

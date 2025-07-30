@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from "react";
-import axios from "../axios.js";
+import api from "../axios.js";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../AuthContext";
 import LinkTeacherForm from "../components/LinkTeacherForm.jsx";
@@ -39,7 +39,7 @@ export default function StudentDashboard({onLogout}) {
 
   const handleLogout = async () => {
     try {
-      await axios.post('/auth/logout', {}, {withCredentials: true})
+      await api.post('/auth/logout', {}, {withCredentials: true})
       onLogout()
       setUser(null)
       navigate('/login')

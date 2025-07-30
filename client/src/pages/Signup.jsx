@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import axios from '../axios';
+import api from '../axios';
 import { useNavigate } from 'react-router-dom';
 
 export default function Signup() {
@@ -17,7 +17,7 @@ export default function Signup() {
     e.preventDefault();
     setError('');
     try {
-      const res = await axios.post('/auth/signup', form);
+      const res = await api.post('/auth/signup', form);
       // console.log(res.data); // --> { message: 'User created successfully', user: {…} }
       setSuccess(res.data.message);
       // optionally delay redirect so they see the message
