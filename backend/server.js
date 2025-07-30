@@ -16,14 +16,13 @@ import uploadsRoutes from './routes/uploads.js'
 
 const app = express()
 
-const PORT = process.env.PORT || 5001
 
 app.use((req,res,next) => {
   res.header('Access-Control-Allow-Origin', 'https://tylerreidd.github.io')
   res.header('Access-Control-Allow-Credentials', 'true')
   res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS')
   res.header('Access-Control-Allow-Headers', 'Content-Type,Authorization')
-
+  
   if (req.method === 'OPTIONS') {
     return res.sendStatus(204)
   }
@@ -33,6 +32,7 @@ app.use((req,res,next) => {
 app.use(cookieParser())
 app.use(express.json())
 
+const PORT = process.env.PORT || 5001
   
   // Route mounting
 app.use('/uploads',      express.static(path.join(__dirname, 'uploads')))
