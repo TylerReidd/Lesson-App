@@ -22,22 +22,13 @@ const PORT = process.env.PORT || 5001
 
 const corsOptions = {
   origin: 'https://tylerreidd.github.io', 
-  credentials:true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', "OPTIONS"],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-type', 'Authorization']
 }
 
-// app.use(cors({
-//   origin: 'http://tylerreidd.github.io', 
-//   credentials:true,
-//   }
-// ));
-
 app.use(cors(corsOptions))
 
-app.options('/*', cors(corsOptions))
-
-  
   
   // Route mounting
 app.use('/uploads',      express.static(path.join(__dirname, 'uploads')))
