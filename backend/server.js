@@ -38,7 +38,6 @@ app.use(express.json())
   // Route mounting
 app.use('/uploads',      express.static(path.join(__dirname, 'uploads')))
 app.use('/api/uploads', uploadsRoutes)
-// app.post('/uploads/pdf', formData)
 app.use('/api/questions', questionRoutes)
 app.use('/api/resources', resourceRoutes)
 app.use('/api/auth', authRoutes)
