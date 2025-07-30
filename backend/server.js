@@ -21,7 +21,7 @@ app.use(express.json())
 const PORT = process.env.PORT || 5001
 
 app.use(cors({
-  origin: 'http://localhost:5173', 
+  origin: 'http://tylerreidd.github.io', 
   credentials:true
   }
 ));
