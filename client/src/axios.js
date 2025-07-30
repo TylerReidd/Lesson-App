@@ -4,7 +4,7 @@ const isDev = import.meta.env.MODE === 'development';
 
 axios.defaults.baseURL = isDev
 ? '/api'
-: 'https://lesson-app.onrender.com/api'
+: 'https://lesson-app-4pp6.onrender.com'
 
 axios.defaults.withCredentials = true
 
