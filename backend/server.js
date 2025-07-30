@@ -18,7 +18,7 @@ const app = express()
 
 
 app.use((req,res,next) => {
-  console.log(`[CORS] ${req.method} ${req.path}`)
+  console.log(`[CORS] ${req.method} ${req.path} Origin: `, req.headers.origin)
   res.header('Access-Control-Allow-Origin', 'https://tylerreidd.github.io')
   res.header('Access-Control-Allow-Credentials', 'true')
   res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS')
