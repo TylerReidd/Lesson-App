@@ -4,6 +4,10 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   // 1) <-- this makes your production build look for files under /Lesson-App/
   base: '/Lesson-App/',
+  build: {
+    outDir: '../docs',
+    emptyOutDir: true,
+  },
   plugins: [react()],
   
   // 2) <-- this only applies to `npm run dev` for local development
