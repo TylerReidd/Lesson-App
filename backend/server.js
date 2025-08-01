@@ -42,6 +42,12 @@ app.use('/api/questions', questionRoutes)
 app.use('/api/resources', resourceRoutes)
 app.use('/api/auth', authRoutes)
 
+app.use(express.static.apply(path.join(__dirname, 'client', 'dist')))
+
+app.get('*', (req,res) => {
+  res.sendFile(path.join(__dirname, 'client', 'dist', 'index.html'))
+})
+
 app.use((err, req,res,next) => {
   console.error(err);
   res.status(err.status || 500).json({message: err.message})
