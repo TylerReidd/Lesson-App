@@ -28,54 +28,59 @@ export default function Signup() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <h2 className="text-2xl font-bold">Sign Up</h2>
+    <div className="container">
+      <div className="card">
+        <form onSubmit={handleSubmit} className="form-group">
+          <h2 className="text-2xl font-bold">Sign Up</h2>
 
-      {error   && <p className="text-red-500">{error}</p>}
-      {success && <p className="text-green-500">{success}</p>}
+          {error   && <p className="text-red-500">{error}</p>}
+          {success && <p className="text-green-500">{success}</p>}
 
-      <input
-        name="name"
-        value={form.name}
-        onChange={handleChange}
-        placeholder="Name"
-        required
-        className="input"
-      />
+          <input
+            name="name"
+            value={form.name}
+            onChange={handleChange}
+            placeholder="Name"
+            required
+            className="input"
+          />
 
-      <input
-        name="email"
-        type="email"
-        value={form.email}
-        onChange={handleChange}
-        placeholder="Email"
-        required
-        className="input"
-      />
+          <input
+            name="email"
+            type="email"
+            value={form.email}
+            onChange={handleChange}
+            placeholder="Email"
+            required
+            className="input"
+          />
 
-      <input
-        name="password"
-        type="password"
-        value={form.password}
-        onChange={handleChange}
-        placeholder="Password"
-        required
-        className="input"
-      />
+          <input
+            name="password"
+            type="password"
+            value={form.password}
+            onChange={handleChange}
+            placeholder="Password"
+            required
+            className="input"
+          />
 
-      <select
-        name="role"
-        value={form.role}
-        onChange={handleChange}
-        className="select"
-      >
-        <option value="student">Student</option>
-        <option value="teacher">Teacher</option>
-      </select>
+          <select
+            name="role"
+            value={form.role}
+            onChange={handleChange}
+            className="select"
+          >
+            <option value="student">Student</option>
+            <option value="teacher">Teacher</option>
+          </select>
 
-      <button type="submit" className="btn">
-        Submit
-      </button>
-    </form>
+          <button type="submit" className="btn">
+            Submit
+          </button>
+        </form>
+
+      </div>
+    </div>
   );
 }
