@@ -101,6 +101,9 @@ input {
   font-weight: 600px;
 }
 .form-group input[type='email'],
+.form-group input[type='name'],
+.form-group select[type='role'],
+.form-group input[type='password'],
 .form-group input[type='file'] {
   justify-content: center;
   padding: 8px;

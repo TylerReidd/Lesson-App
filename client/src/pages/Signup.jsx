@@ -38,6 +38,7 @@ export default function Signup() {
 
           <input
             name="name"
+            type='name'
             value={form.name}
             onChange={handleChange}
             placeholder="Name"
@@ -67,6 +68,7 @@ export default function Signup() {
 
           <select
             name="role"
+            type='role'
             value={form.role}
             onChange={handleChange}
             className="select"
@@ -75,7 +77,7 @@ export default function Signup() {
             <option value="teacher">Teacher</option>
           </select>
 
-          <button type="submit" className="btn">
+          <button type="submit" className="button">
             Submit
           </button>
         </form>
