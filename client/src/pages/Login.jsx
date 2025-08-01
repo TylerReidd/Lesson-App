@@ -76,6 +76,13 @@ export default function Login() {
             <button type="submit" className='button'>Login</button>
           </div>
 
+          <p className="text-sm mt-4">
+              Don’t have an account?{' '}
+            <Link to="/signup" className="text-blue-500 underline">
+              Sign up here
+            </Link>
+      </p>
+
         </form>
 
       </div>
