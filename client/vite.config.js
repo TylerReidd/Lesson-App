@@ -5,7 +5,7 @@ export default defineConfig({
   // 1) <-- this makes your production build look for files under /Lesson-App/
   base: '/',
   build: {
-    outDir: '../client/dist',
+    outDir: 'dist',
     emptyOutDir: true,
   },
   plugins: [react()],
