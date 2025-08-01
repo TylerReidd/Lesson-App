@@ -8,10 +8,10 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 import express       from 'express'
 import mongoose from 'mongoose'
-import authRoutes    from './routes/auth.js'
-import resourceRoutes from './routes/resources.js'
-import questionRoutes from './routes/questions.js'
-import uploadsRoutes from './routes/uploads.js'
+import authRoutes    from './backend/routes/auth.js'
+import resourceRoutes from './backend/routes/resources.js'
+import questionRoutes from './backend/routes/questions.js'
+import uploadsRoutes from './backend/routes/uploads.js'
 
 
 const app = express()
