@@ -22,7 +22,7 @@ export default function StudentLayout() {
           <li><Link to='student/assignments'>Assignments</Link></li>
           <li><Link to='student/questions'>Q&A</Link></li>
         </ul>
-        <button onClick={handleLogout}>Logout</button>
+        <button className='button-logout' onClick={handleLogout}>Logout</button>
       </nav>
       <main>
         <Outlet />

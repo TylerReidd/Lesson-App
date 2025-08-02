@@ -1,14 +1,16 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import axios from "../axios.js";
+import { AuthContext } from "../AuthContext.jsx";
 
 export default function StudentQuestions() {
+  const {user} = useContext(AuthContext)
   const [questions, setQuestions] = useState([]);
   const [newQuestion, setNewQuestion] = useState("");
 
   const fetchQuestions = async () => {
     try {
       const res = await axios.get("/questions/student");
-      setQuestions(res.data);
+      setQuestions(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       console.error("Failed to load questions", err);
     }
@@ -23,7 +25,7 @@ export default function StudentQuestions() {
     if (!newQuestion) return;
 
     try {
-      await axios.post("/questions", { question: newQuestion });
+      await axios.post("/questions", { question: newQuestion, studentId: user._id });
       setNewQuestion("");
       fetchQuestions();
     } catch (err) {
@@ -51,7 +53,7 @@ export default function StudentQuestions() {
 
         <h2 className="mt-4">Previous Questions</h2>
         <ul className="video-list">
-          {Array.isArray(questions) && questions.length > 0 ? (
+          {questions.length > 0 ? (
             questions.map((q) => (
               <li key={q._id}>
               <p><strong>You: </strong>{q.question}</p>

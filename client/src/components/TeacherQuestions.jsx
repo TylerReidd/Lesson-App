@@ -57,7 +57,7 @@ export default function TeacherQuestions() {
                   <textarea
                     placeholder="Type your response..."
                     defaultValue={q.answer || ""}
-                    onBlur={(e) => handleRespond(q._id, e.target.value)}
+                    onBlur={(e) => handleRespond(q._id || q.id, e.target.value)}
                     className="question-textarea"
                   />
                 </div>
