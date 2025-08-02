@@ -3,6 +3,7 @@ import express from 'express'
 import jwt from 'jsonwebtoken'
 import bcrypt from 'bcrypt'
 import User from '../models/User.js';
+import mongoose from 'mongoose'
 import { signup, logout, me, getUserByEmail, linkTeacher } from '../controllers/authController.js';
 import { isAuthenticated, isStudent } from '../middleware/auth.js';
 
@@ -12,10 +13,13 @@ const router = express.Router();
 // PUBLIC ROUTES
 router.get('/user', getUserByEmail)
 
+
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    console.log("LOGIN: req.bod:",req.body)
+    console.log("LOGIN: mongoose.connection.readyState:",mongoose.connection.readyState)
     // find & verify
     const user = await User.findOne({ email });
     if (!user) return res.status(401).json({ message: 'Invalid credentials' });

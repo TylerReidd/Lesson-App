@@ -51,11 +51,13 @@ export default function StudentDashboard({onLogout}) {
   // PDFs
   useEffect(() => {
     const loadPdfs = async () => {
+      console.log('fetching Assignments')
       try {
         const {data} = await axios.get(
           "/resources/assignments/",
           {withCredentials: true}
         )
+        console.log('assignments', data)
         setAssignments(data)
         setErr("")
       } catch(e) {

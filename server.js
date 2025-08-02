@@ -12,14 +12,40 @@ import uploadsRoutes from './backend/routes/uploads.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+
 const app = express();
 
-console.log("🔑 NODE_ENV:", process.env.NODE_ENV);
-console.log("🔑 Using MONGO_URI:", process.env.MONGO_URI ? "Loaded ✅" : "❌ Missing");
+// ------------------- DB + Server Start -------------------
+const PORT = process.env.PORT || 5001;
+const uri = process.env.MONGO_URI;
 
+
+console.log("NODE_ENV: ", process.env.NODE_ENV)
+console.log("MONGO_URI: ", process.env.MONGO_URI)
+mongoose.connect(uri, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+})
+  .then(() => {
+    console.log('✅ MongoDB connected');
+    app.listen(PORT, () => {
+      console.log(`🚀 Server running on http://localhost:${PORT}`);
+    });
+  })
+  .catch((err) => {
+    console.error('❌ MongoDB connection error:', err);
+    process.exit(1);
+  });
+
+  // ------------------- Middleware -------------------
+  app.use(express.json());
+  app.use(cookieParser());
+  
 const allowedOrigin = process.env.NODE_ENV === 'production'
   ? process.env.CLIENT_ORIGIN
   : 'http://localhost:5173';
+
 // ------------------- CORS -------------------
 app.use((req, res, next) => {
   console.log(`[CORS] ${req.method} ${req.path} Origin: `, req.headers.origin);
@@ -34,9 +60,6 @@ app.use((req, res, next) => {
   next();
 });
 
-// ------------------- Middleware -------------------
-app.use(cookieParser());
-app.use(express.json());
 
 // ------------------- Routes -------------------
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
@@ -53,31 +76,15 @@ app.get('*', (req, res) => {
 });
 
 // ------------------- Error Handler -------------------
-app.use((err, req, res, next) => {
-  console.error(err);
-  res.status(err.status || 500).json({ message: err.message });
-});
+// app.use((err, req, res, next) => {
+//   console.error(err);
+//   res.status(err.status || 500).json({ message: err.message });
+// });
 
-// ------------------- DB + Server Start -------------------
-const PORT = process.env.PORT || 5001;
-const uri = process.env.MONGO_URI;
 
 if (!uri) {
   console.error('❌ MONGO_URI not set in environment');
   process.exit(1);
 }
 
-mongoose.connect(uri, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-  .then(() => {
-    console.log('✅ MongoDB connected');
-    app.listen(PORT, () => {
-      console.log(`🚀 Server running on http://localhost:${PORT}`);
-    });
-  })
-  .catch((err) => {
-    console.error('❌ MongoDB connection error:', err);
-    process.exit(1);
-  });
+

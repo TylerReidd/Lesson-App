@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "../axios.js";
 import { useNavigate } from "react-router-dom";
 import TeacherDashboardQuestions from "../components/TeacherDashboardQuestions";
-import Accordion from "../components/Accordion";
+
 
 
 // Fetch assignments and PDFs

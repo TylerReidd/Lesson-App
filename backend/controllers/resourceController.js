@@ -5,25 +5,17 @@ import Resource from '../models/Resource.js';
 // 📥 Get assignments for a student
 export async function getAssignments(req, res, next) {
   try {
-    const query = {
-      type: 'assignment',
-      visibility: 'private'
-    };
+    let list;
+    
     if (req.user.role === 'teacher') {
-      query.owner = req.user.id
+      list = await Resource
+       .find({type: 'assignment', owner: req.user.id})
+       .sort('-createdAt');
     } else {
-      query.recipient = req.user.id
+      list = await Resource
+       .find({type: 'assignment'})
+       .sort('-createdAt')
     }
-
-    const list = await Resource.find(query).sort('-createdAt')
-    const host = `${req.protocol}://${req.get('host')}`;
-    const out  = list.map(r => ({
-      id:           r._id,
-      filename: r.filename,
-      url:          `${host}${r.url}`,
-      uploadedAt:   r.createdAt
-    }));
-    res.json(out);
   } catch (err) { next(err) }
 }
 
