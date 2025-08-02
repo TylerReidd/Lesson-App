@@ -37,3 +37,5 @@ client/dist/
 *.sw?
 .DS_Store
 Thumbs.db
+
+backend/uploads/
