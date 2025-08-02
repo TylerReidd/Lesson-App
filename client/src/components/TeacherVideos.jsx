@@ -96,7 +96,9 @@ export default function TeacherVideos() {
         <div className="dashboard-section">
           <h2>Uploaded Videos</h2>
           <ul className="video-list">
-            {videos.map((video) => (
+            {Array.isArray(videos) && videos.length > 0 ? (
+
+              videos.map((video) => (
               <li key={video._id}>
                 <span className="video-title">{video.filename}</span>
                 <div>
@@ -112,7 +114,10 @@ export default function TeacherVideos() {
                   </button>
                 </div>
               </li>
-            ))}
+            )) 
+            ) : (
+              <li>No videos Uploaded</li>
+            )}
           </ul>
         </div>
       </div>
