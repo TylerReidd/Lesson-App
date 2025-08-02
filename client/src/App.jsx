@@ -52,6 +52,7 @@ function App() {
            </PrivateRoute>
           }
         >
+          <Route index element={<StudentQuestions />} />
           <Route path='videos' element={<StudentVideos />} />
           <Route path='assignments' element={<StudentAssignments/>} />
           <Route path='questions' element={<StudentQuestions />} />
