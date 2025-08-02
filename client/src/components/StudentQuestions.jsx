@@ -7,29 +7,38 @@ export default function StudentQuestions() {
   const [questions, setQuestions] = useState([]);
   const [newQuestion, setNewQuestion] = useState("");
 
-  const fetchQuestions = async () => {
-    try {
-      const res = await axios.get("/questions/student");
-      setQuestions(Array.isArray(res.data) ? res.data : []);
-    } catch (err) {
-      console.error("Failed to load questions", err);
-    }
-  };
-
   useEffect(() => {
-    fetchQuestions();
-  }, []);
+    const fetchQuestions = async () => {
+      try {
+        const res = await axios.get("/questions/");
+        setQuestions(res.data);
+      } catch (err) {
+        console.error("Failed to load questions", err);
+      }
+    };
+    fetchQuestions
+  }, [])
+
+
+  // useEffect(() => {
+  //   fetchQuestions();
+  // }, []);
 
   const handleAsk = async (e) => {
     e.preventDefault();
-    if (!newQuestion) return;
+    if (!newQuestion.trim())  {
+      alert("please enter a question");
+      return
+    }
 
     try {
-      await axios.post("/questions", { question: newQuestion, studentId: user._id });
-      setNewQuestion("");
-      fetchQuestions();
+      const res = await axios.post("/questions", { question: newQuestion, studentId: user?._id });
+      setQuestions((prev) => [...prev, res.data]);
+      setNewQuestion("")
+      alert("Question Submitted successfully")
     } catch (err) {
       console.error("Failed to submit question", err);
+      alert("Could Not submit question. Please try again.")
     }
   };
 
@@ -53,7 +62,7 @@ export default function StudentQuestions() {
 
         <h2 className="mt-4">Previous Questions</h2>
         <ul className="video-list">
-          {questions.length > 0 ? (
+          {Array.isArray(questions) && questions.length > 0 ? (
             questions.map((q) => (
               <li key={q._id}>
               <p><strong>You: </strong>{q.question}</p>
