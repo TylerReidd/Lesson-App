@@ -51,12 +51,22 @@ export default function StudentQuestions() {
 
         <h2 className="mt-4">Previous Questions</h2>
         <ul className="video-list">
-          {questions.map((q) => (
-            <li key={q._id}>
-              <p>{q.question}</p>
-              {q.answer && <p style={{ color: "green" }}>Teacher: {q.answer}</p>}
+          {Array.isArray(questions) && questions.length > 0 ? (
+            questions.map((q) => (
+              <li key={q._id}>
+              <p><strong>You: </strong>{q.question}</p>
+              {q.answer ?  (
+              <p style={{ color: "green" }}>
+                <strong>Teacher</strong> {q.answer}
+              </p>
+          ) : (
+            <p style={{ color: "gray" }}>Awaiting Teachers response...</p>
+          )}
             </li>
-          ))}
+          ))
+          ) : (
+            <li>No questions Yet.</li>
+          )}
         </ul>
       </div>
     </div>
