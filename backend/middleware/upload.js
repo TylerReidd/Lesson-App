@@ -24,11 +24,19 @@ if (process.env.NODE_ENV !== 'production') {
 // Storage configs
 const videoStorage = multer.diskStorage({
   destination: (_req, _file, cb) => cb(null, VIDEO_DIR),
-  filename:    (_req, file, cb) => cb(null, `${Date.now()}-${file.originalname}`)
+  filename:    (_req, file, cb) => {
+    const name = `${Date.now()}-${file.originalname}`
+    console.log('🛑 MULTER saving file to:', VIDEO_DIR, name);
+    cb(null, name)}
+  
 });
 const pdfStorage = multer.diskStorage({
   destination: (_req, _file, cb) => cb(null, PDF_DIR),
-  filename:    (_req, file, cb) => cb(null, `${Date.now()}-${file.originalname}`)
+  
+  filename:    (_req, file, cb) => {
+    const name = `${Date.now()}-${file.originalname}`;
+    onsole.log('🛑 MULTER saving file to:', PDF_DIR, name);
+    cb(null,name )}
 });
 
 // Filters
