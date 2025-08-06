@@ -14,7 +14,7 @@ export async function getAssignments(req, res, next) {
     res.json(list.map(r => ({
       id: r._id,
       filename: r.filename,
-      url: `${baseURL}${r.url}`,
+      url: r.url,
       uploadedAt: r.createdAt
     }))) 
   } catch (err) { next(err) }
@@ -57,13 +57,13 @@ export async function getPrivateVideos(req, res, next) {
       visibility: 'private'
     }).sort('-createdAt');
     
-    const isProd = process.env.NODE_ENV === 'production';
-    const baseURL = isProd ? `https://${process.env.API_HOST}` : ""
+    // const isProd = process.env.NODE_ENV === 'production';
+    // const baseURL = isProd ? `https://${process.env.API_HOST}` : ""
 
     const out  = list.map(r => ({
       id:           r._id,
       filename: r.filename,
-      url:          `${baseURL}${r.url}`,
+      url:          r.url,
       uploadedAt:   r.createdAt
     }));
     res.json({ videos: out });
