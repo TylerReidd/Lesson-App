@@ -9,7 +9,7 @@ export async function getAssignments(req, res, next) {
 
     const list = await Resource.find(query).sort('-createdAt');
     const isProd = process.env.NODE_ENV === 'production';
-    const baseURL = isProd ? process.env.CLIENT_ORIGIN : "";
+    const baseURL = isProd ? `https://${process.env.API_HOST}` : ""
 
     res.json(list.map(r => ({
       id: r._id,
@@ -58,7 +58,7 @@ export async function getPrivateVideos(req, res, next) {
     }).sort('-createdAt');
     
     const isProd = process.env.NODE_ENV === 'production';
-    const baseURL = isProd ? process.env.CLIENT_ORIGIN : ""
+    const baseURL = isProd ? `https://${process.env.API_HOST}` : ""
 
     const out  = list.map(r => ({
       id:           r._id,
