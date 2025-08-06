@@ -1,32 +1,58 @@
-import {Outlet, Link, useNavigate} from 'react-router-dom'
-import axios from '../axios.js'
-
+import { Outlet, NavLink, useNavigate } from 'react-router-dom';
+import axios from '../axios.js';
 
 export default function StudentLayout() {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   const handleLogout = async () => {
     try {
-      await axios.post('/auth/logout');
-      navigate('/login')
+      await axios.post('/auth/logout', {}, { withCredentials: true });
+      navigate('/login');
     } catch (err) {
-      console.err("Logout Failed", err)
+      console.error('Logout Failed', err);
     }
-  }
+  };
 
   return (
-    <div className='container'>
-      <nav className="navbar card">
-        <ul className="video-list">
-          <li><Link to='student/videos'>Videos</Link></li>
-          <li><Link to='student/assignments'>Assignments</Link></li>
-          <li><Link to='student/questions'>Q&A</Link></li>
-        </ul>
-        <button className='button-logout' onClick={handleLogout}>Logout</button>
+    <div className="student-layout">
+      {/* Top navigation bar */}
+      <nav className="top-tab-bar card">
+        <NavLink
+          to="videos"
+          className={({ isActive }) =>
+            isActive ? 'tab active' : 'tab'
+          }
+        >
+          🎥 Videos
+        </NavLink>
+        <NavLink
+          to="assignments"
+          className={({ isActive }) =>
+            isActive ? 'tab active' : 'tab'
+          }
+        >
+          📄 Assignments
+        </NavLink>
+        <NavLink
+          to="questions"
+          className={({ isActive }) =>
+            isActive ? 'tab active' : 'tab'
+          }
+        >
+          ❓ Q&A
+        </NavLink>
+        <button
+          className="tab button-logout"
+          onClick={handleLogout}
+        >
+          Logout
+        </button>
       </nav>
-      <main>
+
+      {/* Main content area where nested routes render */}
+      <main className="content">
         <Outlet />
       </main>
     </div>
-  )
- }
+  );
+}

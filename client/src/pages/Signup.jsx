@@ -77,7 +77,7 @@ export default function Signup() {
             <option value="teacher">Teacher</option>
           </select>
 
-          <button type="submit" className="button">
+          <button type="submit" className="btn">
             Submit
           </button>
         </form>

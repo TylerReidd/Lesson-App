@@ -5,17 +5,18 @@ import Resource from '../models/Resource.js';
 // 📥 Get assignments for a student
 export async function getAssignments(req, res, next) {
   try {
-    let list;
-    
-    if (req.user.role === 'teacher') {
-      list = await Resource
-       .find({type: 'assignment', owner: req.user.id})
-       .sort('-createdAt');
-    } else {
-      list = await Resource
-       .find({type: 'assignment'})
-       .sort('-createdAt')
-    }
+    const query = (req.user.role === 'teacher')
+    ? {type: 'assignment', owner: req.user.id}
+    : {type: 'assignment' ,recipient: req.user.id};
+
+    const list = await Resource.find(query).sort('-createdAt');
+
+    res.json(list.map(r => ({
+      id: r._id,
+      filename: r.filename,
+      url: r.url,
+      uploadedAt: r.createdAt
+    }))) 
   } catch (err) { next(err) }
 }
 
@@ -27,7 +28,7 @@ export async function uploadAssignment(req, res, next) {
     if (!file)      return res.status(400).json({ message: "No PDF provided" });
     if (!recipient) return res.status(400).json({ message: "No recipient" });
 
-    const url = `/uploads/pdf/${file.filename}`;
+    const url = `/uploads/pdfs/${file.filename}`;
 
     const assignment = await Resource.create({
       owner:      req.user.id,
@@ -60,7 +61,7 @@ export async function getPrivateVideos(req, res, next) {
     const out  = list.map(r => ({
       id:           r._id,
       filename: r.filename,
-      url:          `${host}${r.url}`,
+      url:          r.url,
       uploadedAt:   r.createdAt
     }));
     res.json({ videos: out });
@@ -101,4 +102,18 @@ export async function getPublicVideos(_req, res, next) {
     }));
     res.json({ videos: out });
   } catch (err) { next(err) }
+}
+
+export const deleteAssignment = async (req,res) => {
+  try {
+    const { id } = req.params;
+
+    const assignment = await Resource.findById(id)
+    if(!assignment) return res.status(404).json({error: "not found"})
+    await Resource.findByIdAndDelete(id);
+    return res.json({message: 'Deleted '})
+
+  } catch (err) {
+    return res.status(500).json({error: "server error"})
+  }
 }

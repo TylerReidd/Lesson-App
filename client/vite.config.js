@@ -1,23 +1,28 @@
+// vite.config.js
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
 export default defineConfig({
-  // 1) <-- this makes your production build look for files under /Lesson-App/
   base: '/',
   build: {
     outDir: 'dist',
     emptyOutDir: true,
   },
   plugins: [react()],
-  
-  // 2) <-- this only applies to `npm run dev` for local development
   server: {
     proxy: {
+      // your existing API proxy
       '/api': {
-        target: 'http://localhost:5001',  // or whatever port your Express server runs on
+        target: 'http://localhost:5001',
         changeOrigin: true,
         secure: false,
-      }
+      },
+      // NEW: proxy static uploads too
+      '/uploads': {
+        target: 'http://localhost:5001',
+        changeOrigin: true,
+        secure: false,
+      },
     }
   }
 })

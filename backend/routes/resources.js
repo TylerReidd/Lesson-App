@@ -6,7 +6,8 @@ import {
   uploadAssignment,
   getPrivateVideos,
   getPublicVideos,
-  uploadVideo
+  uploadVideo,
+  deleteAssignment
 } from '../controllers/resourceController.js';
 import { uploadPdf, uploadVideo as uploadVideoMW } from '../middleware/upload.js';
 
@@ -43,5 +44,11 @@ router.post(
   uploadVideoMW.single('file'),
   uploadVideo
 );
+
+router.delete(
+  '/assignments/:id',
+  isAuthenticated,
+  deleteAssignment
+)
 
 export default router;

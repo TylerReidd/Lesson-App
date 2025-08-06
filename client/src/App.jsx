@@ -17,7 +17,8 @@ import StudentVideos from './components/StudentVideos';
 import StudentAssignments from './components/StudentAssignments';
 import StudentQuestions from './components/StudentQuestions';
 import TeacherLayout from './components/TeacherLayout';
-
+import StudentDashboard from './pages/StudentDashboard';
+import StudentVideosTabs from './components/StudentVideosTabs';
 
 
 function App() {
@@ -52,7 +53,6 @@ function App() {
            </PrivateRoute>
           }
         >
-          <Route index element={<StudentQuestions />} />
           <Route path='videos' element={<StudentVideos />} />
           <Route path='assignments' element={<StudentAssignments/>} />
           <Route path='questions' element={<StudentQuestions />} />

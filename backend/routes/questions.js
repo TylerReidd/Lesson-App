@@ -1,6 +1,6 @@
 import express from 'express'
 import  {isAuthenticated, isStudent, isTeacher} from '../middleware/auth.js'
-import {postQuestion, getMyQuestions, getAllQuestions, respondToQuestion} from '../controllers/questionController.js'
+import {postQuestion, getMyQuestions, getAllQuestions, respondToQuestion, deleteQuestion} from '../controllers/questionController.js'
 
 const router = express.Router()
 
@@ -32,5 +32,8 @@ router.put(
   isTeacher, 
   respondToQuestion
   )
+
+
+  router.delete('/:id', isAuthenticated, isStudent, deleteQuestion)
 
 export default router

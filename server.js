@@ -52,7 +52,8 @@ app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', allowedOrigin); // Update for Render
   res.header('Access-Control-Allow-Credentials', 'true');
   res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type,Authorization');
+  res.header('Access-Control-Allow-Headers', 'Content-Type,Authorization,Range');
+  res.header('Access-Control-Expose-Headers', 'Content-Length,Accept-Ranges,Content-Range')
 
   if (req.method === 'OPTIONS') {
     return res.sendStatus(204);
@@ -62,7 +63,8 @@ app.use((req, res, next) => {
 
 
 // ------------------- Routes -------------------
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/uploads', express.static(path.join(__dirname, 'backend', 'uploads')));
+app.use('/api/uploads', express.static(path.join(__dirname, 'backend','uploads')))
 app.use('/api/uploads', uploadsRoutes);
 app.use('/api/questions', questionRoutes);
 app.use('/api/resources', resourceRoutes);

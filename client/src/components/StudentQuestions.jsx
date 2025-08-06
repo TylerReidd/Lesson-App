@@ -6,80 +6,123 @@ export default function StudentQuestions() {
   const {user} = useContext(AuthContext)
   const [questions, setQuestions] = useState([]);
   const [newQuestion, setNewQuestion] = useState("");
-
-  useEffect(() => {
-    const fetchQuestions = async () => {
-      try {
-        const res = await axios.get("/questions/");
-        setQuestions(res.data);
-      } catch (err) {
-        console.error("Failed to load questions", err);
-      }
-    };
-    fetchQuestions
-  }, [])
+  const [openId, setOpenId] = useState(null)
+  const [loading, setLoading] = useState(false)
 
 
-  // useEffect(() => {
-  //   fetchQuestions();
-  // }, []);
-
-  const handleAsk = async (e) => {
-    e.preventDefault();
-    if (!newQuestion.trim())  {
-      alert("please enter a question");
-      return
-    }
-
+  const fetchQuestions = async () => {
     try {
-      const res = await axios.post("/questions", { question: newQuestion, studentId: user?._id });
-      setQuestions((prev) => [...prev, res.data]);
-      setNewQuestion("")
-      alert("Question Submitted successfully")
+      const res = await axios.get("/questions/me", {withCredentials:true});
+      setQuestions(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
-      console.error("Failed to submit question", err);
-      alert("Could Not submit question. Please try again.")
+      console.error("Failed to load questions", err);
     }
   };
 
-  return (
-    <div className="container">
-      <div className="card">
-        <h1>Ask a Question</h1>
-        <form onSubmit={handleAsk} className="dashboard-section">
-          <div className="form-group">
-            <textarea
-              placeholder="Type your question..."
-              value={newQuestion}
-              onChange={(e) => setNewQuestion(e.target.value)}
-              className="question-textarea"
-            />
-          </div>
-          <button type="submit" className="button">
-            Submit Question
-          </button>
-        </form>
+  useEffect(() => {
+  fetchQuestions()
+}, [])
 
-        <h2 className="mt-4">Previous Questions</h2>
-        <ul className="video-list">
-          {Array.isArray(questions) && questions.length > 0 ? (
-            questions.map((q) => (
-              <li key={q._id}>
-              <p><strong>You: </strong>{q.question}</p>
-              {q.answer ?  (
-              <p style={{ color: "green" }}>
-                <strong>Teacher</strong> {q.answer}
-              </p>
-          ) : (
-            <p style={{ color: "gray" }}>Awaiting Teachers response...</p>
-          )}
-            </li>
-          ))
-          ) : (
-            <li>No questions Yet.</li>
-          )}
-        </ul>
-      </div>
-    </div>
-  );
-}
+
+
+  const handleAsk = async (e) => {
+    e.preventDefault();
+    if (!newQuestion.trim()) return;
+
+    try {
+      setLoading(true);
+      await axios.post("/questions", { text: newQuestion, withCredentials:true });
+      // setQuestions((prev) => [...prev, res.data]);
+      setNewQuestion("")
+      await fetchQuestions();
+    } catch (err) {
+      console.error("Failed to submit question", err);
+      alert("Could Not submit question. Please try again.")
+    } finally {
+      setLoading(false)
+    }
+  };
+
+
+  const handleDelete = async (id) => {
+    if(!window.confirm("Are you sure you want to do that?")) return; 
+    try {
+      await axios.delete(
+        `/questions/${id}`,
+        {withCredentials:true}
+      );
+      await fetchQuestions();
+    } catch (err) {
+        console.error("Failed to delete question", err)
+    }
+  }
+
+  
+  return (
+    <div className="questions-page">
+      <h1>Ask a Question</h1>
+      <form onSubmit={handleAsk} className="ask-form">
+          <textarea
+            rows={3}
+            placeholder="Type your question..."
+            value={newQuestion}
+            onChange={(e) => setNewQuestion(e.target.value)}
+          />
+        <button type="submit" disabled={loading} className="button">
+          {loading ? "Submitting..." : "Submit Question"}
+        </button>
+      </form>
+
+      <h2>Previous Questions</h2>
+      <div className="question-list">
+        {questions.length === 0 && <p>No questions yet.</p>}
+          {questions.map((q) => {
+            const id = q._id || q.id;
+            const isAnswered = Boolean(q.answer);
+            const questionText = q.text || q.question
+
+            return (
+              <div key={id} className={`q-card ${isAnswered ? 'answered' : "unanswered"}`}>
+                <div className="q-summary"
+                  onClick={() => setOpenId(openId === id ? null : id)}
+                >
+                  <h3 className="q-text">{questionText}</h3>
+                  <span className="badge">
+                    {isAnswered ? "Answered" : "Awaiting Response"}
+                  </span>
+                  <small className="ts">
+                    {new Date(q.createdAt).toLocaleString()}
+                  </small>
+                  <button className="delete-btn"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleDelete(id);
+                    }}
+                  >
+                     🗑️
+                  </button>
+                </div>
+
+                {openId === id && (
+                  <div className="thread">
+                    <div className="bubble student">
+                      <p>{questionText}</p>
+                      <small>{new Date(q.createdAt).toLocaleString()}</small>
+                    </div>
+                    {isAnswered && (
+                      <div className="bubble teacher">
+                        <p>{q.answer}</p>
+                        <small>
+                          {new Date(q.answeredAt || q.updatedAt).toLocaleString()}
+                        </small>
+                      </div>
+                    )}
+                  </div>
+                )}
+                </div>
+              )
+              })}
+              </div>
+            </div>
+            )
+          }
