@@ -3,12 +3,17 @@ import path from 'path'
 import fs from 'fs'
 import { fileURLToPath } from 'url'
 
+
+
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename);
 
 
 
-const UPLOADS_ROOT = path.join(__dirname, '../uploads')
+const UPLOADS_ROOT = process.env.NODE_ENV === 'production'
+? '/mnt/uploads'
+: path.join(__dirname, '../uploads');
+
 const PDF_DIR = path.join(UPLOADS_ROOT, 'pdfs')
 const VIDEO_DIR = path.join(UPLOADS_ROOT, 'videos')
 

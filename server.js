@@ -63,8 +63,9 @@ app.use((req, res, next) => {
 
 
 // ------------------- Routes -------------------
-app.use('/uploads', express.static(path.join(__dirname, 'backend', 'uploads')));
-app.use('/api/uploads', express.static(path.join(__dirname, 'backend','uploads')))
+// app.use('/uploads', express.static(path.join(__dirname, 'backend', 'uploads')));
+app.use('/uploads', express.static(path.join('/mnt/uploads')))
+// app.use('/api/uploads', express.static(path.join(__dirname, 'backend','uploads')))
 app.use('/api/uploads', uploadsRoutes);
 app.use('/api/questions', questionRoutes);
 app.use('/api/resources', resourceRoutes);
