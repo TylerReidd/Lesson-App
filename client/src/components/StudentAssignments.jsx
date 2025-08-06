@@ -46,6 +46,7 @@ export default function StudentAssignments() {
               href={a.url}
               target="_blank"
               rel="noopener"
+              download
               className="assignment-link"
             >
               <div className="assignment-icon">📄</div>

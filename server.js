@@ -13,6 +13,11 @@ import uploadsRoutes from './backend/routes/uploads.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+import fs from 'fs'
+console.log('→ uploads folder exists:', fs.existsSync(path.join(__dirname, 'backend', 'uploads')));
+console.log('→ contents:', fs.readdirSync(path.join(__dirname, 'backend', 'uploads')));
+
+
 
 const app = express();
 
