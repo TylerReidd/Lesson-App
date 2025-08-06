@@ -61,12 +61,8 @@ app.use((req, res, next) => {
   next();
 });
 
-const UPLOADS_ROOT = process.env.NODE_ENV === 'production'
-? '/mnt/uploads'
-: path.join(__dirname, 'backend', 'uploads')
-
 // ------------------- Routes -------------------
-app.use('/uploads', express.static(UPLOADS_ROOT))
+app.use('/uploads', express.static(path.join(__dirname, 'backend', 'uploads')))
 app.use('/api/uploads', uploadsRoutes);
 app.use('/api/questions', questionRoutes);
 app.use('/api/resources', resourceRoutes);
