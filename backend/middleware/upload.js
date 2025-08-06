@@ -14,7 +14,7 @@ const VIDEO_DIR = path.join(UPLOADS_ROOT, 'videos');
 
 // ONLY create folders when running locally
 if (process.env.NODE_ENV !== 'production') {
-  [UPLOADS_ROOT, PDF_DIR, VIDEO_DIR].forEach(dir => {
+  [PDF_DIR, VIDEO_DIR].forEach(dir => {
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
     }
