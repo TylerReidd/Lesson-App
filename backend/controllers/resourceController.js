@@ -1,5 +1,3 @@
-// controllers/resourceController.js
-import Pdf from '../models/Pdf.js';
 import Resource from '../models/Resource.js';
 
 // 📥 Get assignments for a student
@@ -10,11 +8,13 @@ export async function getAssignments(req, res, next) {
     : {type: 'assignment' ,recipient: req.user.id};
 
     const list = await Resource.find(query).sort('-createdAt');
+    const isProd = process.env.NODE_ENV === 'production';
+    const baseURL = isProd ? process.env.CLIENT_ORIGIN : "";
 
     res.json(list.map(r => ({
       id: r._id,
       filename: r.filename,
-      url: r.url,
+      url: `${baseURL}${r.url}`,
       uploadedAt: r.createdAt
     }))) 
   } catch (err) { next(err) }
@@ -56,12 +56,14 @@ export async function getPrivateVideos(req, res, next) {
       type:       'video',
       visibility: 'private'
     }).sort('-createdAt');
+    
+    const isProd = process.env.NODE_ENV === 'production';
+    const baseURL = isProd ? process.env.CLIENT_ORIGIN : ""
 
-    const host = `${req.protocol}://${req.get('host')}`;
     const out  = list.map(r => ({
       id:           r._id,
       filename: r.filename,
-      url:          r.url,
+      url:          `${baseURL}${r.url}`,
       uploadedAt:   r.createdAt
     }));
     res.json({ videos: out });
