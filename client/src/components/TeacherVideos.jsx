@@ -35,7 +35,7 @@ export default function TeacherVideos() {
       formData.append("file", videoFile);
       formData.append("recipient", student._id);
 
-      const res = await axios.post("/resources/upload", formData, {
+      const res = await axios.post("/resources/video/upload", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
