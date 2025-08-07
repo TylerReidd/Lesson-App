@@ -13,13 +13,18 @@ const PDF_DIR   = path.join(UPLOADS_ROOT, 'pdfs');
 const VIDEO_DIR = path.join(UPLOADS_ROOT, 'videos');
 
 // ONLY create folders when running locally
-if (process.env.NODE_ENV !== 'production') {
+
   [PDF_DIR, VIDEO_DIR].forEach(dir => {
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
+    if(!fs.existsSync(dir)){
+    try {
+        fs.mkdirSync(dir, {recursive: true})
+        console.log(`Created upload dir: ${dir}`)
+      } catch (err) {
+        console.warn(`Could not create ${dir}`, err.message)
+      }
     }
   });
-}
+
 
 // Storage configs
 const videoStorage = multer.diskStorage({
@@ -32,10 +37,9 @@ const videoStorage = multer.diskStorage({
 });
 const pdfStorage = multer.diskStorage({
   destination: (_req, _file, cb) => cb(null, PDF_DIR),
-  
   filename:    (_req, file, cb) => {
     const name = `${Date.now()}-${file.originalname}`;
-    onsole.log('🛑 MULTER saving file to:', PDF_DIR, name);
+    console.log('🛑 MULTER saving file to:', PDF_DIR, name);
     cb(null,name )}
 });
 
