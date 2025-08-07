@@ -20,7 +20,7 @@ const __dirname = path.dirname(__filename);
 // Uploads directory (persistent or local)
 const UPLOADS_DIR =
   process.env.NODE_ENV === 'production'
-    ? process.env.PERSISTENT_UPLOADS_PATH || '/opt/render/project/src/backend/uploads'
+    ? process.env.PERSISTENT_UPLOADS_PATH || '/opt/render/uploads'
     : path.join(__dirname, 'backend', 'uploads');
 
 // Ensure uploads directory exists
