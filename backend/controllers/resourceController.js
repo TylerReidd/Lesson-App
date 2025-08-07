@@ -1,53 +1,51 @@
 import Resource from '../models/Resource.js';
+import { fileUrl, ensureAbsolute } from '../utils/urls.js';
 
 // 📥 Get assignments for a student
 export async function getAssignments(req, res, next) {
   try {
     const query = (req.user.role === 'teacher')
-    ? {type: 'assignment', owner: req.user.id}
-    : {type: 'assignment' ,recipient: req.user.id};
+      ? { type: 'assignment', owner: req.user.id }
+      : { type: 'assignment', recipient: req.user.id };
 
     const list = await Resource.find(query).sort('-createdAt');
-    const isProd = process.env.NODE_ENV === 'production';
-    // const baseURL = isProd ? `https://${process.env.API_HOST}` : `${req.protocol}://${req.get('host')}`
-
-
     const assignments = list.map(r => ({
-      id: r._id,
-      filename: r.filename,
-      url: r.url,
+      id:         r._id,
+      filename:   r.filename,                 // display name (originalname)
+      url:        ensureAbsolute(r.url),      // make absolute if needed
       uploadedAt: r.createdAt
-    }))
-    res.json({assignments})
-  } catch (err) { next(err) }
+    }));
+    res.json({ assignments });
+  } catch (err) { next(err); }
 }
 
 // 📤 Upload a PDF assignment
 export async function uploadAssignment(req, res, next) {
   try {
-    const file      = req.file;
+    const file = req.file;
     const { recipient } = req.body;
     if (!file)      return res.status(400).json({ message: "No PDF provided" });
     if (!recipient) return res.status(400).json({ message: "No recipient" });
 
-    const url = `/uploads/${file.filename}`;
+    // Absolute URL based on API_HOST
+    const url = fileUrl(file.filename);
 
     const assignment = await Resource.create({
       owner:      req.user.id,
       recipient,
-      filename:   file.originalname,
-      url,
+      filename:   file.originalname,   // keep human-friendly display name
+      url,                             // store absolute URL
       type:       'assignment',
       visibility: 'private'
     });
 
     return res.status(201).json({
-      id:           assignment._id,
-      filename: assignment.filename,
-      url:          `${req.protocol}://${req.get('host')}${assignment.url}`,
-      uploadedAt:   assignment.createdAt
+      id:         assignment._id,
+      filename:   assignment.filename,
+      url:        assignment.url,      // already absolute
+      uploadedAt: assignment.createdAt
     });
-  } catch (err) { next(err) }
+  } catch (err) { next(err); }
 }
 
 // 🎥 Get private videos
@@ -59,44 +57,46 @@ export async function getPrivateVideos(req, res, next) {
       visibility: 'private'
     }).sort('-createdAt');
 
-    console.log('getPrivateVideos returning', list.map(r=>r.url))
-
-    const out  = list.map(r => ({
-      id:           r._id,
-      filename: r.filename,
-      url:          r.url,
-      uploadedAt:   r.createdAt
+    const out = list.map(r => ({
+      id:         r._id,
+      filename:   r.filename,
+      url:        ensureAbsolute(r.url),
+      uploadedAt: r.createdAt
     }));
 
-    console.log("getPrivateVideos responding with", out)
     res.json({ videos: out });
-  } catch (err) { next(err) }
+  } catch (err) { next(err); }
 }
 
 // 🎥 Upload a private video
 export async function uploadVideo(req, res, next) {
   try {
-    const file      = req.file;
+    const file = req.file;
     const { recipient } = req.body;
     if (!file)      return res.status(400).json({ message: "No video provided" });
     if (!recipient) return res.status(400).json({ message: "No recipient" });
 
-    const url = `/uploads/${file.filename}`;
+    // Absolute URL
+    const url = fileUrl(file.filename);
+
     const video = await Resource.create({
       owner:      req.user.id,
       recipient,
-      filename:   file.originalname,
-      url,
+      filename:   file.originalname,   // display name
+      url,                             // absolute
       type:       'video',
       visibility: 'private'
     });
-    res.status(201).json({ video: {
-      id: video._id,
-      filename: video.filename,
-      url,
-      uploadedAt: video.createdAt
-    }})
-  } catch (err) { next(err) }
+
+    res.status(201).json({
+      video: {
+        id:         video._id,
+        filename:   video.filename,
+        url:        video.url,         // absolute
+        uploadedAt: video.createdAt
+      }
+    });
+  } catch (err) { next(err); }
 }
 
 // 🎥 Get public videos
@@ -104,43 +104,47 @@ export async function getPublicVideos(_req, res, next) {
   try {
     const list = await Resource.find({ type: 'video', visibility: 'public' }).sort('-createdAt');
     const out  = list.map(r => ({
-      id:           r._id,
-      filename: r.filename,
-      url:          r.url,
-      uploadedAt:   r.createdAt
+      id:         r._id,
+      filename:   r.filename,
+      url:        ensureAbsolute(r.url),
+      uploadedAt: r.createdAt
     }));
     res.json({ videos: out });
-  } catch (err) { next(err) }
+  } catch (err) { next(err); }
 }
 
-export const deleteAssignment = async (req,res) => {
+export const deleteAssignment = async (req, res) => {
   try {
     const { id } = req.params;
+    const assignment = await Resource.findById(id);
+    if (!assignment) return res.status(404).json({ error: "not found" });
 
-    const assignment = await Resource.findById(id)
-    if(!assignment) return res.status(404).json({error: "not found"})
+    // Optional physical delete (requires extracting filename from URL)
+    // const fname = new URL(assignment.url).pathname.replace(/^\/uploads\//, '');
+    // fs.unlink(path.join(UPLOADS_DIR, fname), () => {});
+
     await Resource.findByIdAndDelete(id);
-    return res.json({message: 'Deleted '})
-
+    return res.json({ message: 'Deleted' });
   } catch (err) {
-    return res.status(500).json({error: "server error"})
+    return res.status(500).json({ error: "server error" });
   }
-}
+};
 
-
-export const deleteVideo = async (req,res, next) => {
+export const deleteVideo = async (req, res, next) => {
   try {
-    const {id} = req.params;
+    const { id } = req.params;
     const video = await Resource.findById(id);
-
-    if(!video || video.type !== 'video') {
-      return res.status(404).json({error: 'Video not found'})
+    if (!video || video.type !== 'video') {
+      return res.status(404).json({ error: 'Video not found' });
     }
 
-    await Resource.findByIdAndDelete(id)
+    // Optional physical delete:
+    // const fname = new URL(video.url).pathname.replace(/^\/uploads\//, '');
+    // fs.unlink(path.join(UPLOADS_DIR, fname), () => {});
 
-    return res.json({message: "Video deleted"})
+    await Resource.findByIdAndDelete(id);
+    return res.json({ message: "Video deleted" });
   } catch (err) {
-    next(err)
+    next(err);
   }
-}
+};

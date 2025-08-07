@@ -11,7 +11,14 @@ export default function StudentVideos() {
     axios
       .get("/resources/videos/private", { withCredentials: true })
       .then(res => {
-        setVideos(Array.isArray(res.data.videos) ? res.data.videos : []);
+        // setVideos(Array.isArray(res.data.videos) ? res.data.videos : []);
+        const raw = Array.isArray(res.data.videos) ? res.data.videos : []
+        setVideos(raw.map(v => ({
+          id: v._id || v.id,
+          url: v.url,
+          filename: v.filename,
+          uploadedAt: v.uploadedAt
+        })))
         setErr("")
       })
       .catch(e => {
@@ -40,7 +47,12 @@ export default function StudentVideos() {
   return (
     <div className="container video-page">
       <h1>My Videos</h1>
-      <StudentVideosTabs videos={videos} onDelete={handleDelete} />
+      {videos?.length ? (
+        <StudentVideosTabs videos={videos} onDelete={handleDelete} />
+
+      ): 
+        <p>No videos yet.</p>
+      }
     </div>
   );
 }

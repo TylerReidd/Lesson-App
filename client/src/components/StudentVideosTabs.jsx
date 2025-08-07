@@ -29,7 +29,7 @@ export default function StudentVideosTabs({ videos, onDelete}) {
         {videos.map((v, i) => (
           <button
             key={v.id || i}
-            className={`tab-button${activeIdx === i ? "active" : ""}`}
+            className={`tab-button ${activeIdx === i ? "active" : ""}`}
             onClick={() => setActiveIdx(i)}
           >
             {v.filename || `Video ${i + 1}`}
@@ -41,11 +41,13 @@ export default function StudentVideosTabs({ videos, onDelete}) {
       <div className="tab-panel">
         <video
           controls
+          preload="metadata"
+          playsInline
           src={vid.url}
           className="video-player"
         />
         <p>Uploaded: {vid.uploadedAt ? new Date(vid.uploadedAt).toLocaleDateString() : "Unknown"}</p>
-        <button onClick={() => onDelete(vid.id)}>Delete Video</button>
+        <button onClick={() => onDelete(vid.id || vid._id)}>Delete Video</button>
       </div>
     </div>
   );

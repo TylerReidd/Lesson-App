@@ -31,7 +31,7 @@ export default function StudentQuestions() {
 
     try {
       setLoading(true);
-      await axios.post("/questions", { text: newQuestion, withCredentials:true });
+      await axios.post("/questions", { text: newQuestion}, {withCredentials:true });
       // setQuestions((prev) => [...prev, res.data]);
       setNewQuestion("")
       await fetchQuestions();

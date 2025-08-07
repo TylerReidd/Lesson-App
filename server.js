@@ -8,7 +8,8 @@ import express from 'express';
 import cookieParser from 'cookie-parser';
 import mongoose from 'mongoose';
 import fs from 'fs';
-
+import mime from 'mime-types'
+import { UPLOADS_DIR } from './backend/config/paths.js';
 import authRoutes from './backend/routes/auth.js';
 import resourceRoutes from './backend/routes/resources.js';
 import questionRoutes from './backend/routes/questions.js';
@@ -18,10 +19,10 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Uploads directory (persistent or local)
-const UPLOADS_DIR =
-  process.env.NODE_ENV === 'production'
-    ? process.env.PERSISTENT_UPLOADS_PATH || '/opt/render/uploads'
-    : path.join(__dirname, 'backend', 'uploads');
+// const UPLOADS_DIR =
+//   process.env.NODE_ENV === 'production'
+//     ? process.env.PERSISTENT_UPLOADS_PATH || '/opt/render/uploads'
+//     : path.join(__dirname, 'backend', 'uploads');
 
 // Ensure uploads directory exists
 if (!fs.existsSync(UPLOADS_DIR)) {
@@ -93,6 +94,47 @@ app.use((req, res, next) => {
   if (req.method === 'OPTIONS') return res.sendStatus(204);
   next();
 });
+
+app.get('/uploads/:filename', (req,res) => {
+  const requested = path.normalize(req.params.filename).replace(/^(\.\.(\/|\\|$))+/, "")
+  const filePath = path.join(UPLOADS_DIR, requested);
+
+  if(!fs.existsSync(filePath)) return res.sendStatus(404);
+
+  const type = mime.lookup(filePath) || 'application/octet-stream';
+  const stat = fs.statSync(filePath)
+  const range = req.headers.range;
+  const isVideo = String(type).startsWith('video/');
+
+  if(!isVideo || !range) {
+    res.writeHead(200, {
+      "Content-Type": type,
+      "Content-Length": stat.size,
+      "Accept-Ranges": "bytes",
+      "Cache-Control": "public, max-age=2592000, immutable"
+    })
+    return fs.createReadStream(filePath).pipe(res)
+  }
+
+  const [startStr, endStr] = range.replace(/bytes=/, '').split("-")
+  const start = parseInt(startStr, 10);
+  const end = endStr ? parseInt(endStr,10) : stat.size - 1
+
+  if (Number.isNaN(start) || start < 0 || start >= stat.size) {
+    return res.status(416).set('Content-Range', `bytes */${stat.size}`).end();
+  }
+  if (Number.isNaN(end) || end < start) end = Math.min(start + 1_000_000 - 1, stat.size - 1)
+
+  const chunkSize = end - start + 1
+  res.writeHead(206, {
+    "Content-Range": `bytes ${start}-${end}/${stat.size}`,
+    "Accept-Ranges": "bytes",
+    "Content-Length": chunkSize,
+    "Content-Type": type,
+    "Cache-Control": "public, max-age=2592000, immutable"
+  })
+  fs.createReadStream(filePath, {start, end}).pipe(res)
+})
 
 // Serve uploads as static files
 // Debug static file requests
