@@ -17,26 +17,37 @@ import questionRoutes from './backend/routes/questions.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Uploads directories
-const UPLOADS_DIR = path.join(__dirname, 'backend', 'uploads');
-const OLD_VIDEOS_DIR = path.join(UPLOADS_DIR, 'videos');
+// Uploads directory (persistent or local)
+const UPLOADS_DIR =
+  process.env.NODE_ENV === 'production'
+    ? process.env.PERSISTENT_UPLOADS_PATH || '/opt/render/project/src/backend/uploads'
+    : path.join(__dirname, 'backend', 'uploads');
 
-// 1) Ensure uploads directory exists
+// Ensure uploads directory exists
 if (!fs.existsSync(UPLOADS_DIR)) {
   fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 }
 
-// 2) Migrate old videos if folder exists
+// Migrate old videos subfolder if present
+const OLD_VIDEOS_DIR = path.join(UPLOADS_DIR, 'videos');
 if (fs.existsSync(OLD_VIDEOS_DIR)) {
-  console.log(`Migrating ${OLD_VIDEOS_DIR} into ${UPLOADS_DIR}`);
+  console.log(`Migrating videos from ${OLD_VIDEOS_DIR} into ${UPLOADS_DIR}`);
   for (const file of fs.readdirSync(OLD_VIDEOS_DIR)) {
-    fs.renameSync(
-      path.join(OLD_VIDEOS_DIR, file),
-      path.join(UPLOADS_DIR, file)
-    );
+    fs.renameSync(path.join(OLD_VIDEOS_DIR, file), path.join(UPLOADS_DIR, file));
   }
   fs.rmdirSync(OLD_VIDEOS_DIR);
-  console.log('Migration complete. Uploads now contain:', fs.readdirSync(UPLOADS_DIR));
+  console.log('Video migration complete. Uploads now contain:', fs.readdirSync(UPLOADS_DIR));
+}
+
+// Migrate old pdfs subfolder if present
+const OLD_PDFS_DIR = path.join(UPLOADS_DIR, 'pdfs');
+if (fs.existsSync(OLD_PDFS_DIR)) {
+  console.log(`Migrating PDFs from ${OLD_PDFS_DIR} into ${UPLOADS_DIR}`);
+  for (const file of fs.readdirSync(OLD_PDFS_DIR)) {
+    fs.renameSync(path.join(OLD_PDFS_DIR, file), path.join(UPLOADS_DIR, file));
+  }
+  fs.rmdirSync(OLD_PDFS_DIR);
+  console.log('PDF migration complete. Uploads now contain:', fs.readdirSync(UPLOADS_DIR));
 }
 
 // Initialize Express
@@ -50,27 +61,29 @@ if (!MONGO_URI) {
   process.exit(1);
 }
 
-mongoose.connect(MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-.then(() => {
-  console.log('✅ MongoDB connected');
-  app.listen(PORT, () => console.log(`🚀 Server listening on port ${PORT}`));
-})
-.catch(err => {
-  console.error('❌ MongoDB connection error:', err);
-  process.exit(1);
-});
+mongoose
+  .connect(MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => {
+    console.log('✅ MongoDB connected');
+    app.listen(PORT, () => console.log(`🚀 Server listening on port ${PORT}`));
+  })
+  .catch((err) => {
+    console.error('❌ MongoDB connection error:', err);
+    process.exit(1);
+  });
 
 // Middleware
 app.use(express.json());
 app.use(cookieParser());
 
 // CORS configuration
-const CLIENT_ORIGIN = process.env.NODE_ENV === 'production'
-  ? process.env.CLIENT_ORIGIN
-  : 'http://localhost:5173';
+const CLIENT_ORIGIN =
+  process.env.NODE_ENV === 'production'
+    ? process.env.CLIENT_ORIGIN
+    : 'http://localhost:5173';
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', CLIENT_ORIGIN);
   res.header('Access-Control-Allow-Credentials', 'true');
@@ -82,7 +95,11 @@ app.use((req, res, next) => {
 });
 
 // Serve uploads as static files
-if(process.env.NODE_ENV !== 'production'){
+// Debug static file requests
+app.use('/uploads', (req, res, next) => {
+  console.log(`[STATIC DEBUG] ${req.method} ${req.originalUrl}`);
+  next();
+});
 app.use(
   '/uploads',
   express.static(UPLOADS_DIR, {
@@ -92,10 +109,10 @@ app.use(
     setHeaders(res) {
       res.setHeader('Accept-Ranges', 'bytes');
       res.setHeader('Cache-Control', 'no-cache');
-    }
+    },
   })
 );
-}
+
 // API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/resources', resourceRoutes);
