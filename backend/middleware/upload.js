@@ -12,7 +12,6 @@ const UPLOADS_ROOT = path.join(__dirname, '../uploads');
 const PDF_DIR   = path.join(UPLOADS_ROOT, 'pdfs');
 const VIDEO_DIR = path.join(UPLOADS_ROOT, 'videos');
 
-// ONLY create folders when running locally
 
   [PDF_DIR, VIDEO_DIR].forEach(dir => {
     if(!fs.existsSync(dir)){
