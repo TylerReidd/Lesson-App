@@ -75,28 +75,28 @@ app.use((req, res, next) => {
 });
 
 // ------------------- Routes -------------------
-const UPLOADS_PATH = path.join(__dirname, 'backend', 'uploads')
+// const UPLOADS_PATH = path.join(__dirname, 'backend', 'uploads')
 
-app.use('/uploads',
-(req,res,next) => {
-  console.log(`[STATIC IN ] ${req.method} ${req.originalUrl}`)
-  next()
-},
+// app.use('/uploads',
+// (req,res,next) => {
+//   console.log(`[STATIC IN ] ${req.method} ${req.originalUrl}`)
+//   next()
+// },
 
-express.static(UPLOADS_PATH, {
-  etag: false,
-  lastModified: false,
-  maxAge: 0,
-  setHeaders: (res) => {
-    res.setHeader('Accept-Ranges', 'bytes')
-    res.setHeader('Cache-Control', 'no-cache')
-  }
-}),
+// express.static(UPLOADS_PATH, {
+//   etag: false,
+//   lastModified: false,
+//   maxAge: 0,
+//   setHeaders: (res) => {
+//     res.setHeader('Accept-Ranges', 'bytes')
+//     res.setHeader('Cache-Control', 'no-cache')
+//   }
+// }),
 
-  (req,res,next) => {
-    console.log(`[STATIC MISS] ${req.method} ${re.originalUrl}`)
-    next()
-  })
+//   (req,res,next) => {
+//     console.log(`[STATIC MISS] ${req.method} ${req.originalUrl}`)
+//     next()
+//   })
 
 app.use(
   '/uploads',

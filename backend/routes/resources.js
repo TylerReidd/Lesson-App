@@ -5,10 +5,11 @@ import { isAuthenticated, isStudent, isTeacher } from '../middleware/auth.js';
 import {
   getAssignments,
   getPrivateVideos,
-  getPublicVideos,
-  deleteAssignment
+  deleteAssignment,
+  deleteVideo
 } from '../controllers/resourceController.js';
 import { uploadMiddleware } from '../middleware/upload.js';
+import User from '../models/User.js';
 
 
 const router = express.Router();
@@ -20,11 +21,16 @@ router.get(
   getAssignments
 );
 
+router.get(
+  '/videos/private',
+  isAuthenticated,
+  getPrivateVideos
+)
+
 
 router.get(
   '/videos',
   isAuthenticated,
-  isTeacher,
   async( req,res,next) => {
     try {
       const list = await Resource.find({
@@ -49,10 +55,21 @@ router.post(
   uploadMiddleware.single('file'),
   async (req, res, next) => {
     try {
-      const { file }      = req;
-      const { recipient } = req.body;
-      if (!file)      return res.status(400).json({ message: "No file provided" });
-      if (!recipient) return res.status(400).json({ message: "No recipient" });
+      const file     = req.file;
+      let studentId = req.body.recipient;
+      const recipientEmail = req.body.recipientEmail;
+      if(!file) {
+        return res.status(400).json({message: "No file provided"})
+      }
+
+      if(!studentId && recipientEmail) {
+        const student = await User.findOne({email: recipientEmail, role: 'student'})
+        if(!student) return res.status(404).json({message: "student not found"})
+        studentId = student._id.toString()
+      }
+      if(!studentId) {
+        return res.status(400).json({message: "No file or recipient"})
+      }
 
       // build URL relative to /uploads
       const url = `/uploads/${file.filename}`;
@@ -60,18 +77,23 @@ router.post(
 
       const resource = await Resource.create({
         owner:      req.user.id,
-        recipient,
+        recipient:  studentId,
         filename:   file.originalname,
         url,
         type,
         visibility: 'private'
       });
 
+      console.log('upload handler body=',req.body, 'file=',req.file && req.file.filename)
+
       res.status(201).json({
-        id:         resource._id,
-        filename:   resource.filename,
-        url:        resource.url,
-        uploadedAt: resource.createdAt
+        message: "Upload Successful",
+        video: {
+          id:         resource._id,
+          filename:   resource.filename,
+          url:        resource.url,
+          uploadedAt: resource.createdAt
+        }
       });
     } catch (err) {
       next(err);
@@ -82,6 +104,12 @@ router.delete(
   '/assignments/:id',
   isAuthenticated,
   deleteAssignment
+)
+
+router.delete(
+  '/videos/:id',
+  isAuthenticated,
+  deleteVideo
 )
 
 export default router;

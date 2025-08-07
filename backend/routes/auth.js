@@ -11,7 +11,15 @@ import { isAuthenticated, isStudent } from '../middleware/auth.js';
 const router = express.Router();
 
 // PUBLIC ROUTES
-router.get('/user', getUserByEmail)
+router.get('/user', isAuthenticated, async (req,res) => {
+  const {email} = req.query;
+  if(!email) {
+    return res.status(400).json({error: 'Email query required'})
+  }
+  const u = await User.findOne({email, role: 'student'});
+  if(!u) return res.status(404).end()
+  res.json({_id: u._id, name: u.name, email: u.email})
+})
 
 
 router.post('/login', async (req, res) => {

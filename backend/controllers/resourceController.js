@@ -9,14 +9,16 @@ export async function getAssignments(req, res, next) {
 
     const list = await Resource.find(query).sort('-createdAt');
     const isProd = process.env.NODE_ENV === 'production';
-    const baseURL = isProd ? `https://${process.env.API_HOST}` : ""
+    // const baseURL = isProd ? `https://${process.env.API_HOST}` : `${req.protocol}://${req.get('host')}`
 
-    res.json(list.map(r => ({
+    // const host = `${req.protocol}://${req.get('host')}`
+    const assignments = list.map(r => ({
       id: r._id,
       filename: r.filename,
       url: r.url,
       uploadedAt: r.createdAt
-    }))) 
+    }))
+    res.json({assignments})
   } catch (err) { next(err) }
 }
 
@@ -28,7 +30,7 @@ export async function uploadAssignment(req, res, next) {
     if (!file)      return res.status(400).json({ message: "No PDF provided" });
     if (!recipient) return res.status(400).json({ message: "No recipient" });
 
-    const url = `/uploads/pdfs/${file.filename}`;
+    const url = `/uploads/${file.filename}`;
 
     const assignment = await Resource.create({
       owner:      req.user.id,
@@ -56,16 +58,19 @@ export async function getPrivateVideos(req, res, next) {
       type:       'video',
       visibility: 'private'
     }).sort('-createdAt');
+
+    console.log('getPrivateVideos returning', list.map(r=>r.url))
     
-    // const isProd = process.env.NODE_ENV === 'production';
-    // const baseURL = isProd ? `https://${process.env.API_HOST}` : ""
+    const host = `${req.protocol}://${req.get('host')}`
 
     const out  = list.map(r => ({
       id:           r._id,
       filename: r.filename,
-      url:          r.url,
+      url:          `${host}${r.url}`,
       uploadedAt:   r.createdAt
     }));
+
+    console.log("getPrivateVideos responding with", out)
     res.json({ videos: out });
   } catch (err) { next(err) }
 }
@@ -117,5 +122,23 @@ export const deleteAssignment = async (req,res) => {
 
   } catch (err) {
     return res.status(500).json({error: "server error"})
+  }
+}
+
+
+export const deleteVideo = async (req,res, next) => {
+  try {
+    const {id} = req.params;
+    const video = await Resource.findById(id);
+
+    if(!video || video.type !== 'video') {
+      return res.status(404).json({error: 'Video not found'})
+    }
+
+    await Resource.findByIdAndDelete(id)
+
+    return res.json({message: "Video deleted"})
+  } catch (err) {
+    next(err)
   }
 }

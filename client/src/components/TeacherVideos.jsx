@@ -30,16 +30,20 @@ export default function TeacherVideos() {
         '/auth/user',
         {params: {email: videoEmail}, withCredentials:true}
       )
+
+      console.log("handleVideoUpload: student=", student)
    
       const formData = new FormData();
       formData.append("file", videoFile);
       formData.append("recipient", student._id);
 
-      const res = await axios.post("/resources/video/upload", formData, {
+      console.log('handleVideoUpload: formData recipient=', formData.get('recipient'))
+
+      const res = await axios.post("/resources/upload", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
-      setVideoMsg(res.data.message);
+      setVideoMsg(res.data.message || 'Upload Complete');
       setVideoErr("");
       setVideoFile(null);
       setVideoEmail("");
@@ -54,10 +58,11 @@ export default function TeacherVideos() {
     if (!window.confirm("Are you sure you want to delete this video?")) return;
 
     try {
-      await axios.delete(`/resources/videos/${id}`);
+      await axios.delete(`/resources/videos/${id}`, {withCredentials:true});
       fetchVideos();
     } catch (err) {
       console.error("Failed to delete video", err);
+      setVideoErr('Could not delete video')
     }
   };
 
@@ -101,14 +106,14 @@ export default function TeacherVideos() {
             {Array.isArray(videos) && videos.length > 0 ? (
 
               videos.map((video) => (
-              <li key={video._id}>
+              <li key={video.id}>
                 <span className="video-title">{video.filename}</span>
                 <div>
                   <a href={video.url} target="_blank" rel="noopener noreferrer">
                     View
                   </a>
                   <button
-                    onClick={() => handleDelete(video._id)}
+                    onClick={() => handleDelete(video.id)}
                     className="button-logout"
                     style={{ padding: "4px 8px", marginLeft: "8px" }}
                   >

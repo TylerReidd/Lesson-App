@@ -10,8 +10,8 @@ export default function TeacherAssignments() {
 
   const fetchAssignments = async () => {
     try {
-      const res = await axios.get("/resources/assignments");
-      setAssignments(res.data);
+      const res = await axios.get("/resources/assignments", {withCredentials:true});
+      setAssignments(res.data.assignments);
     } catch (err) {
       console.error("Failed to load assignments", err);
     }

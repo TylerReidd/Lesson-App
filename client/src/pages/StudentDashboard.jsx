@@ -104,7 +104,7 @@ export default function StudentDashboard({ onLogout }) {
               {Array.isArray(assignments) && assignments.length > 0 ? (
                 assignments.map((f) => (
                 <li key={f.id}>
-                  <a href={f.url} target="_blank" rel="noopener">
+                  <a href={f.url} target="_blank" rel="noopener noreferrer">
                     {f.filename}
                   </a>
                   <span className="text-sm text-gray-500 ml-2">
