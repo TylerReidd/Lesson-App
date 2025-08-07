@@ -11,7 +11,7 @@ export async function getAssignments(req, res, next) {
     const isProd = process.env.NODE_ENV === 'production';
     // const baseURL = isProd ? `https://${process.env.API_HOST}` : `${req.protocol}://${req.get('host')}`
 
-    // const host = `${req.protocol}://${req.get('host')}`
+
     const assignments = list.map(r => ({
       id: r._id,
       filename: r.filename,
@@ -66,7 +66,7 @@ export async function getPrivateVideos(req, res, next) {
     const out  = list.map(r => ({
       id:           r._id,
       filename: r.filename,
-      url:          `${host}${r.url}`,
+      url:          r.url,
       uploadedAt:   r.createdAt
     }));
 
