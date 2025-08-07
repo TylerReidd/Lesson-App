@@ -82,6 +82,7 @@ app.use((req, res, next) => {
 });
 
 // Serve uploads as static files
+if(process.env.NODE_ENV !== 'production'){
 app.use(
   '/uploads',
   express.static(UPLOADS_DIR, {
@@ -94,7 +95,7 @@ app.use(
     }
   })
 );
-
+}
 // API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/resources', resourceRoutes);
