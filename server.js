@@ -8,7 +8,7 @@ import mongoose from 'mongoose';
 import authRoutes from './backend/routes/auth.js';
 import resourceRoutes from './backend/routes/resources.js';
 import questionRoutes from './backend/routes/questions.js';
-import uploadsRoutes from './backend/routes/uploads.js';
+
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -97,7 +97,7 @@ express.static(UPLOADS_PATH, {
     console.log(`[STATIC MISS] ${req.method} ${re.originalUrl}`)
     next()
   })
-  
+
 app.use(
   '/uploads',
   express.static(path.join(__dirname, 'backend', 'uploads'), {
@@ -105,9 +105,7 @@ app.use(
     lastModified: false,  
     maxAge: 0,            
     setHeaders: (res) => {
-
       res.setHeader('Accept-Ranges', 'bytes');
-
       res.setHeader('Cache-Control', 'no-cache');
     }
   })
@@ -117,9 +115,7 @@ app.use(
 app.use('/api/questions', questionRoutes);
 app.use('/api/resources', resourceRoutes);
 app.use('/api/auth', authRoutes);
-// app.use('/uploads', express.static(path.join(__dirname, 'backend', 'uploads')));
-// app.use('/uploads', express.static(path.join('/mnt/uploads')))
-// app.use('/api/uploads', express.static(path.join(__dirname, 'backend','uploads')))
+
 
 // ------------------- Serve React -------------------
 const clientDistPath = path.join(__dirname, 'client', 'dist');

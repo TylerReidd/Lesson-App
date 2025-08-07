@@ -35,7 +35,7 @@ export default function TeacherAssignments() {
     formData.append("recipient", student._id);
 
     try {
-      const res = await axios.post("/resources/assignments/upload", formData, {
+      const res = await axios.post("/resources/upload", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 

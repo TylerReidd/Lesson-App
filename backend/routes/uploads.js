@@ -1,5 +1,5 @@
 import express from 'express'
-import { uploadVideo, uploadPdf } from '../middleware/upload.js';
+// import { upload } from '../middleware/upload.js';
 import Resource from '../models/Resource.js';
 import User from '../models/User.js';
 import Video from '../models/Video.js';

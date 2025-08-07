@@ -30,13 +30,13 @@ export default function TeacherVideos() {
         '/auth/user',
         {params: {email: videoEmail}, withCredentials:true}
       )
-      // const studentId = userRes.data._id;
+      const studentId = userRes.data._id;
 
       const formData = new FormData();
       formData.append("file", videoFile);
-      formData.append("recipient", student._id);
+      formData.append("recipient", studentId);
 
-      const res = await axios.post("/resources/videos/upload", formData, {
+      const res = await axios.post("/resources/upload", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 

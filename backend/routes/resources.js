@@ -4,13 +4,12 @@ import Resource from '../models/Resource.js';
 import { isAuthenticated, isStudent, isTeacher } from '../middleware/auth.js';
 import {
   getAssignments,
-  uploadAssignment,
   getPrivateVideos,
   getPublicVideos,
-  uploadVideo,
   deleteAssignment
 } from '../controllers/resourceController.js';
-import { uploadPdf, uploadVideo as uploadVideoMW } from '../middleware/upload.js';
+import { uploadMiddleware } from '../middleware/upload.js';
+
 
 const router = express.Router();
 
@@ -18,27 +17,10 @@ const router = express.Router();
 router.get(
   '/assignments',
   isAuthenticated, 
-  // isStudent,
-
   getAssignments
 );
-router.post(
-  '/assignments/upload',
-  isAuthenticated, isTeacher,
-  uploadPdf.single('file'),
-  uploadAssignment
-);
 
-// Video routes
-router.get(
-  '/videos/private',
-  isAuthenticated, isStudent,
-  getPrivateVideos
-);
-router.get(
-  '/videos/public',
-  getPublicVideos
-);
+
 router.get(
   '/videos',
   isAuthenticated,
@@ -60,13 +42,42 @@ router.get(
     }
   }
 )
-router.post(
-  '/videos/upload',
-  isAuthenticated, isTeacher,
-  uploadVideoMW.single('file'),
-  uploadVideo
-);
 
+router.post(
+  '/upload',
+  isAuthenticated, isTeacher,
+  uploadMiddleware.single('file'),
+  async (req, res, next) => {
+    try {
+      const { file }      = req;
+      const { recipient } = req.body;
+      if (!file)      return res.status(400).json({ message: "No file provided" });
+      if (!recipient) return res.status(400).json({ message: "No recipient" });
+
+      // build URL relative to /uploads
+      const url = `/uploads/${file.filename}`;
+      const type = file.mimetype.startsWith('video/') ? 'video' : 'assignment';
+
+      const resource = await Resource.create({
+        owner:      req.user.id,
+        recipient,
+        filename:   file.originalname,
+        url,
+        type,
+        visibility: 'private'
+      });
+
+      res.status(201).json({
+        id:         resource._id,
+        filename:   resource.filename,
+        url:        resource.url,
+        uploadedAt: resource.createdAt
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
 router.delete(
   '/assignments/:id',
   isAuthenticated,

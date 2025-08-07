@@ -4,53 +4,37 @@ import path   from 'path';
 import fs     from 'fs';
 import { fileURLToPath } from 'url';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname  = path.dirname(__filename);
+const __filename    = fileURLToPath(import.meta.url);
+const __dirname     = path.dirname(__filename);
 
-// Decide on disk vs. dev folder
+// one single uploads root on both dev & prod
 const UPLOADS_ROOT = path.join(__dirname, '../uploads');
-const PDF_DIR   = path.join(UPLOADS_ROOT, 'pdfs');
-const VIDEO_DIR = path.join(UPLOADS_ROOT, 'videos');
 
+// ensure that folder exists every start
+if (!fs.existsSync(UPLOADS_ROOT)) {
+  fs.mkdirSync(UPLOADS_ROOT, { recursive: true });
+  console.log(`✅ Created uploads root: ${UPLOADS_ROOT}`);
+}
 
-  [PDF_DIR, VIDEO_DIR].forEach(dir => {
-    if(!fs.existsSync(dir)){
-    try {
-        fs.mkdirSync(dir, {recursive: true})
-        console.log(`Created upload dir: ${dir}`)
-      } catch (err) {
-        console.warn(`Could not create ${dir}`, err.message)
-      }
-    }
-  });
-
-
-// Storage configs
-const videoStorage = multer.diskStorage({
-  destination: (_req, _file, cb) => cb(null, VIDEO_DIR),
+// storage engine: flat in UPLOADS_ROOT
+const storage = multer.diskStorage({
+  destination: (_req, _file, cb) => cb(null, UPLOADS_ROOT),
   filename:    (_req, file, cb) => {
-    const name = `${Date.now()}-${file.originalname}`
-    console.log('🛑 MULTER saving file to:', VIDEO_DIR, name);
-    cb(null, name)}
-  
-});
-const pdfStorage = multer.diskStorage({
-  destination: (_req, _file, cb) => cb(null, PDF_DIR),
-  filename:    (_req, file, cb) => {
-    const name = `${Date.now()}-${file.originalname}`;
-    console.log('🛑 MULTER saving file to:', PDF_DIR, name);
-    cb(null,name )}
+    // prefix with type so we still know what it is
+    const prefix = file.mimetype.startsWith('video/') ? 'video' : 'pdf';
+    const name   = `${Date.now()}-${prefix}-${file.originalname}`;
+    console.log('🛑 MULTER saving file to:', UPLOADS_ROOT, name);
+    cb(null, name);
+  }
 });
 
-// Filters
-const videoFilter = (_req, file, cb) =>
-  file.mimetype.startsWith('video/')
-    ? cb(null, true)
-    : cb(new Error('Only video files allowed'), false);
-const pdfFilter = (_req,file, cb) =>
-  file.mimetype === 'application/pdf'
-    ? cb(null, true)
-    : cb(new Error('Only PDF files please'), false);
+// allow both videos and PDFs
+const fileFilter = (_req, file, cb) => {
+  if (file.mimetype.startsWith('video/') || file.mimetype === 'application/pdf') {
+    cb(null, true);
+  } else {
+    cb(new Error('Only video or PDF files allowed'), false);
+  }
+};
 
-export const uploadVideo = multer({ storage: videoStorage, fileFilter: videoFilter });
-export const uploadPdf   = multer({ storage: pdfStorage,  fileFilter: pdfFilter  });
+export const uploadMiddleware = multer({ storage, fileFilter });
