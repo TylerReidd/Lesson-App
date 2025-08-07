@@ -62,16 +62,16 @@ export default function TeacherAssignments() {
   };
 
   return (
-    <div className="container">
-      <div className="card">
+    <div className="content">
+      <div className="dashboard-panel">
         <h1>Manage Assignments (PDF)</h1>
 
         {/* Upload Section */}
         <div className="dashboard-section">
-          {pdfErr && <p style={{ color: "red" }}>{pdfErr}</p>}
-          {pdfMsg && <p style={{ color: "green" }}>{pdfMsg}</p>}
 
-          <form onSubmit={handlePdfUpload}>
+          <form onSubmit={handlePdfUpload} className="ask-form">
+            {pdfErr && <p style={{ color: "red" }}>{pdfErr}</p>}
+            {pdfMsg && <p style={{ color: "green" }}>{pdfMsg}</p>}
             <div className="form-group">
               <label>Student Email</label>
               <input
@@ -97,24 +97,27 @@ export default function TeacherAssignments() {
         {/* Assignments List */}
         <div className="dashboard-section">
           <h2>Uploaded Assignments</h2>
-          <ul className="video-list">
+          <ul className="assignment-list">
             {assignments.map((f) => (
-              <li key={f._id}>
+              <li key={f._id} className="assignment-card">
                 <a
                   href={f.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="video-title"
+                  className="assignment-link"
                 >
-                  {f.filename}
+                  <span className="assignment-icon">"📄</span>
+                  <div className="assignment-info">
+                    <span className="assignment-title">{f.filename}</span>
+                    <span className="assignment-date">
+                      {new Date(f.uploadedAt).toLocaleDateString()}
+                    </span>
+                  </div>
                 </a>
-                <span className="text-sm text-gray-500 ml-2">
-                  {new Date(f.uploadedAt).toLocaleDateString()}
-                </span>
                 <button
-                  onClick={() => handleDelete(f._id)}
-                  className="button-logout"
-                  style={{ padding: "4px 8px", marginLeft: "8px" }}
+                  onClick={() => handleDelete(f.id)}
+                  className="delete-btn"
+                  aria-lable="Delete assignment"
                 >
                   Delete
                 </button>

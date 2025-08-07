@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "../axios.js";
+import StudentVideosTabs from "./StudentVideosTabs.jsx";
 
 export default function TeacherVideos() {
   const [videoFile, setVideoFile] = useState(null);
@@ -67,8 +68,8 @@ export default function TeacherVideos() {
   };
 
   return (
-    <div className="container">
-      <div className="card">
+    <div className="content">
+      <div className="dashboard-panel">
         <h1>Manage Videos</h1>
 
         {/* Upload Section */}
@@ -99,33 +100,10 @@ export default function TeacherVideos() {
           </form>
         </div>
 
-        {/* Video Grid */}
-        <div className="dashboard-section">
+        <div className="container video-page">
           <h2>Uploaded Videos</h2>
-          <ul className="video-list">
-            {Array.isArray(videos) && videos.length > 0 ? (
-
-              videos.map((video) => (
-              <li key={video.id}>
-                <span className="video-title">{video.filename}</span>
-                <div>
-                  <a href={video.url} target="_blank" rel="noopener noreferrer">
-                    View
-                  </a>
-                  <button
-                    onClick={() => handleDelete(video.id)}
-                    className="button-logout"
-                    style={{ padding: "4px 8px", marginLeft: "8px" }}
-                  >
-                    Delete
-                  </button>
-                </div>
-              </li>
-            )) 
-            ) : (
-              <li>No videos Uploaded</li>
-            )}
-          </ul>
+          <StudentVideosTabs videos={videos}
+          onDelete={handleDelete} />
         </div>
       </div>
     </div>
