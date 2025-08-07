@@ -32,13 +32,9 @@ function App() {
       <Routes>
         <Route
           path="/signup"
-          element={
-            user
-              ? <Navigate to={user.role === 'teacher' ? '/teacher' : '/student'} replace />
-              : <Signup />
-          }
+          element={<Signup />}
         />
-
+        
         <Route
           path="/login"
           element={<Login /> }

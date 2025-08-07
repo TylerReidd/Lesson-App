@@ -1,12 +1,23 @@
-import React, { useState } from 'react';
+// src/pages/Signup.jsx
+import React, { useState, useEffect, useContext } from 'react';
 import axios from '../axios.js';
 import { useNavigate } from 'react-router-dom';
+import { AuthContext } from '../AuthContext';
 
 export default function Signup() {
-  const [form,    setForm]    = useState({ name:'', email:'', password:'', role:'student' });
-  const [error,   setError]   = useState('');
+  const { user, loading } = useContext(AuthContext);
+  const navigate = useNavigate();
+  const [form, setForm] = useState({ name: '', email: '', password: '', role: 'student' });
+  const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const navigate             = useNavigate();
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (!loading && user) {
+      const dest = user.role === 'teacher' ? '/teacher/videos' : '/student/videos';
+      navigate(dest, { replace: true });
+    }
+  }, [user, loading, navigate]);
 
   const handleChange = e => {
     const { name, value } = e.target;
@@ -18,9 +29,7 @@ export default function Signup() {
     setError('');
     try {
       const res = await axios.post('/auth/signup', form);
-      // console.log(res.data); // --> { message: 'User created successfully', user: {…} }
       setSuccess(res.data.message);
-      // optionally delay redirect so they see the message
       setTimeout(() => navigate('/login'), 1000);
     } catch (err) {
       setError(err.response?.data?.message || 'Signup failed');
@@ -31,14 +40,14 @@ export default function Signup() {
     <div className="container">
       <div className="card">
         <form onSubmit={handleSubmit} className="form-group">
-          <h2 className="text-2xl font-bold">Sign Up</h2>
+          <h2>Sign Up</h2>
 
-          {error   && <p className="text-red-500">{error}</p>}
-          {success && <p className="text-green-500">{success}</p>}
+          {error && <p style={{ color: 'red' }}>{error}</p>}
+          {success && <p style={{ color: 'green' }}>{success}</p>}
 
           <input
             name="name"
-            type='name'
+            type="text"
             value={form.name}
             onChange={handleChange}
             placeholder="Name"
@@ -68,7 +77,6 @@ export default function Signup() {
 
           <select
             name="role"
-            type='role'
             value={form.role}
             onChange={handleChange}
             className="select"
@@ -81,7 +89,6 @@ export default function Signup() {
             Submit
           </button>
         </form>
-
       </div>
     </div>
   );
