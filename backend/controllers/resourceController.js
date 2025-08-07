@@ -83,7 +83,7 @@ export async function uploadVideo(req, res, next) {
     if (!file)      return res.status(400).json({ message: "No video provided" });
     if (!recipient) return res.status(400).json({ message: "No recipient" });
 
-    const url = `/uploads/videos/${file.filename}`;
+    const url = `/uploads/${file.filename}`;
     const video = await Resource.create({
       owner:      req.user.id,
       recipient,
@@ -92,7 +92,12 @@ export async function uploadVideo(req, res, next) {
       type:       'video',
       visibility: 'private'
     });
-    res.status(201).json({ message: 'Video uploaded', video });
+    res.status(201).json({ video: {
+      id: video._id,
+      filename: video.filename,
+      url,
+      uploadedAt: video.createdAt
+    }})
   } catch (err) { next(err) }
 }
 

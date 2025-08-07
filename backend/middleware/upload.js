@@ -18,7 +18,9 @@ if (!fs.existsSync(UPLOADS_ROOT)) {
 
 // storage engine: flat in UPLOADS_ROOT
 const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => cb(null, UPLOADS_ROOT),
+  destination: (_req, _file, cb) => {
+    cb(null, UPLOADS_ROOT)
+  },
   filename:    (_req, file, cb) => {
     // prefix with type so we still know what it is
     const prefix = file.mimetype.startsWith('video/') ? 'video' : 'pdf';
