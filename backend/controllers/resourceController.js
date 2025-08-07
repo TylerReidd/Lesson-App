@@ -60,8 +60,6 @@ export async function getPrivateVideos(req, res, next) {
     }).sort('-createdAt');
 
     console.log('getPrivateVideos returning', list.map(r=>r.url))
-    
-    const host = `${req.protocol}://${req.get('host')}`
 
     const out  = list.map(r => ({
       id:           r._id,
@@ -105,11 +103,10 @@ export async function uploadVideo(req, res, next) {
 export async function getPublicVideos(_req, res, next) {
   try {
     const list = await Resource.find({ type: 'video', visibility: 'public' }).sort('-createdAt');
-    const host = `${_req.protocol}://${_req.get('host')}`;
     const out  = list.map(r => ({
       id:           r._id,
       filename: r.filename,
-      url:          `${host}${r.url}`,
+      url:          r.url,
       uploadedAt:   r.createdAt
     }));
     res.json({ videos: out });
