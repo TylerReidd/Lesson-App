@@ -14,9 +14,17 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 import fs from 'fs'
-console.log('→ uploads folder exists:', fs.existsSync(path.join(__dirname, 'backend', 'uploads')));
-console.log('→ contents:', fs.readdirSync(path.join(__dirname, 'backend', 'uploads')));
+const UP = path.join(__dirname, 'backend', 'uploads');
+console.log('🛑 SERVING /uploads from:', UP);
+console.log('🛑 uploads folder exists?', fs.existsSync(UP));
+console.log('🛑 uploads contents:', fs.readdirSync(UP));
+console.log('🛑 STATIC ROOT:', path.join(__dirname, 'backend', 'uploads'));
+console.log('🛑 videos now in folder:', fs.readdirSync(path.join(__dirname, 'backend', 'uploads', 'videos')));
 
+if (fs.existsSync(UP)) {
+  console.log('🛑 videos:', fs.readdirSync(path.join(UP, 'videos')));
+  console.log('🛑 pdfs:',   fs.readdirSync(path.join(UP, 'pdfs')));
+}
 
 
 const app = express();
@@ -67,8 +75,22 @@ app.use((req, res, next) => {
 });
 
 // ------------------- Routes -------------------
-app.use('/uploads', express.static(path.join(__dirname, 'backend', 'uploads')))
-app.use('/api/uploads', uploadsRoutes);
+app.use(
+  '/uploads',
+  express.static(path.join(__dirname, 'backend', 'uploads'), {
+    etag: false,           
+    lastModified: false,  
+    maxAge: 0,            
+    setHeaders: (res) => {
+
+      res.setHeader('Accept-Ranges', 'bytes');
+
+      res.setHeader('Cache-Control', 'no-cache');
+    }
+  })
+);
+
+// app.use('/api/uploads', uploadsRoutes);
 app.use('/api/questions', questionRoutes);
 app.use('/api/resources', resourceRoutes);
 app.use('/api/auth', authRoutes);

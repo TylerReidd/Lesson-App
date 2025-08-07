@@ -25,12 +25,17 @@ export default function TeacherAssignments() {
     e.preventDefault();
     if (!pdfFile || !pdfEmail) return setPdfErr("All fields required");
 
+
+    const {data: student} = await axios.get(
+      '/auth/user',
+      {params: {email: pdfEmail}, withCredentials: true}
+    )
     const formData = new FormData();
     formData.append("file", pdfFile);
-    formData.append("recipientEmail", pdfEmail);
+    formData.append("recipient", student._id);
 
     try {
-      const res = await axios.post("/uploads/pdf", formData, {
+      const res = await axios.post("/resources/assignments/upload", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 

@@ -1,5 +1,6 @@
 // routes/resources.js
 import express from 'express';
+import Resource from '../models/Resource.js';
 import { isAuthenticated, isStudent, isTeacher } from '../middleware/auth.js';
 import {
   getAssignments,
@@ -38,6 +39,27 @@ router.get(
   '/videos/public',
   getPublicVideos
 );
+router.get(
+  '/videos',
+  isAuthenticated,
+  isTeacher,
+  async( req,res,next) => {
+    try {
+      const list = await Resource.find({
+        owner: req.user.id,
+        type: 'video',
+      }).sort('-createdAt');
+      res.json(list.map(r => ({
+        id: r._id,
+        filename: r.filename,
+        url: r.url,
+        uploadedAt: r.createdAt
+      })))
+    } catch (err) {
+      next(err)
+    }
+  }
+)
 router.post(
   '/videos/upload',
   isAuthenticated, isTeacher,

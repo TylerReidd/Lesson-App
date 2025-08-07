@@ -10,7 +10,7 @@ export default function TeacherVideos() {
 
   const fetchVideos = async () => {
     try {
-      const res = await axios.get("/resources/videos");
+      const res = await axios.get("/resources/videos", {withCredentials:true});
       setVideos(res.data);
     } catch (err) {
       console.error("Failed to load videos", err);
@@ -26,12 +26,15 @@ export default function TeacherVideos() {
     if (!videoFile || !videoEmail) return setVideoErr("All fields required");
 
     try {
-      const userRes = await axios.get("/auth/user", { params: { email: videoEmail } });
-      const studentId = userRes.data._id;
+      const { data: student } = await axios.get(
+        '/auth/user',
+        {params: {email: videoEmail}, withCredentials:true}
+      )
+      // const studentId = userRes.data._id;
 
       const formData = new FormData();
       formData.append("file", videoFile);
-      formData.append("recipient", studentId);
+      formData.append("recipient", student._id);
 
       const res = await axios.post("/resources/videos/upload", formData, {
         headers: { "Content-Type": "multipart/form-data" },
