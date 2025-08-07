@@ -28,7 +28,7 @@ export default function StudentVideosTabs({ videos, onDelete}) {
       <nav className="tabs-nav">
         {videos.map((v, i) => (
           <button
-            key={vid.id || i}
+            key={v.id || i}
             className={`tab-button${activeIdx === i ? "active" : ""}`}
             onClick={() => setActiveIdx(i)}
           >
