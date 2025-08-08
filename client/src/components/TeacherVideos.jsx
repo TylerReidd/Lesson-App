@@ -9,9 +9,12 @@ export default function TeacherVideos() {
   const [videoMsg, setVideoMsg] = useState("");
   const [videos, setVideos] = useState([]);
 
+  // new state for upload progress
+  const [uploadProgress, setUploadProgress] = useState(0);
+
   const fetchVideos = async () => {
     try {
-      const res = await axios.get("/resources/videos", {withCredentials:true});
+      const res = await axios.get("/resources/videos", { withCredentials: true });
       setVideos(res.data);
     } catch (err) {
       console.error("Failed to load videos", err);
@@ -28,30 +31,38 @@ export default function TeacherVideos() {
 
     try {
       const { data: student } = await axios.get(
-        '/auth/user',
-        {params: {email: videoEmail}, withCredentials:true}
-      )
+        "/auth/user",
+        { params: { email: videoEmail }, withCredentials: true }
+      );
 
-      console.log("handleVideoUpload: student=", student)
-   
       const formData = new FormData();
       formData.append("file", videoFile);
       formData.append("recipient", student._id);
 
-      console.log('handleVideoUpload: formData recipient=', formData.get('recipient'))
+      setUploadProgress(0); // reset before starting
+      setVideoErr("");
+      setVideoMsg("");
 
       const res = await axios.post("/resources/upload", formData, {
         headers: { "Content-Type": "multipart/form-data" },
+        withCredentials: true,
+        onUploadProgress: (evt) => {
+          if (evt.total) {
+            const percent = Math.round((evt.loaded * 100) / evt.total);
+            setUploadProgress(percent);
+          }
+        },
       });
 
-      setVideoMsg(res.data.message || 'Upload Complete');
-      setVideoErr("");
+      setVideoMsg(res.data.message || "Upload Complete");
       setVideoFile(null);
       setVideoEmail("");
+      setUploadProgress(0);
       fetchVideos();
     } catch (err) {
       console.error("Upload error →", err.response?.data || err);
       setVideoErr(err.response?.data?.error || "Video upload failed");
+      setUploadProgress(0);
     }
   };
 
@@ -59,11 +70,11 @@ export default function TeacherVideos() {
     if (!window.confirm("Are you sure you want to delete this video?")) return;
 
     try {
-      await axios.delete(`/resources/videos/${id}`, {withCredentials:true});
+      await axios.delete(`/resources/videos/${id}`, { withCredentials: true });
       fetchVideos();
     } catch (err) {
       console.error("Failed to delete video", err);
-      setVideoErr('Could not delete video')
+      setVideoErr("Could not delete video");
     }
   };
 
@@ -94,6 +105,31 @@ export default function TeacherVideos() {
                 onChange={(e) => setVideoFile(e.target.files[0])}
               />
             </div>
+
+            {/* Progress bar */}
+            {uploadProgress > 0 && (
+              <div style={{ margin: "8px 0" }}>
+                <div
+                  style={{
+                    background: "#eee",
+                    height: "10px",
+                    borderRadius: "6px",
+                    overflow: "hidden",
+                  }}
+                >
+                  <div
+                    style={{
+                      background: "#4caf50",
+                      width: `${uploadProgress}%`,
+                      height: "100%",
+                      transition: "width 0.2s",
+                    }}
+                  />
+                </div>
+                <small>{uploadProgress}%</small>
+              </div>
+            )}
+
             <button type="submit" className="button">
               Upload Video
             </button>
@@ -102,8 +138,7 @@ export default function TeacherVideos() {
 
         <div className="container video-page">
           <h2>Uploaded Videos</h2>
-          <StudentVideosTabs videos={videos}
-          onDelete={handleDelete} />
+          <StudentVideosTabs videos={videos} onDelete={handleDelete} />
         </div>
       </div>
     </div>
