@@ -37,31 +37,32 @@ export default function Signup() {
         <form onSubmit={handleSubmit} className="form-centered">
           <h2>Sign Up</h2>
           
-          <label>Name 
+          <label>Name:
             <input
               name="name"
               type="text"
               value={form.name}
               onChange={handleChange}
-              placeholder="name"
+              placeholder="Enter your name..."
               required
               className="input"
             />
           </label>
           <label>
-            Email
+            Email: 
             <input
               name="email"
               type="email"
               value={form.email}
               onChange={handleChange}
-              placeholder="Email"
+              placeholder="Enter your email..."
               required
               className="input"
             />
           </label>
 
           <label>
+            Password: 
             <input
               name="password"
               type="password"
