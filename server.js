@@ -95,6 +95,22 @@ app.use((req, res, next) => {
   next();
 });
 
+// server.js (debug route)
+app.get('/debug/uploads', (req, res) => {
+  try {
+    res.json({
+      UPLOADS_DIR,
+      exists: fs.existsSync(UPLOADS_DIR),
+      files: fs.readdirSync(UPLOADS_DIR),
+      nodeEnv: process.env.NODE_ENV,
+      apiHost: process.env.API_HOST
+    });
+  } catch (e) {
+    res.status(500).json({ error: e.message, UPLOADS_DIR });
+  }
+});
+
+
 app.get('/uploads/:filename', (req,res) => {
   const requested = path.normalize(req.params.filename).replace(/^(\.\.(\/|\\|$))+/, "")
   const filePath = path.join(UPLOADS_DIR, requested);
