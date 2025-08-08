@@ -62,6 +62,8 @@ if (!MONGO_URI) {
   process.exit(1);
 }
 
+
+
 mongoose
   .connect(MONGO_URI, {
     useNewUrlParser: true,
@@ -75,6 +77,27 @@ mongoose
     console.error('❌ MongoDB connection error:', err);
     process.exit(1);
   });
+
+
+  console.log("[BOOT] UPLOADS_DIR =", UPLOADS_DIR);
+try { fs.mkdirSync(UPLOADS_DIR, { recursive:true }); fs.accessSync(UPLOADS_DIR, fs.constants.W_OK); console.log("[BOOT] uploads dir writable"); } catch(e){ console.error("[BOOT] uploads dir not writable:", e.message); }
+
+  // server.js (debug route)
+  app.get('/debug/uploads', (req, res) => {
+    try {
+      res.json({
+        UPLOADS_DIR,
+        exists: fs.existsSync(UPLOADS_DIR),
+        files: fs.readdirSync(UPLOADS_DIR),
+        nodeEnv: process.env.NODE_ENV,
+        apiHost: process.env.API_HOST
+      });
+    } catch (e) {
+      res.status(500).json({ error: e.message, UPLOADS_DIR });
+    }
+  });
+  
+    app.get("/debug/uploads", (_req,res)=>{ res.json({UPLOADS_DIR, files: fs.readdirSync(UPLOADS_DIR)}); });
 
 // Middleware
 app.use(express.json());
@@ -95,20 +118,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// server.js (debug route)
-app.get('/debug/uploads', (req, res) => {
-  try {
-    res.json({
-      UPLOADS_DIR,
-      exists: fs.existsSync(UPLOADS_DIR),
-      files: fs.readdirSync(UPLOADS_DIR),
-      nodeEnv: process.env.NODE_ENV,
-      apiHost: process.env.API_HOST
-    });
-  } catch (e) {
-    res.status(500).json({ error: e.message, UPLOADS_DIR });
-  }
-});
+
 
 
 app.get('/uploads/:filename', (req,res) => {
@@ -131,6 +141,9 @@ app.get('/uploads/:filename', (req,res) => {
     })
     return fs.createReadStream(filePath).pipe(res)
   }
+
+
+
 
   const [startStr, endStr] = range.replace(/bytes=/, '').split("-")
   const start = parseInt(startStr, 10);
@@ -181,4 +194,10 @@ const CLIENT_DIST = path.join(__dirname, 'client', 'dist');
 app.use(express.static(CLIENT_DIST));
 app.get('*', (req, res) => {
   res.sendFile(path.join(CLIENT_DIST, 'index.html'));
+});
+
+// Global error handler — logs stack so Render shows why you got a 500
+app.use((err, req, res, _next) => {
+  console.error("[ERROR]", req.method, req.originalUrl, err?.stack || err);
+  res.status(500).json({ error: "Server error", detail: err?.message || "unknown" });
 });

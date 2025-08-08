@@ -9,6 +9,7 @@ import {
   deleteVideo
 } from '../controllers/resourceController.js';
 import { uploadMiddleware } from '../middleware/upload.js';
+import { fileUrl } from '../utils/urls.js';
 import User from '../models/User.js';
 
 
@@ -56,6 +57,10 @@ router.post(
   async (req, res, next) => {
     try {
       const file     = req.file;
+      console.log(("[UPLOAD] hit /api/resources/upload"))
+      console.log("[UPLOAD] content-type=", req.headers["content-type"]);
+      console.log("[UPLOAD] req.file?", !!file, file?.fieldname, file?.mimetype, file?.filename);
+      console.log("[UPLOAD] req.body keys:", Object.keys(req.body || {}));
       let studentId = req.body.recipient;
       const recipientEmail = req.body.recipientEmail;
       if(!file) {
@@ -72,7 +77,7 @@ router.post(
       }
 
       // build URL relative to /uploads
-      const url = `/uploads/${file.filename}`;
+      const url = fileUrl(file.filename);
       const type = file.mimetype.startsWith('video/') ? 'video' : 'assignment';
 
       const resource = await Resource.create({
@@ -84,7 +89,8 @@ router.post(
         visibility: 'private'
       });
 
-      console.log('upload handler body=',req.body, 'file=',req.file && req.file.filename)
+      console.log('[UPLOAD] saved as:', resource._id.toString(), url);
+
 
       res.status(201).json({
         message: "Upload Successful",
@@ -96,6 +102,7 @@ router.post(
         }
       });
     } catch (err) {
+      console.error("UPLOAD: error", err?.stack || err)
       next(err);
     }
   }
