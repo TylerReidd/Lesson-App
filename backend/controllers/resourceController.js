@@ -1,6 +1,34 @@
 import Resource from '../models/Resource.js';
 import { fileUrl, ensureAbsolute } from '../utils/urls.js';
 
+const UPLOADS_DIR = "/opt/render/uploads";
+
+
+function unlinkByUrl(url) {
+  try {
+    // You’re storing absolute URLs now (https://.../uploads/<file>)
+    // Parse and strip the /uploads/ prefix safely:
+    const u = new URL(url);
+    const fname = u.pathname.replace(/^\/uploads\//, "");
+    const fpath = path.join(UPLOADS_DIR, fname);
+
+    fs.unlink(fpath, (err) => {
+      if (err && err.code !== "ENOENT") {
+        console.error("[UNLINK] error:", err.message);
+      }
+    });
+  } catch (e) {
+    // Fallback if URL parsing fails; allow relative “/uploads/..” too
+    const fname = String(url || "").replace(/^https?:\/\/[^/]+\/uploads\//, "").replace(/^\/uploads\//, "");
+    const fpath = path.join(UPLOADS_DIR, fname);
+    fs.unlink(fpath, (err) => {
+      if (err && err.code !== "ENOENT") {
+        console.error("[UNLINK] error:", err.message);
+      }
+    });
+  }
+}
+
 // 📥 Get assignments for a student
 export async function getAssignments(req, res, next) {
   try {
@@ -117,16 +145,16 @@ export const deleteAssignment = async (req, res) => {
   try {
     const { id } = req.params;
     const assignment = await Resource.findById(id);
-    if (!assignment) return res.status(404).json({ error: "not found" });
 
-    // Optional physical delete (requires extracting filename from URL)
-    // const fname = new URL(assignment.url).pathname.replace(/^\/uploads\//, '');
-    // fs.unlink(path.join(UPLOADS_DIR, fname), () => {});
+    if (!assignment) return res.status(404).json({ error: "Not found" });
+
+    // Remove from disk
+    unlinkByUrl(assignment.url);
 
     await Resource.findByIdAndDelete(id);
-    return res.json({ message: 'Deleted' });
+    return res.json({ message: "Deleted" });
   } catch (err) {
-    return res.status(500).json({ error: "server error" });
+    return res.status(500).json({ error: "Server error" });
   }
 };
 
@@ -134,13 +162,13 @@ export const deleteVideo = async (req, res, next) => {
   try {
     const { id } = req.params;
     const video = await Resource.findById(id);
-    if (!video || video.type !== 'video') {
-      return res.status(404).json({ error: 'Video not found' });
+
+    if (!video || video.type !== "video") {
+      return res.status(404).json({ error: "Video not found" });
     }
 
-    // Optional physical delete:
-    // const fname = new URL(video.url).pathname.replace(/^\/uploads\//, '');
-    // fs.unlink(path.join(UPLOADS_DIR, fname), () => {});
+    // Remove from disk
+    unlinkByUrl(video.url);
 
     await Resource.findByIdAndDelete(id);
     return res.json({ message: "Video deleted" });
@@ -148,3 +176,4 @@ export const deleteVideo = async (req, res, next) => {
     next(err);
   }
 };
+

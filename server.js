@@ -82,6 +82,7 @@ mongoose
   console.log("[BOOT] UPLOADS_DIR =", UPLOADS_DIR);
 try { fs.mkdirSync(UPLOADS_DIR, { recursive:true }); fs.accessSync(UPLOADS_DIR, fs.constants.W_OK); console.log("[BOOT] uploads dir writable"); } catch(e){ console.error("[BOOT] uploads dir not writable:", e.message); }
 
+
   // server.js (debug route)
   app.get('/debug/uploads', (req, res) => {
     try {
@@ -97,7 +98,6 @@ try { fs.mkdirSync(UPLOADS_DIR, { recursive:true }); fs.accessSync(UPLOADS_DIR, 
     }
   });
   
-    app.get("/debug/uploads", (_req,res)=>{ res.json({UPLOADS_DIR, files: fs.readdirSync(UPLOADS_DIR)}); });
 
 // Middleware
 app.use(express.json());
