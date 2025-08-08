@@ -29,59 +29,61 @@ function App() {
 
   return (
     <Router basename={import.meta.env.BASE_URL}>
-      <Routes>
-        <Route
-          path="/signup"
-          element={<Signup />}
-        />
-        
-        <Route
-          path="/login"
-          element={<Login /> }
-        />
+      <div className="container">
+        <Routes>
+          <Route
+            path="/signup"
+            element={<Signup />}
+          />
+          
+          <Route
+            path="/login"
+            element={<Login /> }
+          />
 
-        {/* Student page routes */}
-        <Route
-          path="/student"
+          {/* Student page routes */}
+          <Route
+            path="/student"
+            element={
+            <PrivateRoute user={user} role="student">
+              <StudentLayout />
+            </PrivateRoute>
+            }
+          >
+            <Route path='videos' element={<StudentVideos />} />
+            <Route path='assignments' element={<StudentAssignments/>} />
+            <Route path='questions' element={<StudentQuestions />} />
+          </Route>
+          
+          {/* Teacher page Route */}
+          <Route
+          path="/teacher"
           element={
-           <PrivateRoute user={user} role="student">
-            <StudentLayout />
-           </PrivateRoute>
-          }
-        >
-          <Route path='videos' element={<StudentVideos />} />
-          <Route path='assignments' element={<StudentAssignments/>} />
-          <Route path='questions' element={<StudentQuestions />} />
-        </Route>
-        
-        {/* Teacher page Route */}
-        <Route
-         path="/teacher"
-         element={
-          <PrivateRoute user={user} role="teacher">
-            <TeacherLayout />
-          </PrivateRoute>}
-        >
-          <Route path='videos' element={<TeacherVideos />} />
-          <Route path='assignments' element={<TeacherAssignments />} />
-          <Route path='questions' element={<TeacherQuestions />} />
-        </Route>
+            <PrivateRoute user={user} role="teacher">
+              <TeacherLayout />
+            </PrivateRoute>}
+          >
+            <Route path='videos' element={<TeacherVideos />} />
+            <Route path='assignments' element={<TeacherAssignments />} />
+            <Route path='questions' element={<TeacherQuestions />} />
+          </Route>
 
-        <Route
-          path="*"
-          element={
-            <Navigate
-              to={
-                user
-                  ? (user.role === 'teacher' ? '/teacher/videos' : '/student')
-                  : '/login'
-              }
-              replace
-            />
-          }
-        />
+          <Route
+            path="*"
+            element={
+              <Navigate
+                to={
+                  user
+                    ? (user.role === 'teacher' ? '/teacher/videos' : '/student')
+                    : '/login'
+                }
+                replace
+              />
+            }
+          />
 
-      </Routes>
+        </Routes>
+      </div>
     </Router>
 
     

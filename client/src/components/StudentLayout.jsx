@@ -1,4 +1,5 @@
-import { Outlet, NavLink, useNavigate } from 'react-router-dom';
+import { Outlet, useNavigate } from 'react-router-dom';
+import Navbar from './Navbar.jsx';
 import axios from '../axios.js';
 
 export default function StudentLayout() {
@@ -16,38 +17,7 @@ export default function StudentLayout() {
   return (
     <div className="student-layout">
       {/* Top navigation bar */}
-      <nav className="top-tab-bar card">
-        <NavLink
-          to="videos"
-          className={({ isActive }) =>
-            isActive ? 'tab active' : 'tab'
-          }
-        >
-          🎥 Videos
-        </NavLink>
-        <NavLink
-          to="assignments"
-          className={({ isActive }) =>
-            isActive ? 'tab active' : 'tab'
-          }
-        >
-          📄 Assignments
-        </NavLink>
-        <NavLink
-          to="questions"
-          className={({ isActive }) =>
-            isActive ? 'tab active' : 'tab'
-          }
-        >
-          ❓ Q&A
-        </NavLink>
-        <button
-          className="tab button-logout"
-          onClick={handleLogout}
-        >
-          Logout
-        </button>
-      </nav>
+      <Navbar />
 
       {/* Main content area where nested routes render */}
       <main className="content">

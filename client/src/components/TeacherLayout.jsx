@@ -1,4 +1,5 @@
 import { Outlet, Link, useNavigate, NavLink } from "react-router-dom";
+import Navbar from "./Navbar.jsx";
 import axios from "../axios.js";
 
 export default function TeacherLayout() {
@@ -14,42 +15,14 @@ export default function TeacherLayout() {
   };
 
   return (
+    <>
+      <Navbar />
     <div className="student-layout">
-      <nav className="top-tab-bar card">
-        <NavLink to='videos'
-        className={({isActive}) => 
-          isActive ? 'tab active' : 'tab'
-          }
-        >
-            Videos 
-          </NavLink>
 
-          <NavLink 
-            to='assignments'
-            className={({isActive}) => 
-          isActive ? 'tab active' : 'tab'
-        }
-          >
-             📄 Assignments
-          </NavLink>
-
-          <NavLink
-          to="questions"
-          className={({ isActive }) =>
-            isActive ? 'tab active' : 'tab'
-          }
-        >
-          ❓ Q&A
-        </NavLink>
-        
-        <button onClick={handleLogout} className=" tab button-logout">
-          Logout
-        </button>
-      </nav>
-
-      <main className="content">
+      <main className="content-full">
         <Outlet /> {/* renders the current teacher page */}
       </main>
     </div>
+    </>
   );
 }

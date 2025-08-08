@@ -43,7 +43,7 @@ export default function Login() {
   return (
     <div className='container'>
       <div className="card">
-        <form onSubmit={handleLogin}>
+        <form onSubmit={handleLogin} className='form'>
 
           {error && <p className="text-red-500">{error}</p>}
           {success && <p className="text-green-500">{success}</p>}
@@ -71,10 +71,11 @@ export default function Login() {
               onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
               required
             />
-            <button type="submit" className='button'>Login</button>
           </div>
-
-          <p className="text-sm mt-4">
+          <div style={{display: 'flex', gap:8, flexWrap: 'wrap'}}>
+            <button type='submit'>Log In</button>
+          </div>
+          <p className="">
               Don’t have an account?{' '}
             <Link to="/signup" className="text-blue-500 underline">
               Sign up here

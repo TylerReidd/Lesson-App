@@ -106,8 +106,8 @@ export default function TeacherVideos() {
           {videoErr && <p style={{ color: "red" }}>{videoErr}</p>}
           {videoMsg && <p style={{ color: "green" }}>{videoMsg}</p>}
 
-          <form onSubmit={handleVideoUpload}>
-            <div className="form-group">
+          <form onSubmit={handleVideoUpload} className="form-centered">
+            <div>
               <label>Student Email</label>
               <input
                 type="email"
@@ -115,8 +115,8 @@ export default function TeacherVideos() {
                 onChange={(e) => setVideoEmail(e.target.value)}
               />
             </div>
-            <div className="form-group">
-              <label>Select Video</label>
+            <div style={{marginLeft:'50px'}}>
+              <label style={{marginLeft:"100px"}}>Select Video: </label>
               <input
                 type="file"
                 accept="video/*"

@@ -74,10 +74,10 @@ export default function TeacherAssignments() {
         {/* Upload Section */}
         <div className="dashboard-section">
 
-          <form onSubmit={handlePdfUpload} className="ask-form">
+          <form onSubmit={handlePdfUpload} className="form-centered">
             {pdfErr && <p style={{ color: "red" }}>{pdfErr}</p>}
             {pdfMsg && <p style={{ color: "green" }}>{pdfMsg}</p>}
-            <div className="form-group">
+            <div>
               <label>Student Email</label>
               <input
                 type="email"
@@ -85,8 +85,8 @@ export default function TeacherAssignments() {
                 onChange={(e) => setPdfEmail(e.target.value)}
               />
             </div>
-            <div className="form-group">
-              <label>Select PDF</label>
+            <div style={{marginLeft:'50px'}}>
+              <label style={{marginLeft: "90px"}}>Select Your PDF:</label>
               <input
                 type="file"
                 accept="application/pdf"
