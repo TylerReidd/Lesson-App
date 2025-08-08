@@ -11,13 +11,14 @@ export default function StudentVideos() {
     axios
       .get("/resources/videos/private", { withCredentials: true })
       .then(res => {
-        // setVideos(Array.isArray(res.data.videos) ? res.data.videos : []);
-        const raw = Array.isArray(res.data.videos) ? res.data.videos : []
+        const raw = Array.isArray(res.data?.videos) ? res.data.videos : []
         setVideos(raw.map(v => ({
           id: v._id || v.id,
           url: v.url,
           filename: v.filename,
-          uploadedAt: v.uploadedAt
+          uploadedAt: v.uploadedAt,
+          owner: v.owner,
+          recipient: v.recipient
         })))
         setErr("")
       })
@@ -28,7 +29,10 @@ export default function StudentVideos() {
   };
 
   useEffect(() => {
-    fetchVideos()
+    fetchVideos();
+    axios.get("/auth/me", {withCredentials:true})
+    .then(r => SpeechSynthesisUtterance({id: r.data.id || r.data._id, role: r.data.role}))
+    .catch(() => setUser(null))
   }, [])
 
   const handleDelete = async (id) => {

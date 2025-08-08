@@ -39,11 +39,11 @@ router.post('/login', async (req, res) => {
                              process.env.JWT_SECRET,
                            { expiresIn: '1d' }
                         );
-    
+    const isProd = process.env.NODE_ENV === 'production'
     res.cookie('token', token, {
                 httpOnly: true,
-                secure: true,     // Changed from process.env... to secure true
-                sameSite: 'none', //if same site none
+                secure: isProd,     // Changed from process.env... to secure true
+                sameSite: isProd ? 'none' : 'lax', //if same site none
                 path: '/',        //you must open to all paths
                 maxAge: 24*60*60*1000
               })
@@ -70,7 +70,10 @@ router.put('/me/teacher', isAuthenticated, isStudent, linkTeacher)
 router.post('/signup', signup);
 
 // PROTECTED ROUTES
-router.get('/me', isAuthenticated, me)
+router.get('/me', isAuthenticated, (req,res) => {
+  res.set('Cache-Control', 'no-store')
+  res.json({id: req.user.id, role: req.user.role})
+})
 router.post('/logout', logout);
 
 

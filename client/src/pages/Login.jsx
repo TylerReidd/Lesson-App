@@ -25,14 +25,12 @@ export default function Login() {
         form
       );
       // 2) Immediately fetch the full user (including assignedTeacher)
-      const { data: meData } = await axios.get(
-        '/auth/me'
-      );
-      setUser(meData.user);
+      const {data: me} = await axios.get('/auth/me')
+      setUser(me)
       setSuccess('Logged In!');
   
       // 3) Navigate based on role
-      const route = meData.user.role === 'teacher' ? '/teacher' : '/student';
+      const route = me.role === 'teacher' ? '/teacher' : '/student'
       navigate(route, { replace: true });
   
     } catch (err) {

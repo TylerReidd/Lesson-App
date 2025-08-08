@@ -20,7 +20,7 @@ export function AuthProvider({ children }) {
     async function fetchCurrentUser() {
       try {
         const {data} = await axios.get('/auth/me',)
-        setUser(data.user)
+        setUser(data)
       } catch (err) {
         setUser(null);
       } finally {

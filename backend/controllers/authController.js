@@ -37,6 +37,13 @@ export async function signup (req, res) {
   }
 };
 
+const isProd = process.env.NODE_ENV === 'production';
+const cookieOpts = {
+  httpOnly: true,
+  secure: isProd,
+  sameSite: isProd ? 'none' : 'lax',
+  path: '/'
+}
 export async function login (req, res) {
   try {
     const { email, password } = req.body;
@@ -56,13 +63,7 @@ export async function login (req, res) {
       {expiresIn: '1d'}
     )
     res
-      .cookie('token', token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        path: '/',
-        maxAge: 24 * 60 * 60 * 1000,
-      })
+      .cookie('token', token, {...cookieOpts, maxAge: 24*60*60*1000})
       .status(200)
       .json({
         message: 'Login successful',
@@ -73,32 +74,21 @@ export async function login (req, res) {
   }
 };
 
-// clear the cookie on logout
+
+
 export async function logout (req, res)  {
   res
-    .clearCookie('token', {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'none',
-      path: '/',
-    })
+    .clearCookie('token', cookieOpts)
     .status(200)
     .json({ message: 'Logged out successfully' });
 };
 
 // return the logged-in user (req.user set by middleware)
-export async function me  (req, res, next) {
-  try {
-    if (!req.user)
-    return res.status(401).json({message: "not authenticated"})
-  
-    const user = await User.findById(req.user.id)
-    .select('-password')
-    .lean()
-    res.json({user})
-  } catch(err) {
-      next(err)
-  }
+export async function me(req, res) {
+  return res.json({
+    id: req.user.id,
+    role: req.user.role
+  })
 }; 
 
 export async function linkTeacher(req, res, next) {

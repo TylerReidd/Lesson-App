@@ -1,12 +1,13 @@
 // routes/resources.js
 import express from 'express';
 import Resource from '../models/Resource.js';
-import { isAuthenticated, isStudent, isTeacher } from '../middleware/auth.js';
+import { isAuthenticated, isStudent, isTeacher, isTeacherOrStudent } from '../middleware/auth.js';
 import {
   getAssignments,
   getPrivateVideos,
   deleteAssignment,
-  deleteVideo
+  deleteVideo,
+  
 } from '../controllers/resourceController.js';
 import { uploadMiddleware } from '../middleware/upload.js';
 import { fileUrl } from '../utils/urls.js';
@@ -42,7 +43,9 @@ router.get(
         id: r._id,
         filename: r.filename,
         url: r.url,
-        uploadedAt: r.createdAt
+        uploadedAt: r.createdAt,
+        owner: r.owner?.toString(),
+        recipient: r.recipient?.toString(),
       })))
     } catch (err) {
       next(err)
@@ -110,12 +113,14 @@ router.post(
 router.delete(
   '/assignments/:id',
   isAuthenticated,
+  isTeacherOrStudent,
   deleteAssignment
 )
 
 router.delete(
   '/videos/:id',
   isAuthenticated,
+  isTeacherOrStudent,
   deleteVideo
 )
 

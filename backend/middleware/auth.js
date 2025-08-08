@@ -47,4 +47,12 @@ export function isTeacher(req, res, next) {
   next();
 }
 
+
+export function isTeacherOrStudent(req, res, next) {
+  const role = req.user?.role;
+  console.log("[AUTH] isTeacherOrStudent role=", req.user?.role);
+  if (role === "teacher" || role === "student") return next();
+  return res.status(403).json({ error: "Not authorized" });
+}
+
 export default { isAuthenticated, isStudent, isTeacher };

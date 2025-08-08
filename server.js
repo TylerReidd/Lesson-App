@@ -82,6 +82,7 @@ mongoose
   console.log("[BOOT] UPLOADS_DIR =", UPLOADS_DIR);
 try { fs.mkdirSync(UPLOADS_DIR, { recursive:true }); fs.accessSync(UPLOADS_DIR, fs.constants.W_OK); console.log("[BOOT] uploads dir writable"); } catch(e){ console.error("[BOOT] uploads dir not writable:", e.message); }
 
+  app.set('trust proxy', 1)
 
   // server.js (debug route)
   app.get('/debug/uploads', (req, res) => {

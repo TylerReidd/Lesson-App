@@ -1,34 +1,35 @@
 import Resource from '../models/Resource.js';
 import { fileUrl, ensureAbsolute } from '../utils/urls.js';
-
-const UPLOADS_DIR = "/opt/render/uploads";
-
+import { UPLOADS_DIR } from '../config/paths.js';
+import fs from 'fs'
+import path from 'path'
 
 function unlinkByUrl(url) {
   try {
-    // You’re storing absolute URLs now (https://.../uploads/<file>)
-    // Parse and strip the /uploads/ prefix safely:
-    const u = new URL(url);
-    const fname = u.pathname.replace(/^\/uploads\//, "");
-    const fpath = path.join(UPLOADS_DIR, fname);
+    if (!url) return;
+    // Works for absolute and relative
+    let fname = "";
+    try {
+      const u = new URL(url);
+      fname = u.pathname.replace(/^\/+/, "");   // strip leading slash(es)
+    } catch {
+      // not a full URL, assume it starts with /uploads/ or just a filename
+      fname = String(url).replace(/^https?:\/\/[^/]+\/+/, "").replace(/^\/+/, "");
+    }
+    // Ensure it’s inside uploads
+    if (!fname.startsWith("uploads/")) fname = `uploads/${fname.replace(/^uploads\/+/, "")}`;
+    const diskName = fname.replace(/^uploads\//, ""); // actual filename on disk
+    const filePath = path.join(UPLOADS_DIR, diskName);
 
-    fs.unlink(fpath, (err) => {
+    fs.unlink(filePath, (err) => {
       if (err && err.code !== "ENOENT") {
-        console.error("[UNLINK] error:", err.message);
+        console.error("[UNLINK] error:", err.message, "path:", filePath);
       }
     });
   } catch (e) {
-    // Fallback if URL parsing fails; allow relative “/uploads/..” too
-    const fname = String(url || "").replace(/^https?:\/\/[^/]+\/uploads\//, "").replace(/^\/uploads\//, "");
-    const fpath = path.join(UPLOADS_DIR, fname);
-    fs.unlink(fpath, (err) => {
-      if (err && err.code !== "ENOENT") {
-        console.error("[UNLINK] error:", err.message);
-      }
-    });
+    console.error("[UNLINK] unexpected:", e.message, "url:", url);
   }
 }
-
 // 📥 Get assignments for a student
 export async function getAssignments(req, res, next) {
   try {
@@ -41,7 +42,9 @@ export async function getAssignments(req, res, next) {
       id:         r._id,
       filename:   r.filename,                 // display name (originalname)
       url:        ensureAbsolute(r.url),      // make absolute if needed
-      uploadedAt: r.createdAt
+      uploadedAt: r.createdAt,
+      owner:      r.owner?.toString(),
+      recipient:  r.recipient?.toString()
     }));
     res.json({ assignments });
   } catch (err) { next(err); }
@@ -71,7 +74,9 @@ export async function uploadAssignment(req, res, next) {
       id:         assignment._id,
       filename:   assignment.filename,
       url:        assignment.url,      // already absolute
-      uploadedAt: assignment.createdAt
+      uploadedAt: assignment.createdAt,
+      owner:      assignment.owner?.toString(),
+      recipient:  assignment.recipient?.toString()
     });
   } catch (err) { next(err); }
 }
@@ -89,7 +94,9 @@ export async function getPrivateVideos(req, res, next) {
       id:         r._id,
       filename:   r.filename,
       url:        ensureAbsolute(r.url),
-      uploadedAt: r.createdAt
+      uploadedAt: r.createdAt,
+      owner:      r.owner?.toString(),
+      recipient:  r.recipient?.toString()
     }));
 
     res.json({ videos: out });
@@ -121,7 +128,9 @@ export async function uploadVideo(req, res, next) {
         id:         video._id,
         filename:   video.filename,
         url:        video.url,         // absolute
-        uploadedAt: video.createdAt
+        uploadedAt: video.createdAt,
+        owner:      video.owner?.toString(),
+        recipient:  video.recipient?.toString()
       }
     });
   } catch (err) { next(err); }
@@ -135,7 +144,9 @@ export async function getPublicVideos(_req, res, next) {
       id:         r._id,
       filename:   r.filename,
       url:        ensureAbsolute(r.url),
-      uploadedAt: r.createdAt
+      uploadedAt: r.createdAt,
+      owner:      r.owner?.toString(),
+      recipient:  r.recipient?.toString()
     }));
     res.json({ videos: out });
   } catch (err) { next(err); }
@@ -144,36 +155,52 @@ export async function getPublicVideos(_req, res, next) {
 export const deleteAssignment = async (req, res) => {
   try {
     const { id } = req.params;
-    const assignment = await Resource.findById(id);
+    const doc = await Resource.findById(id);
+    if (!doc) return res.status(404).json({ error: "not found" });
 
-    if (!assignment) return res.status(404).json({ error: "Not found" });
+    const isTeacher = req.user.role === "teacher";
+    const isOwner = doc.owner?.toString() === req.user.id;
+    const isRecipient = doc.recipient?.toString() === req.user.id;
 
-    // Remove from disk
-    unlinkByUrl(assignment.url);
+    if (!isTeacher && !isOwner && !isRecipient) {
+      return res.status(403).json({ error: "Not authorized to delete this file" });
+    }
 
-    await Resource.findByIdAndDelete(id);
+    unlinkByUrl(doc.url);                 // best-effort disk cleanup
+    await Resource.findByIdAndDelete(id); // DB cleanup
     return res.json({ message: "Deleted" });
   } catch (err) {
-    return res.status(500).json({ error: "Server error" });
+    console.error("[DELETE assignment] error:", err?.message);
+    // Still return 200 so UI can refresh even if file was already gone
+    return res.status(200).json({ message: "Deleted (file may have already been removed)" });
   }
 };
 
-export const deleteVideo = async (req, res, next) => {
+export const deleteVideo = async (req, res) => {
   try {
     const { id } = req.params;
-    const video = await Resource.findById(id);
-
-    if (!video || video.type !== "video") {
+    const doc = await Resource.findById(id);
+    if (!doc || doc.type !== "video") {
       return res.status(404).json({ error: "Video not found" });
     }
 
-    // Remove from disk
-    unlinkByUrl(video.url);
+    const isTeacher = req.user.role === "teacher";
+    const isOwner = String(doc.owner) === req.user.id;
+    const isRecipient = String(doc.recipient) === req.user.id;
 
+    console.log("[DELETE video] user=", req.user.id, req.user.role,
+                "owner=", String(doc.owner), "recipient=", String(doc.recipient));
+
+    if (!isTeacher && !isOwner && !isRecipient) {
+      return res.status(403).json({ error: "Not authorized to delete this file" });
+    }
+
+    unlinkByUrl(doc.url);
     await Resource.findByIdAndDelete(id);
     return res.json({ message: "Video deleted" });
   } catch (err) {
-    next(err);
+    console.error("[DELETE video] error:", err?.message);
+    return res.status(200).json({ message: "Video deleted (file may have already been removed)" });
   }
 };
 

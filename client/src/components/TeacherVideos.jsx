@@ -8,21 +8,35 @@ export default function TeacherVideos() {
   const [videoErr, setVideoErr] = useState("");
   const [videoMsg, setVideoMsg] = useState("");
   const [videos, setVideos] = useState([]);
+  const [user, setUser] = useState(null)
 
   // new state for upload progress
   const [uploadProgress, setUploadProgress] = useState(0);
 
   const fetchVideos = async () => {
-    try {
-      const res = await axios.get("/resources/videos", { withCredentials: true });
-      setVideos(res.data);
-    } catch (err) {
-      console.error("Failed to load videos", err);
-    }
+    const res = await axios.get("/resources/videos", { withCredentials: true });
+    const list = Array.isArray(res.data) ? res.data : res.data?.videos || [];
+    setVideos(list.map(v => ({
+      id: v.id || v._id,
+      filename: v.filename,
+      url: v.url,
+      uploadedAt: v.uploadedAt,
+      owner: v.owner,
+      recipient: v.recipient
+    })));
   };
-
+  
   useEffect(() => {
     fetchVideos();
+  
+    axios.get("/auth/me", { withCredentials: true })
+      .then(({ data }) => {
+        console.log("[/auth/me] body:", data);
+        const id   = data.id ?? data._id ?? data.user?.id ?? data.user?._id;
+        const role = data.role ?? data.user?.role;
+        setUser(id ? { id, role } : null);
+      })
+      .catch(() => setUser(null));
   }, []);
 
   const handleVideoUpload = async (e) => {
@@ -67,10 +81,14 @@ export default function TeacherVideos() {
   };
 
   const handleDelete = async (id) => {
+    const safeId = id || (typeof id === 'object' ? id?.id || id?._id : null)
+    console.log("[DELETE click] got id=", id, "safeId=", safeId);
+    if(!safeId) {console.warn("Delete clicked with no Id", id); return }
     if (!window.confirm("Are you sure you want to delete this video?")) return;
 
     try {
-      await axios.delete(`/resources/videos/${id}`, { withCredentials: true });
+      const resp = await axios.delete(`/resources/videos/${safeId}`, { withCredentials: true });
+      console.log("[DELETE resp]", resp.status, resp.data)
       fetchVideos();
     } catch (err) {
       console.error("Failed to delete video", err);
@@ -138,7 +156,7 @@ export default function TeacherVideos() {
 
         <div className="container video-page">
           <h2>Uploaded Videos</h2>
-          <StudentVideosTabs videos={videos} onDelete={handleDelete} />
+          <StudentVideosTabs videos={videos} onDelete={handleDelete} currentUser={user} />
         </div>
       </div>
     </div>

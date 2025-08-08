@@ -7,6 +7,7 @@ export default function TeacherAssignments() {
   const [pdfErr, setPdfErr] = useState("");
   const [pdfMsg, setPdfMsg] = useState("");
   const [assignments, setAssignments] = useState([]);
+  const [user, setUser] = useState(null)
 
   const fetchAssignments = async () => {
     try {
@@ -19,6 +20,9 @@ export default function TeacherAssignments() {
 
   useEffect(() => {
     fetchAssignments();
+    axios.get("/auth/user", {withCredentials:true})
+    .then(r => setUser(r.data))
+    .catch(() => setUser(null))
   }, []);
 
   const handlePdfUpload = async (e) => {
@@ -37,6 +41,7 @@ export default function TeacherAssignments() {
     try {
       const res = await axios.post("/resources/upload", formData, {
         headers: { "Content-Type": "multipart/form-data" },
+        withCredentials: true,
       });
 
       setPdfMsg(res.data.message);
@@ -54,7 +59,7 @@ export default function TeacherAssignments() {
     if (!window.confirm("Are you sure you want to delete this assignment?")) return;
 
     try {
-      await axios.delete(`/resources/assignments/${id}`);
+      await axios.delete(`/resources/assignments/${id}`, {withCredentials: true});
       fetchAssignments();
     } catch (err) {
       console.error("Failed to delete assignment", err);
@@ -98,7 +103,13 @@ export default function TeacherAssignments() {
         <div className="dashboard-section">
           <h2>Uploaded Assignments</h2>
           <ul className="assignment-list">
-            {assignments.map((f) => (
+            {assignments.map((f) => {
+              const id = f.id || f._id;
+              const canDelete = 
+                user?.role === 'teacher' ||
+                String(f.owner) === String(user?.id) ||
+                String(f.recipient) === String(user?.id)
+                return (
               <li key={f._id} className="assignment-card">
                 <a
                   href={f.url}
@@ -106,7 +117,7 @@ export default function TeacherAssignments() {
                   rel="noopener noreferrer"
                   className="assignment-link"
                 >
-                  <span className="assignment-icon">"📄</span>
+                  <span className="assignment-icon">📄</span>
                   <div className="assignment-info">
                     <span className="assignment-title">{f.filename}</span>
                     <span className="assignment-date">
@@ -114,15 +125,18 @@ export default function TeacherAssignments() {
                     </span>
                   </div>
                 </a>
-                <button
-                  onClick={() => handleDelete(f.id)}
+               {canDelete && (
+                <button 
+                  onClick={() => handleDelete(id)}
                   className="delete-btn"
-                  aria-lable="Delete assignment"
-                >
-                  Delete
-                </button>
+                  aria-label="Delete Assignment"
+                  >
+                    Delete
+                  </button>
+               )}
               </li>
-            ))}
+                 )
+               })}
           </ul>
         </div>
       </div>
