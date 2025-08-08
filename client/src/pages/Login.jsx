@@ -41,46 +41,45 @@ export default function Login() {
   
 
   return (
-    <div className='container'>
-      <div className="card">
-        <form onSubmit={handleLogin} className='form'>
+    <div className='auth-page'>
+      <div className="auth-card">
+        <h1 className='auth-title'>Welcome Back</h1>
+        <p className="auth-sub">Log in to manage lessons and files</p>
 
-          {error && <p className="text-red-500">{error}</p>}
-          {success && <p className="text-green-500">{success}</p>}
+        <form onSubmit={handleLogin} className='form-centered'>
 
-          <div className='form-group'>
-            <h2 style={{marginBottom: '10px'}}>Login</h2>
-            <label htmlFor="email" className="block mb-1">Email:</label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              value={form.email}
-              onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-              required
-            />
-          </div>
+            <label>Email:
+              <input
+                id="email"
+                name="email"
+                type="email"
+                value={form.email}
+                onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+                autoComplete='email'
+                required
+              />
+            </label>
 
-          <div className='form-group'>
-            <label htmlFor="password" className>Password:</label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              value={form.password}
-              onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
-              required
-            />
+            <label>Password:
+              <input
+                id="password"
+                name="password"
+                type="password"
+                value={form.password}
+                onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
+                required
+              />
+            </label>
+
+            {error && <p className="text-red-500">{error}</p>}
+            {success && <p className="text-green-500">{success}</p>}
+
+          <div className="auth-actions">
+            <button type='submit' className='btn-primary'>Log In</button>
+            <button className="btn-ghost" onClick={() => navigate('/signup')}>
+              Create An account
+            </button>
           </div>
-          <div style={{display: 'flex', gap:8, flexWrap: 'wrap'}}>
-            <button type='submit'>Log In</button>
-          </div>
-          <p className="">
-              Don’t have an account?{' '}
-            <Link to="/signup" className="text-blue-500 underline">
-              Sign up here
-            </Link>
-      </p>
 
         </form>
 

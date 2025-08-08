@@ -29,43 +29,49 @@ export default function Signup() {
   };
 
   return (
-    <div className="container">
-      <div className="card">
-        <form onSubmit={handleSubmit} className="form-group">
+    <div className="auth-page">
+      <div className="auth-card">
+        <h1 className="auth-title">Create Your Account</h1>
+        <p className="auth-sub">Join and start learning</p>
+
+        <form onSubmit={handleSubmit} className="form-centered">
           <h2>Sign Up</h2>
+          
+          <label>Name 
+            <input
+              name="name"
+              type="text"
+              value={form.name}
+              onChange={handleChange}
+              placeholder="name"
+              required
+              className="input"
+            />
+          </label>
+          <label>
+            Email
+            <input
+              name="email"
+              type="email"
+              value={form.email}
+              onChange={handleChange}
+              placeholder="Email"
+              required
+              className="input"
+            />
+          </label>
 
-          {error && <p style={{ color: 'red' }}>{error}</p>}
-          {success && <p style={{ color: 'green' }}>{success}</p>}
-
-          <input
-            name="name"
-            type="text"
-            value={form.name}
-            onChange={handleChange}
-            placeholder="Name"
-            required
-            className="input"
-          />
-
-          <input
-            name="email"
-            type="email"
-            value={form.email}
-            onChange={handleChange}
-            placeholder="Email"
-            required
-            className="input"
-          />
-
-          <input
-            name="password"
-            type="password"
-            value={form.password}
-            onChange={handleChange}
-            placeholder="Password"
-            required
-            className="input"
-          />
+          <label>
+            <input
+              name="password"
+              type="password"
+              value={form.password}
+              onChange={handleChange}
+              placeholder="Password"
+              required
+              className="input"
+            />
+          </label>
 
           <select
             name="role"
@@ -77,9 +83,19 @@ export default function Signup() {
             <option value="teacher">Teacher</option>
           </select>
 
-          <button type="submit" className="btn">
-            Submit
+
+          {error && <p style={{ color: 'red' }}>{error}</p>}
+          {success && <p style={{ color: 'green' }}>{success}</p>}
+
+          <div className="auth-actions">
+          <button type="submit" className="btn-primary">
+            Sign Up
           </button>
+          <button type='button' className='btn-ghost' onClick={() => navigate('/login')}>
+            I already have an account
+          </button>
+            
+          </div>
         </form>
       </div>
     </div>
