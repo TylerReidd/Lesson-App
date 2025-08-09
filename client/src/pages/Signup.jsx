@@ -1,14 +1,16 @@
 // src/pages/Signup.jsx
-import React, { useState, useContext, useEffect } from 'react';
+import React, { useState, useContext } from 'react';
 import { AuthContext } from '../AuthContext';
 import axios from '../axios.js';
 import { useNavigate } from 'react-router-dom';
 
 export default function Signup() {
   const navigate = useNavigate();
+  const { setUser } = useContext(AuthContext);
   const [form, setForm] = useState({ name: '', email: '', password: '', role: 'student' });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -18,13 +20,30 @@ export default function Signup() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setSuccess('');
+    setSubmitting(true);
     try {
+      // 1) Create account → server returns { token, user }
       const res = await axios.post('/auth/signup', form);
-      setSuccess(res.data.message);
-      // Redirect to login after a short delay
-      setTimeout(() => navigate('/login'), 1000);
+
+      // 2) Store token so axios sends Authorization: Bearer on mobile
+      if (res.data?.token) {
+        localStorage.setItem('token', res.data.token);
+      }
+
+      // 3) Fetch canonical user (works via cookie on desktop or Bearer on mobile)
+      const { data: me } = await axios.get('/auth/me');
+      const user = me?.user ?? me;
+      setUser(user);
+
+      setSuccess(res.data?.message || 'Account created!');
+      // 4) Route by role
+      const route = user?.role === 'teacher' ? '/teacher' : '/student';
+      navigate(route, { replace: true });
     } catch (err) {
       setError(err.response?.data?.message || 'Signup failed');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -48,8 +67,8 @@ export default function Signup() {
               className="input"
             />
           </label>
-          <label>
-            Email: 
+
+          <label>Email:
             <input
               name="email"
               type="email"
@@ -61,8 +80,7 @@ export default function Signup() {
             />
           </label>
 
-          <label>
-            Password: 
+          <label>Password:
             <input
               name="password"
               type="password"
@@ -84,18 +102,16 @@ export default function Signup() {
             <option value="teacher">Teacher</option>
           </select>
 
-
           {error && <p style={{ color: 'red' }}>{error}</p>}
           {success && <p style={{ color: 'green' }}>{success}</p>}
 
           <div className="auth-actions">
-          <button type="submit" className="btn-primary">
-            Sign Up
-          </button>
-          <button type='button' className='btn-ghost' onClick={() => navigate('/login')}>
-            I already have an account
-          </button>
-            
+            <button type="submit" className="btn-primary" disabled={submitting}>
+              {submitting ? 'Creating…' : 'Sign Up'}
+            </button>
+            <button type="button" className="btn-ghost" onClick={() => navigate('/login')}>
+              I already have an account
+            </button>
           </div>
         </form>
       </div>

@@ -1,95 +1,118 @@
+// authController.js
 import User from '../models/User.js';
-import bcrypt from 'bcrypt'
-import jwt from 'jsonwebtoken'
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
 
-export async function signup (req, res) {
+const isProd = process.env.NODE_ENV === 'production';
+const cookieOptsBase = {
+  httpOnly: true,
+  secure: isProd,                // required on Render (HTTPS)
+  sameSite: isProd ? 'none' : 'lax',
+  path: '/',
+};
+
+function signToken(payload) {
+  if (!process.env.JWT_SECRET) {
+    throw new Error('Missing JWT_SECRET');
+  }
+  return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1d' });
+}
+
+export async function signup(req, res) {
   try {
     const { name, email, password, role } = req.body;
-    if(!name || !email || !password) {
-      return req.status(400).json({message: 'Name, email, and password are required'})
+    if (!name || !email || !password) {
+      return res.status(400).json({ message: 'Name, email, and password are required' });
     }
-    if (await User.findOne({ email }))
+
+    if (await User.findOne({ email })) {
       return res.status(400).json({ message: 'Email already in use' });
+    }
 
     const hashed = await bcrypt.hash(password, 10);
-    const user   = await new User({ name, email, password: hashed, role }).save();
-    const payload = {id: user._id, role: userrole, assignedTeacher: user.assignedTeacher}
-    const token  = jwt.sign(payload, process.env.JWT_SECRET, {expiresIn: '1d'});
-    res.cookie('token', token, {httpOnly: true}).status(201).json({
-      id: user._id, name: user.name, email: user.email, assignedTeacher: user.assignedTeacher
-    })
+    const user = await new User({ name, email, password: hashed, role }).save();
 
+    const payload = {
+      id: user._id,
+      role: user.role,                 // fixed (was userrole)
+      assignedTeacher: user.assignedTeacher,
+    };
+
+    const token = signToken(payload);
+
+    // Set cookie + ALSO return token in body for mobile Bearer fallback
     res
-      .cookie('token', token, {
-        httpOnly: true,
-        secure:true,
-        sameSite: 'none',
-        path: '/',
-        maxAge: 24 * 60 * 60 * 1000,
-      })
+      .cookie('token', token, { ...cookieOptsBase, maxAge: 24 * 60 * 60 * 1000 })
       .status(201)
       .json({
         message: 'User created successfully',
-        user: { id: user._id, name: user.name, email: user.email, role: user.role }
+        token,
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          assignedTeacher: user.assignedTeacher,
+        },
       });
   } catch (err) {
+    console.error('Signup error:', err);
     res.status(500).json({ message: 'Signup failed', error: err.message });
   }
-};
-
-const isProd = process.env.NODE_ENV === 'production';
-const cookieOpts = {
-  httpOnly: true,
-  secure: isProd,
-  sameSite: isProd ? 'none' : 'lax',
-  path: '/'
 }
-export async function login (req, res) {
+
+export async function login(req, res) {
   try {
     const { email, password } = req.body;
+
     const user = await User.findOne({ email });
     if (!user) return res.status(400).json({ message: 'Invalid credentials' });
 
-    if (!(await bcrypt.compare(password, user.password)))
-      return res.status(400).json({ message: 'Invalid credentials' });
+    const ok = await bcrypt.compare(password, user.password);
+    if (!ok) return res.status(400).json({ message: 'Invalid credentials' });
 
-    if(!process.env.JWT_SECRET) {
-      console.error("Missing JWT secret")
-      return res.status(500).json({message: "server misconfig"})
-    } 
-    const token = jwt.sign(
-      {id: user._id, role: user.role},
-      process.env.JWT_SECRET,
-      {expiresIn: '1d'}
-    )
+    const payload = {
+      id: user._id,
+      role: user.role,
+      assignedTeacher: user.assignedTeacher,
+    };
+    const token = signToken(payload);
+
     res
-      .cookie('token', token, {...cookieOpts, maxAge: 24*60*60*1000})
+      .cookie('token', token, { ...cookieOptsBase, maxAge: 24 * 60 * 60 * 1000 })
       .status(200)
       .json({
         message: 'Login successful',
-        user: { id: user._id, name: user.name, email: user.email, role: user.role, assignedTeacher: user.assignedTeacher }
+        token, // <-- return token for mobile header auth
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          assignedTeacher: user.assignedTeacher,
+        },
       });
   } catch (err) {
+    console.error('Login error:', err);
     res.status(500).json({ message: 'Login failed', error: err.message });
   }
-};
+}
 
-
-
-export async function logout (req, res)  {
+export async function logout(req, res) {
   res
-    .clearCookie('token', cookieOpts)
+    .clearCookie('token', cookieOptsBase)
     .status(200)
     .json({ message: 'Logged out successfully' });
-};
+}
 
-// return the logged-in user (req.user set by middleware)
 export async function me(req, res) {
+  // req.user is set by auth middleware
   return res.json({
     id: req.user.id,
-    role: req.user.role
-  })
-}; 
+    role: req.user.role,
+    assignedTeacher: req.user.assignedTeacher,
+  });
+}
 
 export async function linkTeacher(req, res, next) {
   try {
@@ -102,21 +125,16 @@ export async function linkTeacher(req, res, next) {
       return res.status(404).json({ message: 'No teacher found with that email.' });
     }
 
-    // UPDATE the student record in the DB
     await User.findByIdAndUpdate(req.user.id, {
-      assignedTeacher: teacher._id
-    });
+      assignedTeacher: teacher._id,
+    }, { new: true });
 
-    // Optionally, fetch back the updated user:
     const updated = await User.findById(req.user.id).select('-password');
     res.json({ user: updated });
   } catch (err) {
     next(err);
   }
 }
-
-
-
 
 export async function getUserByEmail(req, res, next) {
   try {

@@ -74,7 +74,7 @@ export default function StudentQuestions() {
       </form>
 
       <h2>Previous Questions</h2>
-      <div className="question-list">
+      <div className="questions-list">
         {questions.length === 0 && <p>No questions yet.</p>}
           {questions.map((q) => {
             const id = q._id || q.id;
@@ -96,7 +96,7 @@ export default function StudentQuestions() {
                   <button className="delete-btn"
                     onClick={(e) => {
                       e.stopPropagation()
-                      handleDelete(id);
+                      handleDelete(q._id || q.id);
                     }}
                   >
                      🗑️

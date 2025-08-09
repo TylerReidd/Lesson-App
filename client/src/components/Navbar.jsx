@@ -37,7 +37,7 @@ export default function Navbar() {
     <header className="top-tab-bar">
       <div className="nav-inner">
         <Link to={user ? (user.role === "teacher" ? "/teacher" : "/student") : "/"} className="brand">
-          Lesson Helper
+         Forte
         </Link>
 
         {/* Hamburger (visible on mobile) */}

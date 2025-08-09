@@ -110,22 +110,11 @@ export const deleteQuestion = async (req,res) => {
       return res.status(400).json({error: "Invalid question ID"});
     }
 
-    const q = await Question.findById(id);
-    if(!q) return res.status(404).json({error: "Question not found"});
-
-    console.log("=== deleteQuestion: req.user =", req.user);
-    console.log("q.student (type):", typeof q.student, "value:", q.student.toString());
-    console.log("req.user.id (type):", typeof req.user.id, "value:", req.user.id);
-
-    if(!q.student.equals(req.user.id)) {
-      console.log(
-        "Owner mismatch-",
-        'q.student:', q.student.toString(),
-        'req.user.id:',req.user.id
-      )
-    }
-    await Question.findByIdAndDelete(id);
-    res.json({message: "Deleted"})
+   const deleted = await Question.findOneAndDelete({_id: id, student:req.user.id})
+   if (!deleted) {
+    return res.status(404).json({error: "Question not found or not yours"})
+   }
+   res.json({message: "Deleted", id})
   } catch (err) {
     console.error(err);
     res.status(500).json({error: 'Server Error'})
