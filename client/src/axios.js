@@ -3,7 +3,7 @@ import Axios from 'axios';
 
 const isProd = import.meta.env.MODE === 'production';
 // In prod (same origin), use relative paths; in dev, use Vite proxy at /api
-const baseURL = isProd ? '' : (import.meta.env.VITE_API_URL || '/api');
+const baseURL = isProd ? '/api' : (import.meta.env.VITE_API_URL ?? '/api');
 
 const api = Axios.create({
   baseURL,
