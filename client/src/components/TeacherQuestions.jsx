@@ -1,125 +1,106 @@
-import React, { useState, useEffect } from "react";
+// src/components/TeacherQuestions.jsx
+import React, { useEffect, useState } from "react";
 import axios from "../axios.js";
 
-export default function TeacherQuestions() {
+export default function TeacherQuestions({ studentId }) {
   const [questions, setQuestions] = useState([]);
-  const [answers, setAnswers] = useState({});
-  const [openId, setOpenId] = useState(null)
-  const [loadingId, setLoadingId] = useState(null)
+  const [drafts, setDrafts] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState("");
 
+  const fetchQuestions = async () => {
+    try {
+      setLoading(true);
+      setErr("");
+      const url = studentId
+        ? `/questions/teacher?studentId=${studentId}`
+        : `/questions/teacher`;
+      const res = await axios.get(url);
+      const list = Array.isArray(res.data?.questions)
+      ? res.data.questions
+      : Array.isArray(res.data?.items)
+      ? res.data.items
+      : Array.isArray(res.data)
+      ? res.data 
+      : []
+      setQuestions(list);
+    } catch (e) {
+      console.error("Failed to load questions", e);
+      setErr(e?.response?.data?.message || "Failed to load questions");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchQuestions = async () => {
-      try {
-
-        const res = await axios.get("/questions/teacher", { withCredentials: true });
-        setQuestions(res.data);
-      } catch (err) {
-        console.error("Failed to load questions", err);
-      }
-    };
     fetchQuestions();
-  }, []);
+    // re-run whenever the selected student changes
+  }, [studentId]);
 
-    // inside your TeacherQuestions component, after your useState/useEffect:
-    const handleAnswer = async (questionId) => {
-      const answerText = answers[questionId]?.trim();
-      if (!answerText) {
-        return alert("Please enter an answer before submitting.");
-      }
-      setLoadingId(questionId)
-      try {
-        // 1) Send the answer to your backend
-        const res = await axios.put(
-          `/questions/${questionId}/respond`,
-          { answer: answerText },
-          { withCredentials: true }
-        );
-        // 2) Optimistically update local UI with the returned answer
-        setQuestions((qs) =>
-          qs.map((q) =>
-            q.id === questionId
-              ? { ...q, answer: res.data.answer }
-              : q
-          )
-        );
-        // 3) Clear out the textarea for that question
-        setAnswers((ans) => ({ ...ans, [questionId]: "" }));
-      } catch (err) {
-        console.error("Failed to submit answer:", err);
-        alert("Could not submit answer—check console for details.");
-      } finally {
-        setLoadingId(null)
-      }
-    };
-
+  const respond = async (id) => {
+    const answer = drafts[id]?.trim();
+    if (!answer) return;
+    try {
+      await axios.put(`/questions/${id}/respond`, { answer });
+      // clear draft and refresh
+      setDrafts((d) => ({ ...d, [id]: "" }));
+      fetchQuestions();
+    } catch (e) {
+      console.error("Failed to respond", e);
+      setErr(e?.response?.data?.message || "Failed to submit answer");
+    }
+  };
 
   return (
-    <div className="questions-page">
+    <div className="dashboard-panel">
       <h1>Student Questions</h1>
-        <div className="question-list">
-          {questions.length === 0 && <p>No questions from students yet.</p>}
-            {questions.map((q) => {
-              const id = q._id || q.id;
-              const isAnswered = Boolean(q.answer)
-              const questionText = q.text || q.question
 
-              return (
-                <div 
-                  ley={id}
-                  className={`q-card ${isAnswered ? 'answered' : 'unanswered'}`}
+      {err && <p className="text-red-500" style={{ marginBottom: 8 }}>{err}</p>}
+      {loading && <div>Loading…</div>}
+
+      {!loading && !questions.length && (
+        <div className="no-assignments">No questions yet.</div>
+      )}
+
+      <ul className="assignment-list">
+        {questions.map((q) => (
+          <li key={q._id} className="assignment-card" style={{ alignItems: "stretch" }}>
+            <div style={{ flex: 1 }}>
+              <div className="assignment-title" style={{ marginBottom: 6 }}>
+                {q.text}
+              </div>
+              <div className="assignment-date">
+                {new Date(q.createdAt).toLocaleString()}
+              </div>
+
+              {q.answer ? (
+                <div className="badge" style={{ marginTop: 8 }}>
+                  Answer: {q.answer}
+                </div>
+              ) : (
+                <div className="form-centered" style={{ marginTop: 10 }}>
+                  <textarea
+                    rows={2}
+                    placeholder="Type your answer…"
+                    value={drafts[q._id] ?? ""}
+                    onChange={(e) =>
+                      setDrafts((d) => ({ ...d, [q._id]: e.target.value }))
+                    }
+                    style={{ width: "100%" }}
+                  />
+                  <button
+                    className="button"
+                    onClick={() => respond(q._id)}
+                    style={{ marginTop: 6 }}
                   >
-                    <div
-                      className="q-summary"
-                      onClick={() => setOpenId(openId === id ? null : id)}
-                    >
-                      <h3 className="q-text">{questionText}</h3>
-                      <span className="badge">
-                        {isAnswered ? 'Answered' : 'Awaiting response...'}
-                      </span>
-                      <small className="ts">
-                        {new Date(q.createdAt).toLocaleString()}
-                      </small>
-                    </div>
-
-                    {openId === id && (
-                      <div className="thread">
-                        <div className="bubble student">
-                          <p>{questionText}</p>
-                          <small>{new Date(q.createdAt).toLocaleString()}</small>
-                        </div>
-                        {isAnswered ? (
-                          <div className="bubble teacher">
-                            <p>{q.answer}</p>
-                            <small>
-                              {new Date(q.answeredAt || q.updatedAt).toLocaleString()}
-                            </small>
-                          </div>
-                        ) : (
-                          <div className="bubble teacher">
-                            <textarea 
-                              placeholder="Type your answer..."  
-                              value={answers[id] || ''}
-                              className="question-textarea"
-                              onChange={(e) => {
-                                setAnswers((ans) => ({...ans, [id]: e.target.value}))}
-                              }
-                               />
-                               <button
-                                onClick={() => handleAnswer(id)}
-                                disabled={loadingId === id}
-                                className="button"
-                               >
-                                {loadingId === id ? 'Submitting...': 'Submit Answer'}
-                               </button>
-                            </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-              )
-            })}
-        </div>
+                    Send Answer
+                  </button>
+                </div>
+              )}
+            </div>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

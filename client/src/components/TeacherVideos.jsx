@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "../axios.js";
 import StudentVideosTabs from "./StudentVideosTabs.jsx";
 
-export default function TeacherVideos() {
+export default function TeacherVideos({studentId, defaultRecipientEmail}) {
   const [videoFile, setVideoFile] = useState(null);
   const [videoEmail, setVideoEmail] = useState("");
   const [videoErr, setVideoErr] = useState("");
@@ -14,13 +14,22 @@ export default function TeacherVideos() {
   const [uploadProgress, setUploadProgress] = useState(0);
 
   const fetchVideos = async () => {
-    const res = await axios.get("/resources/videos", { withCredentials: true });
-    const list = Array.isArray(res.data) ? res.data : res.data?.videos || [];
+    const url = studentId
+    ? `/teacher/students/${studentId}/videos`
+    : `/resources/videos`
+    const res = await axios.get(url);
+    const list = Array.isArray(res.data?.videos) ? res.data.videos 
+                                                 : Array.isArray(res.data?.items)
+                                                 ? res.data.items 
+                                                 : Array.isArray(res.data)
+                                                 ? res.data 
+                                                 : []
+
     setVideos(list.map(v => ({
       id: v.id || v._id,
       filename: v.filename,
-      url: v.url,
-      uploadedAt: v.uploadedAt,
+      url: v.url ||v.path,
+      uploadedAt: v.uploadedAt || v.createdAt,
       owner: v.owner,
       recipient: v.recipient
     })));
@@ -37,29 +46,37 @@ export default function TeacherVideos() {
         setUser(id ? { id, role } : null);
       })
       .catch(() => setUser(null));
-  }, []);
+  }, [studentId]);
 
   const handleVideoUpload = async (e) => {
     e.preventDefault();
-    if (!videoFile || !videoEmail) return setVideoErr("All fields required");
-
+    if (!videoFile) return setVideoErr("Select a video");
+  
+    if (!studentId && !videoEmail) {
+      return setVideoErr("Enter student email (or pick a student)");
+    }
+  
     try {
-      const { data: student } = await axios.get(
-        "/auth/user",
-        { params: { email: videoEmail }, withCredentials: true }
-      );
-
+      let targetId = studentId;
+  
+      // fallback: lookup by email only if no student selected
+      if (!targetId) {
+        const { data: student } = await axios.get("/auth/user", {
+          params: { email: videoEmail }
+        });
+        targetId = student._id;
+      }
+  
       const formData = new FormData();
       formData.append("file", videoFile);
-      formData.append("recipient", student._id);
-
-      setUploadProgress(0); // reset before starting
+      formData.append("recipient", targetId);
+  
+      setUploadProgress(0);
       setVideoErr("");
       setVideoMsg("");
-
+  
       const res = await axios.post("/resources/upload", formData, {
         headers: { "Content-Type": "multipart/form-data" },
-        withCredentials: true,
         onUploadProgress: (evt) => {
           if (evt.total) {
             const percent = Math.round((evt.loaded * 100) / evt.total);
@@ -67,10 +84,10 @@ export default function TeacherVideos() {
           }
         },
       });
-
+  
       setVideoMsg(res.data.message || "Upload Complete");
       setVideoFile(null);
-      setVideoEmail("");
+      if (!studentId) setVideoEmail(""); // keep email if no selection
       setUploadProgress(0);
       fetchVideos();
     } catch (err) {
@@ -79,6 +96,7 @@ export default function TeacherVideos() {
       setUploadProgress(0);
     }
   };
+  
 
   const handleDelete = async (id) => {
     const safeId = id || (typeof id === 'object' ? id?.id || id?._id : null)
@@ -113,6 +131,7 @@ export default function TeacherVideos() {
                 type="email"
                 value={videoEmail}
                 onChange={(e) => setVideoEmail(e.target.value)}
+                disabled={!!studentId}
               />
             </div>
             <div style={{marginLeft:'50px'}}>

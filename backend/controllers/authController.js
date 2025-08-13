@@ -8,7 +8,7 @@ const cookieOptsBase = {
   httpOnly: true,
   secure: isProd,                // required on Render (HTTPS)
   sameSite: isProd ? 'none' : 'lax',
-  path: '/',
+  path: '/'
 };
 
 function signToken(payload) {
@@ -20,13 +20,20 @@ function signToken(payload) {
 
 export async function signup(req, res) {
   try {
-    const { name, email, password, role } = req.body;
+    let { name, email, password, role } = req.body;
     if (!name || !email || !password) {
       return res.status(400).json({ message: 'Name, email, and password are required' });
     }
 
-    if (await User.findOne({ email })) {
-      return res.status(400).json({ message: 'Email already in use' });
+    email = String(email).trim().toLowerCase()
+    if(role && !['student', 'teacher'].includes(role)) {
+      return res.status(400).json({message: "Invalid role"})
+    }
+    role = role || 'student'
+
+    const existing = await User.findOne({email})
+    if(existing) {
+      return res.status(400).json({message:"Email already in yse"})
     }
 
     const hashed = await bcrypt.hash(password, 10);
@@ -34,8 +41,7 @@ export async function signup(req, res) {
 
     const payload = {
       id: user._id,
-      role: user.role,                 // fixed (was userrole)
-      assignedTeacher: user.assignedTeacher,
+      role: user.role,       
     };
 
     const token = signToken(payload);
@@ -65,17 +71,18 @@ export async function login(req, res) {
   try {
     const { email, password } = req.body;
 
-    const user = await User.findOne({ email });
-    if (!user) return res.status(400).json({ message: 'Invalid credentials' });
+    const user = await User.findOne({ email: String(email).trim().toLowerCase() });
+    if (!user) return res.status(401).json({ message: 'Invalid credentials' });
 
     const ok = await bcrypt.compare(password, user.password);
-    if (!ok) return res.status(400).json({ message: 'Invalid credentials' });
+    if (!ok) return res.status(401).json({ message: 'Invalid credentials' });
 
     const payload = {
       id: user._id,
       role: user.role,
-      assignedTeacher: user.assignedTeacher,
     };
+
+    console.log('User role before token: ', user.role)
     const token = signToken(payload);
 
     res
@@ -140,8 +147,8 @@ export async function getUserByEmail(req, res, next) {
   try {
     const { email } = req.query;
     if (!email) return res.status(400).json({ message: 'Email is required' });
-    const user = await User.findOne({ email });
-    if (!user) return res.status(404).json({ message: 'Student not found' });
+    const user = await User.findOne({ email: String(email).trim().toLowerCase() });
+    if (!user) return res.status(404).json({ message: 'User not found' });
     res.json({ _id: user._id, email: user.email, name: user.name });
   } catch (err) {
     next(err);

@@ -14,7 +14,7 @@ export default function PrivateRoute({ children, role}) {
   }
 
   if (role && user.role !== role) {
-    return <Navigate to='/login' replace />
+    return <Navigate to={user.role === 'teacher' ? '/teacher' : '/student'} replace />
   }
 
   return children

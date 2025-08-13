@@ -7,11 +7,11 @@ export function isAuthenticated(req, res, next) {
   if (req.method === 'OPTIONS') return res.sendStatus(204);
 
   let token = req.cookies?.token;
-
-  // Mobile/iOS Safari fallback
   const auth = req.headers.authorization;
-  if (!token && auth?.startsWith('Bearer ')) {
-    token = auth.split(' ')[1];
+  if(!token && auth?.startsWith('Bearer ')) {
+    token = auth.split(' ')[1]
+  } else {
+    token = req.cookies?.token;
   }
 
   if (!token) {
@@ -53,5 +53,8 @@ export function isTeacherOrStudent(req, res, next) {
   if (role === "teacher" || role === "student") return next();
   return res.status(403).json({ error: "Not authorized" });
 }
+
+
+
 
 export default { isAuthenticated, isStudent, isTeacher };

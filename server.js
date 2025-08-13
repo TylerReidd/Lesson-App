@@ -13,6 +13,7 @@ import { UPLOADS_DIR } from './backend/config/paths.js';
 import authRoutes from './backend/routes/auth.js';
 import resourceRoutes from './backend/routes/resources.js';
 import questionRoutes from './backend/routes/questions.js';
+import teacherRoutes from './backend/routes/teacher.js'
 
 // Resolve __dirname in ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -78,6 +79,14 @@ mongoose
     process.exit(1);
   });
 
+  mongoose.connection.once('open', () => {
+    console.log('[db] connected to', 
+    mongoose.connection.host,
+    mongoose.connection.name
+    )
+    console.log('[db] URI ', process.env.MONGO_URI)
+  })
+
 
   console.log("[BOOT] UPLOADS_DIR =", UPLOADS_DIR);
 try { fs.mkdirSync(UPLOADS_DIR, { recursive:true }); fs.accessSync(UPLOADS_DIR, fs.constants.W_OK); console.log("[BOOT] uploads dir writable"); } catch(e){ console.error("[BOOT] uploads dir not writable:", e.message); }
@@ -98,6 +107,76 @@ try { fs.mkdirSync(UPLOADS_DIR, { recursive:true }); fs.accessSync(UPLOADS_DIR, 
       res.status(500).json({ error: e.message, UPLOADS_DIR });
     }
   });
+
+  // --- DEV DEBUG: DB + users + seed helper (safe to keep; only active in non-prod) ---
+if (process.env.NODE_ENV !== 'production') {
+  // Shows which DB you're actually connected to, and collection counts
+  app.get('/debug/db', async (_req, res) => {
+    try {
+      const db = mongoose.connection.db;
+      const collections = await db.listCollections().toArray();
+      const names = collections.map(c => c.name);
+      const counts = {};
+      for (const col of ['users','resources','questions']) {
+        try { counts[col] = await db.collection(col).countDocuments(); }
+        catch { counts[col] = 'n/a'; }
+      }
+      res.json({
+        host: mongoose.connection.host,
+        name: mongoose.connection.name,   // <-- the DB name actually in use
+        uri: process.env.MONGO_URI,       // <-- the exact URI the server used
+        collections: names,
+        counts
+      });
+    } catch (e) {
+      res.status(500).json({ error: e.message });
+    }
+  });
+
+  // Lists all users with assignedTeacher populated (helps spot dangling links)
+  app.get('/debug/users', async (_req, res) => {
+    try {
+      const User = (await import('./backend/models/User.js')).default;
+      const users = await User.find({})
+        .select('_id name email role assignedTeacher')
+        .populate('assignedTeacher', '_id name email role');
+      res.json(users);
+    } catch (e) {
+      res.status(500).json({ error: e.message });
+    }
+  });
+
+  // Seeds a teacher+student and links them (deterministic test data)
+  app.post('/debug/seed-link', async (_req, res) => {
+    try {
+      const User = (await import('./backend/models/User.js')).default;
+      const bcrypt = (await import('bcrypt')).default;
+
+      const tEmail = 'teacherA@example.com';
+      const sEmail = 'studentS@example.com';
+      const pass   = await bcrypt.hash('Passw0rd!', 10);
+
+      let teacher = await User.findOne({ email: tEmail });
+      if (!teacher) teacher = await User.create({ name: 'Teacher A', email: tEmail, password: pass, role: 'teacher' });
+
+      let student = await User.findOne({ email: sEmail });
+      if (!student) student = await User.create({ name: 'Student S', email: sEmail, password: pass, role: 'student' });
+
+      student.assignedTeacher = teacher._id;
+      await student.save();
+
+      const studentsOfTeacher = await User.find({ role:'student', assignedTeacher: teacher._id }).select('name email');
+      res.json({
+        teacher: { id: teacher._id, email: teacher.email },
+        student: { id: student._id, email: student.email },
+        studentsOfTeacher
+      });
+    } catch (e) {
+      res.status(500).json({ error: e.message });
+    }
+  });
+}
+
   
 
 // Middleware
@@ -148,7 +227,7 @@ app.get('/uploads/:filename', (req,res) => {
 
   const [startStr, endStr] = range.replace(/bytes=/, '').split("-")
   const start = parseInt(startStr, 10);
-  const end = endStr ? parseInt(endStr,10) : stat.size - 1
+  let end = endStr ? parseInt(endStr,10) : stat.size - 1
 
   if (Number.isNaN(start) || start < 0 || start >= stat.size) {
     return res.status(416).set('Content-Range', `bytes */${stat.size}`).end();
@@ -189,7 +268,8 @@ app.use(
 app.use('/api/auth', authRoutes);
 app.use('/api/resources', resourceRoutes);
 app.use('/api/questions', questionRoutes);
-
+app.use('/api/teacher', teacherRoutes)
+app.use('/teacher', teacherRoutes)
 // Serve React client (assumes build output in client/dist)
 const CLIENT_DIST = path.join(__dirname, 'client', 'dist');
 app.use(express.static(CLIENT_DIST));

@@ -20,7 +20,21 @@ const router = express.Router();
 router.get(
   '/assignments',
   isAuthenticated, 
-  getAssignments
+  async (req,res,next) => {
+    try {
+      if(req.user.role === 'student') {
+        const items = await Resource.find({recipient: req.user.id, type: 'assignment'})
+        .sort({createdAt: -1})
+        return res.json({assignments: items})
+      }
+
+      const {studentId} = req.query;
+      const q = {owner: req.user.id, type: 'assignment'};
+      if (studentId) q.recipient = studentId;
+      const items = await Resource.find(q).sort({createdAt: -1})
+      res.json({assignments: items})
+    } catch (e) {next(e)}
+  }
 );
 
 router.get(
@@ -35,18 +49,11 @@ router.get(
   isAuthenticated,
   async( req,res,next) => {
     try {
-      const list = await Resource.find({
-        owner: req.user.id,
-        type: 'video',
-      }).sort('-createdAt');
-      res.json(list.map(r => ({
-        id: r._id,
-        filename: r.filename,
-        url: r.url,
-        uploadedAt: r.createdAt,
-        owner: r.owner?.toString(),
-        recipient: r.recipient?.toString(),
-      })))
+      const {studentId} = req.query;
+      const q = {owner: req.user.id, type: 'video'}
+      if(studentId) q.recipient = studentId;
+      const items = await Resource.find(q).sort({ createdAt: - 1 });
+      res.json({videos: items})
     } catch (err) {
       next(err)
     }
@@ -94,15 +101,19 @@ router.post(
 
       console.log('[UPLOAD] saved as:', resource._id.toString(), url);
 
-
+      const payload = {
+        id: resource.id,
+        filename: resource.filename,
+        url: resource.url,
+        uploadedAt: resource.createdAt,
+        type: resource.type
+      }
       res.status(201).json({
         message: "Upload Successful",
-        video: {
-          id:         resource._id,
-          filename:   resource.filename,
-          url:        resource.url,
-          uploadedAt: resource.createdAt
-        }
+        resource: payload, 
+        ...(resource.type === 'video' 
+        ? {video: payload}
+        : {assignment: payload})
       });
     } catch (err) {
       console.error("UPLOAD: error", err?.stack || err)

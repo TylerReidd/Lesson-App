@@ -2,11 +2,15 @@ import React, { useState, useContext } from 'react';
 import axios from '../axios.js';
 import { AuthContext } from '../AuthContext';
 
-export default function LinkTeacherForm() {
-  const { setUser } = useContext(AuthContext);
+export default function LinkTeacherForm({onLinked}) {
+  const {user, setUser} = useContext(AuthContext)
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+
+  if (user?.role !== 'student' || user?.assignedTeacher) {
+    return null;
+  }
 
   const handleLink = async e => {
     e.preventDefault();
@@ -16,10 +20,15 @@ export default function LinkTeacherForm() {
         { teacherEmail: email },
         { withCredentials: true }
       );
+      const me = data?.user
+      ? data.user
+      : (await axios.get('/auth/me/full', {withCredentials: true})).data?.user
       console.log('linkTeacher response:', data);
-      setUser(data.user);
+      onLinked?.(me)
+      setUser(me);
       setError(null);
-      setSuccess('Teacher linked!');   // add a success message
+      setSuccess('Teacher linked!');
+      setEmail('')
     } catch (err) {
       console.error(err);
       setError(err.response?.data?.message || 'Link failed');

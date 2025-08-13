@@ -2,17 +2,22 @@
 import Axios from 'axios';
 
 const isProd = import.meta.env.MODE === 'production';
-// In prod (same origin), use relative paths; in dev, use Vite proxy at /api
-const baseURL = isProd ? '/api' : (import.meta.env.VITE_API_URL ?? '/api');
+const baseURL = import.meta.env.VITE_API_URL || '/api';
 
 const api = Axios.create({
   baseURL,
   withCredentials: true,
 });
 
+const USE_BEARER = import.meta.env.VITE_USE_BEARER === 'true'
+
 api.interceptors.request.use((config) => {
-  const t = localStorage.getItem('token');
-  if (t) config.headers.Authorization = `Bearer ${t}`;
+  if(USE_BEARER) {
+    const t = localStorage.getItem('token');
+    if(t) config.headers.Authorization = `Bearer ${t}`
+  } else {
+    if(config.headers?.Authorization) delete config.headers.Authorization
+  }
   return config;
 });
 

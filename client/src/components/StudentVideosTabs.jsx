@@ -48,7 +48,9 @@ export default function StudentVideosTabs({ videos, onDelete}) {
           className="video-player"
         />
         <p>Uploaded: {vid.uploadedAt ? new Date(vid.uploadedAt).toLocaleDateString() : "Unknown"}</p>
-        <button onClick={() => onDelete(vid.id || vid._id)}>Delete Video</button>
+        {typeof onDelete === 'function' && (
+          <button onClick={() => onDelete(vid.id || vid._id)}>Delete Video</button>
+        )}
       </div>
     </div>
   );

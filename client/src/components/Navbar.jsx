@@ -1,7 +1,7 @@
 import React, { useState, useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AuthContext } from "../AuthContext";
-import axios from "../axios";
+import axios from "../axios.js";
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
@@ -11,6 +11,7 @@ export default function Navbar() {
   const handleLogout = async () => {
     try {
       await axios.post("/auth/logout");
+      try { localStorage.removeItem('token'); } catch {}
       setUser(null);
       navigate("/login", { replace: true });
     } catch {

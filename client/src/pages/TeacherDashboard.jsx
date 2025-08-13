@@ -1,237 +1,58 @@
-import React, { useState, useEffect } from "react";
-import axios from "../axios.js";
-import { useNavigate } from "react-router-dom";
-import TeacherDashboardQuestions from "../components/TeacherDashboardQuestions";
+// src/pages/TeacherDashboard.jsx
+import React, { useState } from "react";
+import TeacherStudentsPanel from "../components/TeacherStudentsPanel";
+import TeacherVideos from "../components/TeacherVideos";
+import TeacherAssignments from "../components/TeacherAssignment";
+import TeacherQuestions from "../components/TeacherQuestions";
 
-
-
-// Fetch assignments and PDFs
-
-
-export default function TeacherDashboard({onLogout}) {
-  const navigate = useNavigate()
-  const [videoFile, setVideoFile]   = useState(null);
-  const [videoEmail, setVideoEmail] = useState("");
-  const [videoErr, setVideoErr]     = useState("");
-  const [videoMsg, setVideoMsg]     = useState("");
-
-  const [pdfEmail, setPdfEmail] = useState('')
-  const [pdfFile, setPdfFile] = useState(null)
-  const [pdfErr, setPdfErr] = useState('')
-  const [pdfMsg, setPdfMsg] = useState('')
-  const [assignments, setAssignments] = useState([])
-
-  const [questions, setQuestions] = useState([])
-
-  // const fetchQs = async () => {
-  //   const {data} = await axios.get('/questions/teacher');
-  //   setQuestions(data)
-  // }
-
-  // useEffect(()=> {fetchQs()}, [])
-
-  // const respond = async (id, answer) => {
-  //   await axios.put(`/questions/${id}/respond`, {answer})
-  //   fetchQs()
-  // }
-
-  useEffect(() => {
-    axios
-      .get('/resources/assignments')
-      .then(res => setAssignments(res.data))
-      .catch(err => console.error('fetch assignments failed', err));
-  }, []);
-
-  // Handle PDF upload
-  const handlePdfUpload = async e => {
-  e.preventDefault();
-  if (!pdfFile) return setPdfErr("Must select a PDF");
-  if (!pdfEmail) return setPdfErr("Enter student email");
-
-  const formData = new FormData();
-  formData.append('file', pdfFile);            // matches upload.single('file')
-  formData.append('recipientEmail', pdfEmail);     // matches req.body.recipient
-
-
-  try {
-      const res = await axios.post(
-        '/uploads/pdf',
-        formData,
-        { headers: { 'Content-Type': 'multipart/form-data' } }
-      );
-      setPdfMsg(res.data.message);
-      setPdfErr('');
-      // Prepend the new assignment returned from the API
-      if (res.data.assignment) {
-        setAssignments(a => [res.data.assignment, ...a]);
-      }
-      setPdfFile(null);
-      setPdfEmail('');
-    } catch (err) {
-      console.error('PDF upload failed', err.response?.data || err);
-      setPdfErr(err.response?.data?.error || 'Upload failed');
-    }
-  };
-
-
-  const handleVideoUpload = async e => {
-    e.preventDefault();
-    if (!videoFile) return setVideoErr("Select a video");
-    if (!videoEmail) return setVideoErr("Enter student Email")
-
-
-
-    let studentId
-    try {
-      const userRes = await axios.get('/auth/user', {
-        params: {email: videoEmail}
-      })
-      studentId = userRes.data._id
-    } catch {
-      return setVideoErr('Student not found')
-    }
-
-    const formData = new FormData();
-    formData.append("file", videoFile);
-    formData.append("recipient", studentId)
- 
-
-    try {
-      const res = await axios.post(
-        "/resources/videos/upload",
-        formData,
-        { headers: { "Content-Type": "multipart/form-data" } }
-      );
-      setVideoMsg(res.data.message);
-      setVideoErr("");
-      setVideoFile(null);
-      setVideoEmail("");
-    } catch (err) {
-      console.error("upload error →", err.response?.data || err);
-      setVideoErr(err.response?.data?.error || "Video upload failed");
-    }
-  };
-
-
-  const handleLogout = async () => {
-    try {
-      await axios.post('/auth/logout')
-      onLogout()
-      navigate('/login', {replace: true})
-    } catch (err){
-      console.error("Logout Failed", err)
-    }
-  }
+export default function TeacherDashboard({ onLogout }) {
+  const [activeStudent, setActiveStudent] = useState(null); // {_id, name, email} or null
 
   return (
-  <div className="container">
-    <div className="card">
+    <div>
       <h1>Teacher Dashboard</h1>
 
-      {videoErr && <p style={{ color: "red" }}>{videoErr}</p>}
-      {videoMsg && <p style={{ color: "green" }}>{videoMsg}</p>}
+      {/* Student picker */}
+      <div className="dashboard-grid" style={{ marginBottom: 16 }}>
+        <TeacherStudentsPanel
+          onSelect={setActiveStudent}
+          activeId={activeStudent?._id}
+        />
+      </div>
 
-      <div className="section">
-        <h2>Upload video</h2>
-
-        <form onSubmit={handleVideoUpload}>
-          <div className="form-group">
-            <label>Student Email</label>
-            <input
-              type="email"
-              value={videoEmail}
-              onChange={e => setVideoEmail(e.target.value)}
-              />
-          </div>
-          <div className="form-group">
-            <label>Select Video</label>
-            <input
-              type="file"
-              accept="video/*"
-              onChange={e => setVideoFile(e.target.files[0])}
-              />
-          <button type="submit" className="button">
-            Upload Video
+      {/* Context note + clear */}
+      {activeStudent && (
+        <div className="form-note" style={{ marginBottom: 12 }}>
+          Viewing: <strong>{activeStudent.name}</strong> ({activeStudent.email})
+          <button className="btn-ghost" style={{ marginLeft: 8 }} onClick={() => setActiveStudent(null)}>
+            Clear
           </button>
-          </div>
-        </form>
+        </div>
+      )}
+
+      {/* The three teacher blocks, now filtered when a student is selected */}
+      <div className="dashboard-grid">
+        <section className="dashboard-panel">
+          <h2>Videos</h2>
+          <TeacherVideos
+            studentId={activeStudent?._id}
+            defaultRecipientEmail={activeStudent?.email}
+          />
+        </section>
+
+        <section className="dashboard-panel">
+          <h2>Assignments</h2>
+          <TeacherAssignments
+            studentId={activeStudent?._id}
+            defaultRecipientEmail={activeStudent?.email}
+          />
+        </section>
+
+        <section className="dashboard-panel">
+          <h2>Questions</h2>
+          <TeacherQuestions studentId={activeStudent?._id} />
+        </section>
       </div>
-
-      <div className="dashboard-section">
-          {pdfErr && <p style={{ color: 'red' }}>{pdfErr}</p>}
-          {pdfMsg && <p style={{ color: 'green' }}>{pdfMsg}</p>}
-
-        <form onSubmit={handlePdfUpload}>
-          <div className="form-group">
-            <h2>Upload Assignment (PDF Only)</h2>
-            <label>Student Email</label>
-            <input
-              type="email"
-              value={pdfEmail}
-              onChange={e => setPdfEmail(e.target.value)}
-              required
-              />
-            </div>
-
-            <div className="form-group">
-            <label>Select PDF</label>
-            <input
-              type='file'
-              accept='application/pdf'
-              onChange={e => setPdfFile(e.target.files[0])}
-              />
-          <button type='submit' className="button">
-            Upload PDF
-          </button>
-          </div>
-        </form>
-      </div>
-
-      <div className="dashboard-section">
-        <h3 >Available Assignments</h3>
-        <ul>
-          {assignments.map(f => (
-            <li key={f.id}>
-              <a
-                href={f.url}
-                target="_blank"
-                rel='noopener noreferrer'
-                >
-                {f.filename}
-              </a>
-              <span className="text-sm text-gray-500 ml-2">
-                {new Date(f.uploadedAt).toLocaleDateString()}
-              </span>
-            </li>
-          ))}
-        </ul>
-
-      </div>
-
-      <div className="dashboard-section">
-        <TeacherDashboardQuestions />
-      </div>
-
-        <button onClick={handleLogout} className='button-logout'>Logout</button>
-      </div>
-
     </div>
   );
-}
-
-function AnswerForm ({questionId, onRespond}) {
-  const [ans,setAns] = useState('');
-  return (
-    <form
-      onSubmit={e => {e.preventDefault(); onRespond(questionId,ans); setAns('')}}
-    >
-      <textarea
-       value={ans} 
-       onChange={e=> setAns(e.target.value)} 
-       placeholder="type your response..." 
-       required />
-
-       <button type="submit" >Send Response</button>
-    </form>
-  )
 }

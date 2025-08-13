@@ -52,6 +52,7 @@ export default function StudentQuestions() {
         {withCredentials:true}
       );
       await fetchQuestions();
+      setOpenId((cur) => (cur === id ? null : cur))
     } catch (err) {
         console.error("Failed to delete question", err)
     }

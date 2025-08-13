@@ -1,6 +1,7 @@
 import express from 'express'
 import  {isAuthenticated, isStudent, isTeacher} from '../middleware/auth.js'
 import {postQuestion, getMyQuestions, getAllQuestions, respondToQuestion, deleteQuestion} from '../controllers/questionController.js'
+import Question from '../models/Question.js'
 
 const router = express.Router()
 
@@ -23,7 +24,15 @@ router.get(
   '/teacher',
   isAuthenticated,
   isTeacher,
-  getAllQuestions
+  async (req,res,next) => {
+    try {
+      const {studentId} = req.query;
+      const q = {teacher: req.user.id};
+      if(studentId) q.student = studentId;
+      const items = await Question.find(q).sort({createdAt: -1})
+      res.json({questions: items})
+    } catch (e) {next(e)}
+  }
   )
 
 router.put(

@@ -18,11 +18,11 @@ import StudentAssignments from './components/StudentAssignments';
 import StudentQuestions from './components/StudentQuestions';
 import TeacherLayout from './components/TeacherLayout';
 import StudentDashboard from './pages/StudentDashboard';
-import StudentVideosTabs from './components/StudentVideosTabs';
+import TeacherDashboard from './pages/TeacherDashboard';
 
 
 function App() {
-  const {user, setUser, loading} = useContext(AuthContext)
+  const {user, loading} = useContext(AuthContext)
 
 
 
@@ -50,6 +50,7 @@ function App() {
             </PrivateRoute>
             }
           >
+            <Route index element={<StudentDashboard /> } /> 
             <Route path='videos' element={<StudentVideos />} />
             <Route path='assignments' element={<StudentAssignments/>} />
             <Route path='questions' element={<StudentQuestions />} />
@@ -63,30 +64,28 @@ function App() {
               <TeacherLayout />
             </PrivateRoute>}
           >
+            <Route index element={<TeacherDashboard /> } /> 
             <Route path='videos' element={<TeacherVideos />} />
             <Route path='assignments' element={<TeacherAssignments />} />
             <Route path='questions' element={<TeacherQuestions />} />
           </Route>
 
           <Route
-            path="*"
+            path="/"
             element={
+              loading ? <div /> : (
               <Navigate
-                to={
-                  user
-                    ? (user.role === 'teacher' ? '/teacher/videos' : '/student')
-                    : '/login'
-                }
+                to={user
+                    ? (user.role === 'teacher' ? '/teacher' : '/student')
+                    : '/login'}
                 replace
               />
+              )
             }
           />
-
         </Routes>
       </div>
     </Router>
-
-    
   );
 }
 

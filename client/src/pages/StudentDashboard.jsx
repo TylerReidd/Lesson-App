@@ -3,6 +3,7 @@ import axios from "../axios.js";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../AuthContext";
 import LinkTeacherForm from "../components/LinkTeacherForm.jsx";
+import UnlinkTeacherButton from "../components/UnlinkTeacherButton.jsx";
 import StudentQuestions from "../components/StudentQuestions.jsx";
 import StudentVideosTabs from "../components/StudentVideosTabs.jsx";
 
@@ -13,9 +14,13 @@ export default function StudentDashboard({ onLogout }) {
   const [videos, setVideos] = useState([]);
   const [assignments, setAssignments] = useState([]);
   const [err, setErr] = useState("");
+  const clearPanels = () => {
+    setVideos([])
+    setAssignments([])
+  }
   const [reload, setReload] = useState(0);
 
-  const onQuestionSent = () => setReload((r) => r + 1);
+
 
   // Fetch only videos here
   const fetchVideos = async () => {
@@ -118,18 +123,23 @@ export default function StudentDashboard({ onLogout }) {
             </ul>
           </section>
 
-          {/* Q&A or Link-Teacher Panel */}
+
           <section className="dashboard-panel">
-            {!user.assignedTeacher ? (
-              <>
-                <h2>Link Your Teacher</h2>
-                <LinkTeacherForm />
-              </>
-            ) : (
-              <>
-                <h2>My Questions & Answers</h2>
-              <StudentQuestions />
-              </>
+            {user?.role === 'student' && (
+              user.assignedTeacher ? ( 
+                <UnlinkTeacherButton 
+                  onUnlinked={() => {
+                    clearPanels()
+                    axios.get('/auth/me/full').then(({data}) => setUser(data?.user ?? null))
+                  }}
+                  />
+              ) : (
+                <LinkTeacherForm onUnlinked={async () => {
+                  const {data} = await axios.get('/auth/me/full');
+                  setUser(data?.user ?? null)
+                }} 
+                />
+            )
             )}
           </section>
         </div>
