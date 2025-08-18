@@ -1,7 +1,6 @@
 // src/axios.js
 import Axios from 'axios';
 
-const isProd = import.meta.env.MODE === 'production';
 const baseURL = import.meta.env.VITE_API_URL || '/api';
 
 const api = Axios.create({

@@ -21,8 +21,7 @@ export default function StudentVideosTabs({ videos, onDelete}) {
   }
 
   return (
-    <div className="tabs-container container">
-      {/* Tab bar */}
+    <>
       <nav className="tabs-nav" role='tablist' aria-label="Videos">
         {videos.map((v, i) => (
           <button
@@ -37,6 +36,7 @@ export default function StudentVideosTabs({ videos, onDelete}) {
           </button>
         ))}
       </nav>
+    <div className="tabs-container container">
 
       {/* Active video */}
       <div id={`video-panel-${idx}`} className="tab-panel">
@@ -53,5 +53,6 @@ export default function StudentVideosTabs({ videos, onDelete}) {
         )}
       </div>
     </div>
+    </>
   );
 }

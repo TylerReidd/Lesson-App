@@ -1,6 +1,8 @@
 // src/components/TeacherAssignment.jsx
 import React, { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import axios from "../axios.js";
+import Sidebar from "./Sidebar.jsx"
 
 export default function TeacherAssignments({ studentId, defaultRecipientEmail }) {
   const [pdfFile, setPdfFile] = useState(null);
@@ -9,11 +11,14 @@ export default function TeacherAssignments({ studentId, defaultRecipientEmail })
   const [pdfMsg, setPdfMsg] = useState("");
   const [assignments, setAssignments] = useState([]);
   const [user, setUser] = useState(null);
+  const { search } = useLocation();
+  const qsStudentId = new URLSearchParams(search).get('studentId');
+  const effectiveStudentId = studentId ?? qsStudentId ?? null;
 
   const fetchAssignments = async () => {
     try {
-      const url = studentId
-        ? `/resources/assignments?studentId=${studentId}`
+      const url = effectiveStudentId
+        ? `/resources/assignments?studentId=${effectiveStudentId}`
         : `/resources/assignments`;
       const res = await axios.get(url);
       const list = Array.isArray(res.data?.assignments) ? res.data.assignments 
@@ -45,7 +50,7 @@ export default function TeacherAssignments({ studentId, defaultRecipientEmail })
         setUser(id ? { id, role } : null);
       })
       .catch(() => setUser(null));
-  }, [studentId]);
+  }, [effectiveStudentId]);
 
   // Optional UX: prefill email when a student is selected
   useEffect(() => {
@@ -58,11 +63,11 @@ export default function TeacherAssignments({ studentId, defaultRecipientEmail })
     setPdfMsg("");
 
     if (!pdfFile) return setPdfErr("Select a PDF");
-    if (!studentId && !pdfEmail) return setPdfErr("Enter student email (or pick a student)");
+    if (!effectiveStudentId && !pdfEmail) return setPdfErr("Enter student email (or pick a student)");
 
     try {
       // Resolve recipient target id
-      let targetId = studentId;
+      let targetId = effectiveStudentId;
       if (!targetId) {
         const { data: student } = await axios.get("/auth/user", {
           params: { email: pdfEmail },
@@ -80,7 +85,7 @@ export default function TeacherAssignments({ studentId, defaultRecipientEmail })
 
       setPdfMsg(res.data.message || "Upload complete");
       setPdfFile(null);
-      if (!studentId) setPdfEmail(""); // keep email field if using selection
+      if (!effectiveStudentId) setPdfEmail(""); // keep email field if using selection
       await fetchAssignments();
     } catch (err) {
       console.error("PDF upload failed", err.response?.data || err);
@@ -99,8 +104,9 @@ export default function TeacherAssignments({ studentId, defaultRecipientEmail })
   };
 
   return (
-    <div className="content">
-      <div className="dashboard-panel">
+    <div> 
+    {/* <Sidebar role='teacher'/> */}
+      <div >
         <h1>Manage Assignments (PDF)</h1>
 
         {/* Upload Section */}
@@ -116,7 +122,7 @@ export default function TeacherAssignments({ studentId, defaultRecipientEmail })
                 value={pdfEmail}
                 onChange={(e) => setPdfEmail(e.target.value)}
                 placeholder="student@example.com"
-                disabled={!!studentId} // if a student is selected, no email needed
+                disabled={!!effectiveStudentId} // if a student is selected, no email needed
               />
             </div>
 

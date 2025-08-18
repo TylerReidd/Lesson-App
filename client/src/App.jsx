@@ -19,6 +19,7 @@ import StudentQuestions from './components/StudentQuestions';
 import TeacherLayout from './components/TeacherLayout';
 import StudentDashboard from './pages/StudentDashboard';
 import TeacherDashboard from './pages/TeacherDashboard';
+import TeacherStudentPage from './pages/TeacherStudentPage';
 
 
 function App() {
@@ -65,6 +66,7 @@ function App() {
             </PrivateRoute>}
           >
             <Route index element={<TeacherDashboard /> } /> 
+            <Route path="students/:id" element={<TeacherStudentPage /> } />
             <Route path='videos' element={<TeacherVideos />} />
             <Route path='assignments' element={<TeacherAssignments />} />
             <Route path='questions' element={<TeacherQuestions />} />

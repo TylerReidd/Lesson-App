@@ -4,8 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../AuthContext";
 import LinkTeacherForm from "../components/LinkTeacherForm.jsx";
 import UnlinkTeacherButton from "../components/UnlinkTeacherButton.jsx";
-import StudentQuestions from "../components/StudentQuestions.jsx";
-import StudentVideosTabs from "../components/StudentVideosTabs.jsx";
+import PracticeForm from "../components/PracticeForm.jsx";
 
 export default function StudentDashboard({ onLogout }) {
   const navigate = useNavigate();
@@ -62,68 +61,15 @@ export default function StudentDashboard({ onLogout }) {
     fetchVideos();
   }, [reload]);
 
-  const handleLogout = async () => {
-    try {
-      await axios.post("/auth/logout", {}, { withCredentials: true });
-      onLogout();
-      setUser(null);
-      navigate("/login");
-    } catch (err) {
-      console.error("logout failed", err);
-    }
-  };
-
   if (loading) return <div>Loading...</div>;
 
   return (
-    <div className="container student-layout-container">
+    <div>
       <div className="card">
         <h1>Student Dashboard</h1>
-
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            fetchVideos();
-          }}
-        >
-          <div className="form-group">
-            <button type="submit" className="button">
-              Load My Videos
-            </button>
-          </div>
-        </form>
-
-        {err && <p style={{ color: "red" }}>{err}</p>}
+        <PracticeForm /> 
 
         <div className="dashboard-grid">
-          {/* Videos Panel */}
-          <section className="dashboard-panel">
-            <h2>My Videos</h2>
-            <StudentVideosTabs videos={videos} />
-          </section>
-
-          {/* Assignments Panel */}
-          <section className="dashboard-panel">
-            <h2>Your PDF Assignments</h2>
-            <ul>
-              {Array.isArray(assignments) && assignments.length > 0 ? (
-                assignments.map((f) => (
-                <li key={f.id}>
-                  <a href={f.url} target="_blank" rel="noopener noreferrer">
-                    {f.filename}
-                  </a>
-                  <span className="text-sm text-gray-500 ml-2">
-                    {new Date(f.uploadedAt).toLocaleDateString()}
-                  </span>
-                </li>
-            ))
-            ) : (
-              <li>No Assignments Available</li>
-            )}
-            </ul>
-          </section>
-
-
           <section className="dashboard-panel">
             {user?.role === 'student' && (
               user.assignedTeacher ? ( 
@@ -141,12 +87,8 @@ export default function StudentDashboard({ onLogout }) {
                 />
             )
             )}
-          </section>
+          </section> 
         </div>
-
-        <button className="button-logout" onClick={handleLogout}>
-          Logout
-        </button>
       </div>
     </div>
   );

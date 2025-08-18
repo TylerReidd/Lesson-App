@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import axios from "../axios.js";
 import StudentVideosTabs from "./StudentVideosTabs.jsx";
+import { useLocation } from 'react-router-dom';
+
 
 export default function TeacherVideos({studentId, defaultRecipientEmail}) {
   const [videoFile, setVideoFile] = useState(null);
@@ -9,13 +11,16 @@ export default function TeacherVideos({studentId, defaultRecipientEmail}) {
   const [videoMsg, setVideoMsg] = useState("");
   const [videos, setVideos] = useState([]);
   const [user, setUser] = useState(null)
-
+  const { search } = useLocation();
+  const qsStudentId = new URLSearchParams(search).get('studentId');
+  const effectiveStudentId = studentId ?? qsStudentId ?? null;
+  
   // new state for upload progress
   const [uploadProgress, setUploadProgress] = useState(0);
 
   const fetchVideos = async () => {
-    const url = studentId
-    ? `/teacher/students/${studentId}/videos`
+    const url = effectiveStudentId
+    ? `/teacher/students/${effectiveStudentId}/videos`
     : `/resources/videos`
     const res = await axios.get(url);
     const list = Array.isArray(res.data?.videos) ? res.data.videos 
@@ -46,18 +51,18 @@ export default function TeacherVideos({studentId, defaultRecipientEmail}) {
         setUser(id ? { id, role } : null);
       })
       .catch(() => setUser(null));
-  }, [studentId]);
+  }, [effectiveStudentId]);
 
   const handleVideoUpload = async (e) => {
     e.preventDefault();
     if (!videoFile) return setVideoErr("Select a video");
   
-    if (!studentId && !videoEmail) {
+    if (!effectiveStudentId && !videoEmail) {
       return setVideoErr("Enter student email (or pick a student)");
     }
   
     try {
-      let targetId = studentId;
+      let targetId = effectiveStudentId;
   
       // fallback: lookup by email only if no student selected
       if (!targetId) {
@@ -87,7 +92,7 @@ export default function TeacherVideos({studentId, defaultRecipientEmail}) {
   
       setVideoMsg(res.data.message || "Upload Complete");
       setVideoFile(null);
-      if (!studentId) setVideoEmail(""); // keep email if no selection
+      if (!effectiveStudentId) setVideoEmail(""); // keep email if no selection
       setUploadProgress(0);
       fetchVideos();
     } catch (err) {
@@ -115,28 +120,32 @@ export default function TeacherVideos({studentId, defaultRecipientEmail}) {
   };
 
   return (
-    <div className="content">
-      <div className="dashboard-panel">
+    <div>
+      {/* <Sidebar role='teacher' /> */}
+      <div className="panel">
         <h1>Manage Videos</h1>
 
         {/* Upload Section */}
-        <div className="dashboard-section">
+        <div className="dashboard-section panel">
           {videoErr && <p style={{ color: "red" }}>{videoErr}</p>}
           {videoMsg && <p style={{ color: "green" }}>{videoMsg}</p>}
 
-          <form onSubmit={handleVideoUpload} className="form-centered">
-            <div>
-              <label>Student Email</label>
+          <form onSubmit={handleVideoUpload} className="form-grid form-centered">
+            <div className="field">
+              <label className="label-lg">Student Email</label>
               <input
+                className="input-lg"
                 type="email"
                 value={videoEmail}
                 onChange={(e) => setVideoEmail(e.target.value)}
-                disabled={!!studentId}
+                disabled={!!effectiveStudentId}
               />
             </div>
-            <div style={{marginLeft:'50px'}}>
-              <label style={{marginLeft:"100px"}}>Select Video: </label>
+            <div className='field'>
+              <label className="label-lg" style={{marginLeft:"100px"}}>Select Video: </label>
               <input
+                className="input-lg"
+                
                 type="file"
                 accept="video/*"
                 onChange={(e) => setVideoFile(e.target.files[0])}
@@ -146,30 +155,26 @@ export default function TeacherVideos({studentId, defaultRecipientEmail}) {
             {/* Progress bar */}
             {uploadProgress > 0 && (
               <div style={{ margin: "8px 0" }}>
-                <div
+                <div className="progress"
                   style={{
-                    background: "#eee",
-                    height: "10px",
-                    borderRadius: "6px",
-                    overflow: "hidden",
+                   gridColumn: '1/-1'
                   }}
                 >
                   <div
+                    className="bar"
                     style={{
-                      background: "#4caf50",
-                      width: `${uploadProgress}%`,
-                      height: "100%",
-                      transition: "width 0.2s",
+                     width: `${uploadProgress}%` 
                     }}
                   />
                 </div>
                 <small>{uploadProgress}%</small>
               </div>
             )}
-
-            <button type="submit" className="button">
-              Upload Video
-            </button>
+            <div className="actons">
+              <button type="submit" className="button button-lg">
+                Upload Video
+              </button>
+            </div>
           </form>
         </div>
 

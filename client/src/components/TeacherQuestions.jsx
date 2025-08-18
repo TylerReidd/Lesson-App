@@ -1,19 +1,24 @@
 // src/components/TeacherQuestions.jsx
 import React, { useEffect, useState } from "react";
 import axios from "../axios.js";
+import { useLocation } from "react-router-dom";
+import Sidebar from './Sidebar.jsx'
 
 export default function TeacherQuestions({ studentId }) {
   const [questions, setQuestions] = useState([]);
   const [drafts, setDrafts] = useState({});
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
+  const { search } = useLocation();
+  const qsStudentId = new URLSearchParams(search).get('studentId')
+  const effectiveStudentId = studentId ?? qsStudentId ?? null;
 
   const fetchQuestions = async () => {
     try {
       setLoading(true);
       setErr("");
-      const url = studentId
-        ? `/questions/teacher?studentId=${studentId}`
+      const url = effectiveStudentId
+        ? `/questions/teacher?studentId=${effectiveStudentId}`
         : `/questions/teacher`;
       const res = await axios.get(url);
       const list = Array.isArray(res.data?.questions)
@@ -35,7 +40,7 @@ export default function TeacherQuestions({ studentId }) {
   useEffect(() => {
     fetchQuestions();
     // re-run whenever the selected student changes
-  }, [studentId]);
+  }, [effectiveStudentId]);
 
   const respond = async (id) => {
     const answer = drafts[id]?.trim();
@@ -52,7 +57,8 @@ export default function TeacherQuestions({ studentId }) {
   };
 
   return (
-    <div className="dashboard-panel">
+    <div>
+      {/* <Sidebar role='teacher'/> */}
       <h1>Student Questions</h1>
 
       {err && <p className="text-red-500" style={{ marginBottom: 8 }}>{err}</p>}

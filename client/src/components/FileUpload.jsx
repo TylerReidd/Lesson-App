@@ -1,4 +1,3 @@
-// client/src/components/FileUpload.jsx
 import React from 'react';
 
 export default function FileUpload({ onUpload }) {
