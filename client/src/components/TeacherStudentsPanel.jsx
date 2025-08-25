@@ -87,7 +87,7 @@ import axios from '../axios.js';
         ) : (
           <>
              {/* KPI pills only */}
-            <div className="grid grid-sm-2 grid-lg-3" style={{ marginBottom: 12 }}>
+            <div className="grid" style={{ marginBottom: 12 }}>
               <Stat label="Questions" value={summary?.questions} />
               <Stat label="Videos" value={summary?.videos} />
               <Stat label="Assignments" value={summary?.assignments} />

@@ -16,7 +16,7 @@ export default function TeacherLayout() {
 
   return (
     <>
-      <Navbar onMenu={() => setMenuOpen(true)} isMenuOpen={menuOpen} />
+      <Navbar onMenu={() => setMenuOpen(!menuOpen)} isMenuOpen={menuOpen} /> 
 
       <div className="workspace">
 

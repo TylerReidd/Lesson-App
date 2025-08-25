@@ -65,7 +65,7 @@ export default function Navbar({ onMenu, isMenuOpen }) {
           className="hamburger"
           onClick={onMenu}
           aria-label="Open menu"
-          aria-expanded={isMenuOpen ? 'true' : 'false'}
+          aria-expanded={isMenuOpen}
         >
           {/* menu icon */}
           <svg viewBox="0 0 24 24" aria-hidden="true">

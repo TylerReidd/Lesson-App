@@ -73,12 +73,13 @@ export default function StudentDashboard({ onLogout }) {
           <section className="dashboard-panel">
             {user?.role === 'student' && (
               user.assignedTeacher ? ( 
-                <UnlinkTeacherButton 
-                  onUnlinked={() => {
-                    clearPanels()
-                    axios.get('/auth/me/full').then(({data}) => setUser(data?.user ?? null))
-                  }}
-                  />
+                ""
+                // <UnlinkTeacherButton 
+                //   onUnlinked={() => {
+                //     clearPanels()
+                //     axios.get('/auth/me/full').then(({data}) => setUser(data?.user ?? null))
+                //   }}
+                //   />
               ) : (
                 <LinkTeacherForm onUnlinked={async () => {
                   const {data} = await axios.get('/auth/me/full');

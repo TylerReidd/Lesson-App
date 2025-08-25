@@ -1,8 +1,7 @@
-// src/components/TeacherAssignment.jsx
+// src/components/TeacherAssignments.jsx
 import React, { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import axios from "../axios.js";
-import Sidebar from "./Sidebar.jsx"
 
 export default function TeacherAssignments({ studentId, defaultRecipientEmail }) {
   const [pdfFile, setPdfFile] = useState(null);
@@ -11,8 +10,9 @@ export default function TeacherAssignments({ studentId, defaultRecipientEmail })
   const [pdfMsg, setPdfMsg] = useState("");
   const [assignments, setAssignments] = useState([]);
   const [user, setUser] = useState(null);
+
   const { search } = useLocation();
-  const qsStudentId = new URLSearchParams(search).get('studentId');
+  const qsStudentId = new URLSearchParams(search).get("studentId");
   const effectiveStudentId = studentId ?? qsStudentId ?? null;
 
   const fetchAssignments = async () => {
@@ -21,20 +21,23 @@ export default function TeacherAssignments({ studentId, defaultRecipientEmail })
         ? `/resources/assignments?studentId=${effectiveStudentId}`
         : `/resources/assignments`;
       const res = await axios.get(url);
-      const list = Array.isArray(res.data?.assignments) ? res.data.assignments 
-                                                        : Array.isArray(res.data?.items)
-                                                        ? res.data.items 
-                                                        : Array.isArray(res.data)
-                                                        ? res.data 
-                                                        : []
-      setAssignments(list.map(a =>({
-        id: a.id || a._id,
-        filename: a.filename,
-        url: a.url || a.path,
-        uploadedAt: a.uploadedAt || a.createdAt,
-        owner: a.owner,
-        recipient: a.recipient
-    })));
+      const list = Array.isArray(res.data?.assignments)
+        ? res.data.assignments
+        : Array.isArray(res.data?.items)
+        ? res.data.items
+        : Array.isArray(res.data)
+        ? res.data
+        : [];
+      setAssignments(
+        list.map((a) => ({
+          id: a.id || a._id,
+          filename: a.filename,
+          url: a.url || a.path,
+          uploadedAt: a.uploadedAt || a.createdAt,
+          owner: a.owner,
+          recipient: a.recipient,
+        }))
+      );
     } catch (err) {
       console.error("Failed to load assignments", err);
     }
@@ -52,7 +55,6 @@ export default function TeacherAssignments({ studentId, defaultRecipientEmail })
       .catch(() => setUser(null));
   }, [effectiveStudentId]);
 
-  // Optional UX: prefill email when a student is selected
   useEffect(() => {
     if (defaultRecipientEmail) setPdfEmail(defaultRecipientEmail);
   }, [defaultRecipientEmail]);
@@ -63,10 +65,11 @@ export default function TeacherAssignments({ studentId, defaultRecipientEmail })
     setPdfMsg("");
 
     if (!pdfFile) return setPdfErr("Select a PDF");
-    if (!effectiveStudentId && !pdfEmail) return setPdfErr("Enter student email (or pick a student)");
+    if (!effectiveStudentId && !pdfEmail)
+      return setPdfErr("Enter student email (or pick a student)");
 
     try {
-      // Resolve recipient target id
+      // resolve target student
       let targetId = effectiveStudentId;
       if (!targetId) {
         const { data: student } = await axios.get("/auth/user", {
@@ -85,7 +88,7 @@ export default function TeacherAssignments({ studentId, defaultRecipientEmail })
 
       setPdfMsg(res.data.message || "Upload complete");
       setPdfFile(null);
-      if (!effectiveStudentId) setPdfEmail(""); // keep email field if using selection
+      if (!effectiveStudentId) setPdfEmail("");
       await fetchAssignments();
     } catch (err) {
       console.error("PDF upload failed", err.response?.data || err);
@@ -104,83 +107,77 @@ export default function TeacherAssignments({ studentId, defaultRecipientEmail })
   };
 
   return (
-    <div> 
-    {/* <Sidebar role='teacher'/> */}
-      <div >
-        <h1>Manage Assignments (PDF)</h1>
+    <div className="assignments-page">
+      <h1>Manage Assignments</h1>
 
-        {/* Upload Section */}
-        <div className="dashboard-section">
-          <form onSubmit={handlePdfUpload} className="form-centered">
-            {pdfErr && <p style={{ color: "red" }}>{pdfErr}</p>}
-            {pdfMsg && <p style={{ color: "green" }}>{pdfMsg}</p>}
+      {/* Upload Section */}
+      <form onSubmit={handlePdfUpload} className="form-centered">
+        {pdfErr && <p style={{ color: "red" }}>{pdfErr}</p>}
+        {pdfMsg && <p style={{ color: "green" }}>{pdfMsg}</p>}
 
-            <div>
-              <label>Student Email</label>
-              <input
-                type="email"
-                value={pdfEmail}
-                onChange={(e) => setPdfEmail(e.target.value)}
-                placeholder="student@example.com"
-                disabled={!!effectiveStudentId} // if a student is selected, no email needed
-              />
-            </div>
+        <label>Student Email</label>
+        <input
+          type="email"
+          value={pdfEmail}
+          onChange={(e) => setPdfEmail(e.target.value)}
+          placeholder="student@example.com"
+          disabled={!!effectiveStudentId}
+        />
 
-            <div style={{ marginLeft: "50px" }}>
-              <label style={{ marginLeft: "90px" }}>Select Your PDF:</label>
-              <input
-                type="file"
-                accept="application/pdf"
-                onChange={(e) => setPdfFile(e.target.files[0])}
-              />
-            </div>
+        <label>Select PDF</label>
+        <input
+          type="file"
+          accept="application/pdf"
+          onChange={(e) => setPdfFile(e.target.files[0])}
+        />
 
-            <button type="submit" className="button">Upload PDF</button>
-          </form>
-        </div>
+        <button type="submit" className="button">Upload PDF</button>
+      </form>
 
-        {/* Assignments List */}
-        <div className="dashboard-section">
-          <h2>Uploaded Assignments</h2>
-          <ul className="assignment-list">
-            {assignments.map((f) => {
-              const id = f.id || f._id;
-              const canDelete =
-                user?.role === "teacher" ||
-                String(f.owner) === String(user?.id) ||
-                String(f.recipient) === String(user?.id);
+      {/* Assignments List */}
+      <h2>Uploaded Assignments</h2>
+      <div className="assignments-list">
+        {assignments.length > 0 ? (
+          assignments.map((f) => {
+            const id = f.id || f._id;
+            const canDelete =
+              user?.role === "teacher" ||
+              String(f.owner) === String(user?.id) ||
+              String(f.recipient) === String(user?.id);
 
-              return (
-                <li key={id} className="assignment-card">
-                  <a
-                    href={f.url || f.path}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="assignment-link"
+            return (
+              <div key={id} className="assignment-card">
+                {canDelete && (
+                  <button
+                    onClick={() => handleDelete(id)}
+                    className="delete-btn"
+                    aria-label="Delete Assignment"
                   >
-                    <span className="assignment-icon">📄</span>
-                    <div className="assignment-info">
-                      <span className="assignment-title">{f.filename || f.title || "Assignment"}</span>
-                      <span className="assignment-date">
-                        {new Date(f.uploadedAt || f.createdAt).toLocaleDateString()}
-                      </span>
-                    </div>
-                  </a>
-                  {canDelete && (
-                    <button
-                      onClick={() => handleDelete(id)}
-                      className="delete-btn"
-                      aria-label="Delete Assignment"
-                    >
-                      Delete
-                    </button>
-                  )}
-                </li>
-              );
-            })}
-            {!assignments.length && <div className="no-assignments">No assignments yet.</div>}
-          </ul>
-        </div>
+                    🗑️
+                  </button>
+                )}
+                <a
+                  href={f.url || f.path}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="assignment-link"
+                >
+                  <div className="assignment-icon">📄</div>
+                  <div className="assignment-info">
+                    <span className="assignment-title">
+                      {f.filename || f.title || "Assignment"}
+                    </span>
+                    <span className="assignment-date">
+                      {new Date(f.uploadedAt).toLocaleDateString()}
+                    </span>
+                  </div>
+                </a>
+              </div>
+            );
+          })
+        ) : (
+          <p className="no-assignments">No assignments yet.</p>
+        )}
       </div>
     </div>
   );

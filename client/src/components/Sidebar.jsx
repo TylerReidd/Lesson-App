@@ -27,7 +27,7 @@ function NavList({ items }) {
   );
 }
 
-export default function Sidebar({ role='teacher', open=false, onClose }) {
+export default function Sidebar({ role, open, onClose }) {
   const base = role === 'teacher' ? '/teacher' : '/student';
   const items = [
     { to: `${base}`, label:'Dashboard', icon:I.dash, exact:true },
@@ -55,7 +55,6 @@ export default function Sidebar({ role='teacher', open=false, onClose }) {
       <div
         className={`drawer-backdrop ${open ? 'show' : ''}`}
         onClick={onClose}
-        aria-hidden="true"
       />
     </>
   );
