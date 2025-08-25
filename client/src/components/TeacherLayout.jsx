@@ -1,21 +1,31 @@
-import { Outlet, Link, useNavigate, NavLink } from "react-router-dom";
+// TeacherLayout.jsx
+import { useState, useEffect } from "react";
+import { Outlet } from "react-router-dom";
 import Navbar from "./Navbar.jsx";
-import axios from "../axios.js";
 import Sidebar from "./Sidebar.jsx";
 
 export default function TeacherLayout() {
-  const navigate = useNavigate();
+  const [menuOpen, setMenuOpen] = useState(false);
 
+  // Close on ESC (mobile)
+  useEffect(() => {
+    const onKey = (e) => (e.key === "Escape" ? setMenuOpen(false) : null);
+    if (menuOpen) document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [menuOpen]);
 
   return (
     <>
-      <Navbar />
-    <div className="workspace">
-      <Sidebar />
-      <main>
-        <Outlet />
-      </main>
-    </div>
+      <Navbar onMenu={() => setMenuOpen(true)} isMenuOpen={menuOpen} />
+
+      <div className="workspace">
+
+        <Sidebar role="teacher" open={menuOpen} onClose={() => setMenuOpen(false)} />
+
+        <main onClick={() => setMenuOpen(false)}>
+          <Outlet />
+        </main>
+      </div>
     </>
   );
 }

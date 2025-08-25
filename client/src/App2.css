@@ -1,0 +1,242 @@
+/* === Design tokens === */
+:root{
+  --bg:#f8fafc;
+  --panel:#ffffff;
+  --panel-2:#f1f5f9;       /* added (was referenced but undefined) */
+  --text:#0f172a;
+  --muted:#64748b;
+  --border:#e2e8f0;
+  --primary:#2563eb;
+  --primary-hover:#1d4ed8;
+  --ring:rgba(37,99,235,.35);
+  --shadow:0 2px 10px rgba(15,23,42,.06);
+  --radius:14px;
+  --radius-sm:10px;
+  --radius-md:12px;        /* added (was referenced but undefined) */
+  --gap:16px;
+
+  /* add KPI colors so those rules don’t “drop” */
+  --kpi-bg:#eef2ff;
+  --kpi-text:#1e3a8a;
+
+  /* layout constants */
+  --sidebar-w:240px;
+  --topbar-h:56px;
+  --content-max:1280px;
+  --mobile-content-w:620px;
+}
+:root.dark{
+  --bg:#0b1220;
+  --panel:#0f172a;
+  --panel-2:#111b2c;
+  --text:#e5e7eb;
+  --muted:#94a3b8;
+  --border:#172036;
+  --primary:#60a5fa;
+  --primary-hover:#3b82f6;
+  --ring:rgba(96,165,250,.45);
+  --shadow:0 2px 16px rgba(0,0,0,.35);
+}
+
+/* === Base / typography === */
+*,
+*::before,*::after{box-sizing:border-box}
+html,body,#root{height:100%}
+html,body{overflow-x:hidden}
+body{
+  margin:0;
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  background:var(--bg); color:var(--text);
+}
+h1,h2,h3,h4{font-family:'Poppins',sans-serif; margin:0 0 .5rem}
+
+/* === Top bar === */
+.topbar{
+  position:sticky; top:0; z-index:1010;
+  background:#033f63; color:#fff; border-bottom:1px solid rgba(255,255,255,.08);
+}
+.topbar-inner{
+  max-width:100%; margin:0 auto; padding:14px 20px;
+  min-height:var(--topbar-h);
+  display:flex; align-items:center; gap:16px;
+}
+.brand{ color:#fff; text-decoration:none; font-weight:800; font-size:22px; letter-spacing:.2px; }
+.spacer{flex:1}
+.hamburger{ display:none; background:transparent; border:0; color:#fff; cursor:pointer; padding:8px; border-radius:8px; }
+.hamburger svg{width:24px;height:24px}
+@media(max-width:768px){ .hamburger{display:inline-flex} }
+
+/* === Workspace layout (sidebar + main) === */
+.workspace{
+  min-height:100dvh;
+  display:grid;
+  grid-template-columns: var(--sidebar-w) 1fr;
+  gap:20px;
+}
+.workspace main{ padding:16px 24px; }
+@media(max-width:1100px){ .workspace{ grid-template-columns:1fr; } }
+@media(max-width:768px){ .workspace{ gap:0 } }
+
+/* === Sidebar (desktop) === */
+.sidebar{
+  background:var(--panel); border:1px solid var(--border);
+  border-radius:22px; box-shadow:var(--shadow);
+  padding:12px;
+}
+.navgroup{ list-style:none; margin:6px 0 0; padding:0; display:grid; gap:8px; font-weight:700; font-size:18px; }
+.navitem{
+  display:flex; align-items:center; gap:10px;
+  padding:10px 12px; border-radius:12px; color:var(--text);
+  transition:.15s background;
+}
+.navitem:hover{ background:var(--panel-2) }
+.navitem.active{ background:var(--panel-2); box-shadow:inset 0 0 0 1px var(--border) }
+.navitem .icon{
+  width:20px;height:20px; display:inline-grid; place-items:center;
+  border-radius:999px; background:rgba(83,194,217,.12); color:var(--primary);
+}
+
+/* === Mobile drawer === */
+.sidebar-drawer{
+  position:fixed; left:0; top:var(--topbar-h); bottom:0;
+  width:280px; background:var(--panel);
+  border-right:1px solid var(--border); box-shadow:var(--shadow);
+  transform:translateX(-100%); transition:transform .25s ease; z-index:1100;
+  padding:12px; overflow-y:auto; -webkit-overflow-scrolling:touch;
+}
+.sidebar-drawer.open{ transform:translateX(0) }
+.drawer-backdrop{
+  position:fixed; inset:0;
+  background:rgba(0,0,0,.35); backdrop-filter:blur(1px);
+  opacity:0; pointer-events:none; transition:opacity .2s; z-index:999;
+}
+.drawer-backdrop.show{ opacity:1; pointer-events:auto }
+@media(max-width:768px){ .sidebar{ display:none } }
+
+/* === Panels / cards === */
+.panel{
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:12px;
+  box-shadow:var(--shadow);
+}
+.panel-h{ padding:14px 16px; border-bottom:1px solid var(--border); font-weight:700; }
+.panel-b{ padding:16px; }
+
+.card{ background:var(--panel); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); }
+.card-header{ padding:14px 16px; border-bottom:1px solid var(--border); }
+.card-body{ padding:16px; }
+.card-title{ font-weight:700; }
+
+/* Centered “main card” panel used on dashboard */
+.dashboard-panel{
+  width:100%;
+  max-width:min(860px, 94vw);
+  margin:0 auto;
+  border-radius:10px;
+  padding:20px;
+  box-shadow:0 4px 12px rgba(0,0,0,.05);
+}
+
+/* KPI row */
+.kpi-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin:12px 0 16px; }
+.kpi{
+  background:var(--kpi-bg); color:var(--kpi-text);
+  border:1px solid var(--border); border-radius:14px; padding:16px; text-align:center;
+}
+.kpi .label{ font-weight:600; font-size:12px; letter-spacing:.02em; opacity:.9 }
+.kpi .value{ font-weight:800; font-size:24px; margin-top:6px }
+
+/* === Buttons / inputs === */
+.button{
+  appearance:none; border:1px solid var(--border);
+  padding:10px 14px; border-radius:var(--radius-sm);
+  background:var(--panel-2); color:var(--text); cursor:pointer;
+}
+.button:hover{ filter:brightness(.98) }
+.button:focus{ outline:none; box-shadow:0 0 0 3px var(--ring) }
+.button-primary{ background:var(--primary); color:#fff; border:1px solid transparent }
+.button-primary:hover{ background:var(--primary-hover) }
+
+.input,.select,.file{
+  width:100%;
+  padding:10px 12px;
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+  background:var(--panel); color:var(--text);
+}
+.input:focus,.select:focus,.file:focus{ outline:none; box-shadow:0 0 0 3px var(--ring) }
+
+/* Group of big actions under the KPIs */
+.students-actions{
+  display:flex; flex-wrap:wrap; gap:12px; align-items:center; justify-content:center; margin-top:12px;
+}
+
+/* === Lists / assignments === */
+.assignment-list{ display:grid; gap:1rem; padding:1rem 0; width:100%; list-style:none; }
+.assignment-card{
+  background:#fff; border:1px solid #28666e; border-radius:8px; padding:.75rem;
+  transition:box-shadow .2s; position:relative; justify-self:center; width:100%; max-width:720px;
+}
+.assignment-card:hover{ box-shadow:0 2px 8px rgba(0,0,0,.1) }
+.assignment-link{ display:flex; text-decoration:none; color:inherit; }
+.assignment-icon{ font-size:1.8rem; margin-right:.5rem; color:#28666e; }
+.assignment-info{ display:flex; flex-direction:column; justify-content:center; }
+.assignment-title{ font-weight:600; color:#033f63; margin-bottom:.25rem; }
+.assignment-date{ font-size:.85rem; color:#555; }
+.delete-btn{ position:absolute; top:.5rem; right:2px; background:transparent; border:none; cursor:pointer; font-size:1rem; }
+.no-assignments{ font-style:italic; color:#666; padding:1rem; }
+
+/* === Tabs (generic pill tabs + “button” variant) === */
+.tabs-nav{ display:flex; gap:8px; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:thin; border-bottom:1px solid var(--border); }
+.tab, .tab-button{
+  flex:0 0 auto; padding:8px 12px;
+  border:1px solid var(--border); border-radius:8px;
+  background:#fff; color:var(--muted); cursor:pointer;
+}
+.tab.active, .tab-button.active{ background:#f1f5ff; border-color:#abc4ff; color:#1e3a8a; }
+
+/* === Forms === */
+.form{ display:grid; gap:10px; }
+.form-grid{ display:grid; grid-template-columns:1fr 1fr; gap:16px 20px; align-items:end; max-width:860px; }
+.form-centered{ display:flex; flex-direction:column; align-items:center; gap:12px; max-width:400px; margin:0 auto; }
+@media(max-width:1000px){ .form-grid{ grid-template-columns:1fr } }
+label{ font-weight:600; }
+
+/* === Video === */
+.video-page{ max-width:100%; margin:0 auto; text-align:center; }
+.video-player{ display:block; width:100%; max-width:100%; margin-top:0; }
+.video-player video, .video-player iframe{ width:100%; height:auto; display:block; }
+
+/* === Utilities === */
+.container-center{ max-width:var(--content-max); margin:0 auto; }
+.row{ display:flex; gap:8px; align-items:center; }
+.mt-8{ margin-top:8px } .mt-12{ margin-top:12px } .mt-16{ margin-top:16px }
+.muted{ color:var(--muted) }
+.empty{ color:var(--muted); font-style:italic; padding:10px }
+
+/* === Mobile: single-column + centered === */
+@media(max-width:480px){
+  .workspace{ grid-template-columns:1fr }
+  .workspace main{
+    min-height:100dvh; display:flex; flex-direction:column; align-items:center; justify-content:flex-start;
+    gap:16px; padding:16px; text-align:center;
+    padding-left:max(16px, env(safe-area-inset-left));
+    padding-right:max(16px, env(safe-area-inset-right));
+  }
+  .panel,.card,.dashboard-panel,.auth-card,.assignment-card,.video-player,.form,.table-responsive{
+    width:min(var(--mobile-content-w), 94vw); margin:0 auto;
+  }
+  .grid,.dashboard-grid,.kpi-grid{ grid-template-columns:1fr !important; justify-items:center }
+  .tabs-nav{ justify-content:center }
+  .button,.button-primary,button[type="button"],button[type="submit"]{
+    display:inline-flex; justify-content:center; width:min(320px, 88vw);
+  }
+  .input,input,select,textarea{ width:min(480px, 88vw); margin-left:auto; margin-right:auto; text-align:center; }
+}
+
+/* === Teacher dashboard 2-col layout (students list + panel) === */
+.dashboard-grid{ display:grid; gap:20px; grid-template-columns:300px 1fr; }
+@media(max-width:1100px){ .dashboard-grid{ grid-template-columns:1fr } }
+/* ensure grid children can shrink on small screens */
+.dashboard-grid > *{ min-width:0; max-width:100% }

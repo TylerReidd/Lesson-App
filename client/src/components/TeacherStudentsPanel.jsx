@@ -54,9 +54,7 @@ import axios from '../axios.js';
   return (
     <div className="dashboard-grid mt-16">
       <aside style={{alignItems: 'center'}}>
-      {/* <div className='card-title'>My Students</div> */}
-       
-        <ul>
+        <ul style={{padding: ''}}>
           {students.map((s) => (
             <li key={s._id || s.id} style={{listStyleType:'none'}}>
               <button
@@ -95,7 +93,7 @@ import axios from '../axios.js';
               <Stat label="Assignments" value={summary?.assignments} />
             </div>
             {/* Big actions to open the detail pages */}
-            <div className="row" style={{ gap: 12 }}>
+            <div className="students-actions" style={{ gap: 12 }}>
               <button className="button-primary" onClick={() => navigate(`/teacher/questions?studentId=${selectedId}`)}>Open Questions</button>
               <button className="button" onClick={() => navigate(`/teacher/videos?studentId=${selectedId}`)}>Open Videos</button>
               <button className="button" onClick={() => navigate(`/teacher/assignments?studentId=${selectedId}`)}>Open Assignments</button>

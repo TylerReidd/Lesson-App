@@ -89,12 +89,18 @@ h1, h2, h3, h4 {
   font-weight: 700;
   font-size: 25px;
   display:grid;
-  gap:8px; 
-  margin-top:6px;
+  gap:20%; 
+  margin-top:20%;;
   }
 .navitem{
-  display:flex; align-items:center; justify-content: center; gap:10px;
-  padding:10px 12px; border-radius: 12px; color:var(--text);
+  display:flex; 
+  text-decoration: none;
+  align-items:center; 
+  justify-content: center;
+  gap:10px;
+  padding:10px 12px; 
+  border-radius: 12px;
+  color:var(--text);
   transition:.15s background;
 }
 .navitem:hover{ background: var(--panel-2); }
@@ -194,16 +200,6 @@ h1, h2, h3, h4 {
 }
 
 
-/* .dashboard-panel ul {
-  padding: 0;
-  margin: 0;
-}
-.dashboard-panel li {
-  margin-bottom: 1rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-} */
 
 
 
@@ -277,6 +273,8 @@ h1, h2, h3, h4 {
   color: #666;
   text-decoration: none;
   cursor: pointer;
+  margin: 0;
+  padding: 0;
 }
 .tab.active {
   color: #0070f3;
@@ -377,12 +375,14 @@ h1, h2, h3, h4 {
   gap: 1rem;
   padding: 1rem 0;
   width: 100%;
+  list-style-type: none;
 }
 
 .assignment-card {
   background: #fff;
   border: 1px solid #28666e;
   justify-self: center;
+  margin: 10px;
   width: 50%;
   border-radius: 8px;
   padding: 0.75rem;
@@ -617,8 +617,8 @@ button {
   align-items: center;       /* center horizontally */
   justify-content: center;   /* center vertically if container has height */
   gap: 12px;                 /* space between fields */
-  max-width: 400px;          /* optional: narrower than full page */
-  margin: 0 auto;            /* center the whole form block */
+  max-width: 500px;          /* optional: narrower than full page */
+  margin: 0 auto;           
 }
 
 .form-centered input[type="text"],
@@ -629,7 +629,7 @@ button {
 .form-centered select {
   width: 100%;
   max-width: 300px;          /* keeps it from being too wide */
-  padding: 8px 10px;
+  /* padding: 8px 10px; */
   border: 1px solid #ccc;
   border-radius: 6px;
   font: inherit;
@@ -882,7 +882,7 @@ button {
 }
 
 /* === Utility === */
-.row { display:flex; gap: 8px; align-items:center; }
+.row { display:flex; gap: 8px; align-items:center;}
 .mt-8 { margin-top: 8px; } .mt-12{margin-top:12px;} .mt-16{margin-top:16px;}
 
 
@@ -943,11 +943,6 @@ button {
   max-width: 100%;
   margin-top: 0;   
 }
-
-
-
-
-
 /* Screen-fill layout */
 html, body, #root { height: 100%; }
 .workspace { min-height: 100vh; display: flex; }
@@ -1034,4 +1029,242 @@ html, body, #root { height: 100%; }
   /* height: 75%; */
   border-radius: 8px;
   margin: auto;
+}
+
+/* --- Mobile drawer + backdrop (iPhone friendly) --- */
+html, body { overflow-x: hidden; }
+.workspace { min-height: 100dvh; }
+
+/* On small screens, collapse grid to 1 column and hide the static sidebar */
+@media (max-width: 768px) {
+  .workspace { display: grid; grid-template-columns: 1fr; gap: 0; }
+  .sidebar { display: none; } /* hide desktop sidebar */
+}
+
+/* Sticky topbar color + spacing (keeps your existing .topbar-inner) */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 1010;
+  background: #033f63;
+  color: #fff;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+.topbar .brand { color: #fff; text-decoration: none; }
+
+/* Hamburger (shows only on mobile) */
+.hamburger {
+  display: none;
+  background: transparent;
+  border: 0;
+  color: #fff;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+}
+.hamburger svg { width: 24px; height: 24px; }
+@media (max-width: 768px) { .hamburger { display: inline-flex; } }
+
+/* Slide-in drawer */
+.sidebar-drawer {
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  width: 280px;
+  background: var(--panel);
+  border-right: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  transform: translateX(-100%);
+  transition: transform .25s ease;
+  z-index: 1100;
+  padding: 12px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.sidebar-drawer.open { transform: translateX(0); }
+
+/* Backdrop */
+.drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.35);
+  backdrop-filter: blur(1px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .2s;
+  z-index: 999;
+}
+.drawer-backdrop.show { opacity: 1; pointer-events: auto; }
+
+/* ===== iPhone vertical + centered layout ===== */
+:root { --mobile-content-w: 620px; } /* max content width on mobile */
+
+@media (max-width: 480px) {
+  /* Hide desktop sidebar; keep drawer behavior you already added */
+  .sidebar { display: none; }
+  .workspace { grid-template-columns: 1fr; }
+
+  /* Main: single column, centered everything */
+  .workspace main {
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;     /* center horizontally */
+    justify-content: flex-start;
+    gap: 16px;
+    padding: 16px;
+    text-align: center;      /* center text by default */
+    padding-left: max(16px, env(safe-area-inset-left));
+    padding-right: max(16px, env(safe-area-inset-right));
+  }
+
+  /* Make common blocks full-width (but not too wide) and centered */
+  .panel,
+  .card,
+  .dashboard-panel,
+  .auth-card,
+  .assignment-card,
+  .video-player,
+  .form,
+  .table-responsive {
+    width: min(var(--mobile-content-w), 94vw);
+    margin: 0 auto;
+  }
+
+
+  /* Panels: ensure inner content centers nicely */
+  .panel { display: flex; flex-direction: column; align-items: center; }
+  .panel-h { width: 100%; text-align: center; }
+  .panel-b { width: 100%; }
+
+  /* Grids -> single column, centered cards */
+  .grid,
+  .dashboard-grid,
+  .kpi-grid {
+    grid-template-columns: 1fr !important;
+    justify-items: center;
+  }
+
+  /* Tabs centered */
+  .tabs-nav,
+  .top-tab-bar,
+  .mobile-tab-bar { justify-content: center; }
+
+  /* Buttons and inputs: big, tappable, centered */
+  .button,
+  .button-primary,
+  button[type="button"],
+  button[type="submit"] {
+    display: inline-flex;
+    justify-content: center;
+    width: min(320px, 88vw);
+  }
+  .input,
+  input,
+  select,
+  textarea {
+    width: min(480px, 88vw);
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
+  }
+
+  /* Videos scale nicely */
+  .video-player video,
+  .video-player iframe {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  /* Drawer links centered to match the vibe */
+  .sidebar-drawer .navitem { justify-content: center; }
+}
+
+/* Utility to opt-out for specific blocks (if needed) */
+@media (max-width: 480px) {
+  .text-left { text-align: left !important; }
+}
+
+
+
+/* ===== MOBILE FIX PACK (iPhone) ===== */
+*, *::before, *::after { box-sizing: border-box; }  /* stop subtle spill */
+
+:root { --mobile-w: 620px; } /* max content width */
+
+/* Hide desktop sidebar on small screens (prevents that left blue sliver) */
+@media (max-width: 768px) {
+  .sidebar { display: none !important; }
+}
+
+/* One-column, centered content */
+@media (max-width: 480px) {
+  .workspace { display: block; }
+
+  .workspace main {
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;        /* horizontal center */
+    justify-content: flex-start;
+    padding: 16px;
+    text-align: center;         /* center headings/text */
+    padding-left: max(16px, env(safe-area-inset-left));
+    padding-right: max(16px, env(safe-area-inset-right));
+  }
+
+  /* Hard-center panels/cards and cap width */
+  .dashboard-panel,
+  .panel,
+  .card,
+  .assignment-card {
+    width: min(var(--mobile-w), 94vw);
+    margin-left: auto;
+    margin-right: auto;
+    max-width: 100%;
+  }
+
+  /* Make any grid become single column and STOP overflows */
+  .dashboard-grid,
+  .stats-grid,
+  .panel-b,
+  .cards,
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr !important;
+    gap: 12px;
+    justify-items: stretch;
+  }
+
+  /* Allow children to shrink inside grid (key to fix “spilling out”) */
+  .dashboard-grid > *,
+  .stats-grid > *,
+  .panel-b > *,
+  .cards > *,
+  .grid > * {
+    min-width: 0;      /* <- prevents overflow */
+    max-width: 100%;
+  }
+
+
+  /* Media elements never overflow */
+  img, video, iframe { max-width: 100%; height: auto; display: block; }
+
+  /* Vertically stack the three "Open ..." buttons */
+  .students-actions,        /* if you added the wrapper */
+  .dashboard-actions {      /* alt name if you used it */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    margin-top: 12px;
+    width: 100%;
+  }
+  .students-actions .button,
+  .students-actions .button-primary,
+  .dashboard-actions .button,
+  .dashboard-actions .button-primary {
+    width: min(320px, 88vw);
+    justify-content: center;
+  }
 }

@@ -50,8 +50,9 @@ export default function PracticeForm() {
     <section >
       <div className="panel-h">Daily Practice / Study Log</div>
       <div className="panel-b">
-        <form onSubmit={submit} className="form">
-          <div className="" style={{gap:12}}>
+        <form onSubmit={submit} className="form-centered">
+          <div className="grid grid-sm-2">
+        
             <label style={{flex:1}}>
               Date
               <input className="input" type="date" name="date" value={form.date} onChange={change} />
@@ -68,29 +69,24 @@ export default function PracticeForm() {
               <div className="muted">Duration</div>
               <div style={{marginLeft:8, fontWeight:700}}>{durationMin} min</div>
             </div>
-          </div>
 
-          <label>
-            What did you focus on?
-            <textarea className="input" name="focus" rows={3} placeholder="Scales, reading, chord changes, repertoire…" value={form.focus} onChange={change} />
-          </label>
-
-          <div className="">
+            <label>
+              What did you focus on?
+              <textarea className="input" name="focus" rows={3} placeholder="Scales, reading, chord changes, repertoire…" value={form.focus} onChange={change} />
+            </label>
             <label>
               Things you struggled with
               <textarea className="input" name="struggles" rows={3} value={form.struggles} onChange={change} />
             </label>
             <label>
-              Things that went well
+              Things that went well: 
               <textarea className="input" name="wins" rows={3} value={form.wins} onChange={change} />
             </label>
-          </div>
-
-          <div className="grid grid-sm-2">
             <label>
               Notes (optional)
               <textarea className="input" name="notes" rows={3} value={form.notes} onChange={change} />
             </label>
+          
 
             <div>
               {/* <label className="" style={{gap:8, marginBottom:8}}>
@@ -103,14 +99,14 @@ export default function PracticeForm() {
               </label> */}
 
             </div>
-              <label style={{marginTop:10}}>
-                Session rating (1–5)
-                <input className="input" name="rating" type="number" min="1" max="5" value={form.rating} onChange={change} />
-              </label>
-          </div>
+            <label style={{marginTop:10}}>
+              Session rating (1–5)
+              <input className="input" name="rating" type="number" min="1" max="5" value={form.rating} onChange={change} />
+            </label>
 
           {msg && <div className="mt-12">{msg}</div>}
 
+          </div>
           <div className="mt-12">
             <button className="button-primary" type="submit" disabled={submitting}>
               {submitting ? 'Saving…' : 'Submit Practice Log'}

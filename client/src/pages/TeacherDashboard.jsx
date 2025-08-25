@@ -9,10 +9,10 @@ export default function TeacherDashboard({ onLogout }) {
   return (
     <div>
     <main>
-      <div style={{margin: '10px'}}>
+      <div>
         <section className="panel">
           <div className="panel-h">My Students</div>
-          <div className="panel-b">
+          <div className="">
             <TeacherStudentsPanel    
             />
           </div>

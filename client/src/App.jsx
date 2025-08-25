@@ -74,17 +74,10 @@ function App() {
 
           <Route
             path="/"
-            element={
-              loading ? <div /> : (
-              <Navigate
-                to={user
-                    ? (user.role === 'teacher' ? '/teacher' : '/student')
-                    : '/login'}
-                replace
-              />
-              )
-            }
-          />
+            element={user ? <Navigate to={user.role === 'teacher' ? '/teacher' : '/student'} replace /> 
+                          : <Login /> }
+          />  
+          
         </Routes>
       </div>
     </Router>
