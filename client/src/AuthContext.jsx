@@ -25,8 +25,13 @@ export function AuthProvider({ children }) {
   async function refreshMe() {
     try {
       const res = await axios.get('/auth/me/full');
-      // your /auth/me returns {id, role, ...}; normalize to user obj
-      setUser(res.data?.user ?? res.data ?? null);
+      const u = res.data?.user ?? res.data ?? null;
+
+      if(!u || !u._id || !u.role) {
+        setUser(null)
+      } else {
+        setUser(u)
+      }
     } catch {
       setUser(null);
     }
