@@ -25,7 +25,7 @@ const PracticeLogSchema = new mongoose.Schema({
     required: true
   },
   durationMin: {
-    type: String,
+    type: Number,
     required: true
   },
   focus: {

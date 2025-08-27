@@ -20,6 +20,7 @@ import TeacherLayout from './components/TeacherLayout';
 import StudentDashboard from './pages/StudentDashboard';
 import TeacherDashboard from './pages/TeacherDashboard';
 import TeacherStudentPage from './pages/TeacherStudentPage';
+import PrivacyPage from './pages/PrivacyPage';
 
 
 function App() {
@@ -77,6 +78,8 @@ function App() {
             element={user ? <Navigate to={user.role === 'teacher' ? '/teacher' : '/student'} replace /> 
                           : <Login /> }
           />  
+
+          <Route path='/privacy' element={<PrivacyPage /> } /> 
           
         </Routes>
       </div>

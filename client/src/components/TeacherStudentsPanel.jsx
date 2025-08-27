@@ -2,6 +2,7 @@
 import { useEffect, useImperativeHandle, useState, forwardRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from '../axios.js';
+import TeacherPracticePanel from './TeacherPracticePanel.jsx';
 
   function TeacherStudentsPanel({ onSelect, activeId }, ref) {
   const [students, setStudents] = useState([]);

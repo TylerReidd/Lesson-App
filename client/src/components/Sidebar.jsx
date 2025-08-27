@@ -34,6 +34,7 @@ export default function Sidebar({ role, open, onClose }) {
     { to: `${base}/videos`, label:'Videos', icon:I.vid },
     { to: `${base}/assignments`, label:'Assignments', icon:I.doc },
     { to: `${base}/questions`, label:'Questions', icon:I.q },
+    { to: '/privacy', label: 'Privay Policy',}
   ];
 
   return (

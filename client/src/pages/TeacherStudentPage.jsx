@@ -5,6 +5,7 @@ import Sidebar from "../components/Sidebar.jsx";
 import TeacherVideos from "../components/TeacherVideos.jsx";
 import TeacherAssignments from "../components/TeacherAssignment.jsx";
 import TeacherQuestions from "../components/TeacherQuestions.jsx";
+import TeacherPracticePanel from "../components/TeacherPracticePanel.jsx";
 
 export default function TeacherStudentPage() {
   const { id } = useParams();
@@ -31,7 +32,7 @@ export default function TeacherStudentPage() {
         <div className="container-center">
           <div className="row" style={{ justifyContent:'space-between', alignItems:'center' }}> 
           </div>
-          <div className="page-heater">
+          <div className="page-header">
             <h1 className="page-title" style={{ margin: 0 }}>{student?.name || "Student"}</h1>
             {student?.email && <div className="muted">{student.email}</div>}
           </div>
@@ -50,6 +51,7 @@ export default function TeacherStudentPage() {
           <button className={`tab ${tab==='videos'?'active':''}`} onClick={()=>setTab('videos')}>Videos</button>
           <button className={`tab ${tab==='assignments'?'active':''}`} onClick={()=>setTab('assignments')}>Assignments</button>
           <button className={`tab ${tab==='questions'?'active':''}`} onClick={()=>setTab('questions')}>Questions</button>
+          <button className={`tab ${tab==='practice' ? 'active': ''}`} onClick={() => setTab('practice')}>Practice</button>
         </div>
 
         {/* Body (reuse your components, just pass studentId) */}
@@ -57,6 +59,7 @@ export default function TeacherStudentPage() {
           {tab === "videos" && <TeacherVideos studentId={id} />}
           {tab === "assignments" && <TeacherAssignments studentId={id} />}
           {tab === "questions" && <TeacherQuestions studentId={id} />}
+          {tab === "practice" && <TeacherPracticePanel studentId={id} />}
         </div>
       </main>
     </div>

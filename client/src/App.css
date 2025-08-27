@@ -541,6 +541,12 @@ button {
     padding: 6px;
     border-radius: 6px;
   }
+
+  .privacy-text {
+    font-size: 2rem;
+    font-family: 'Poppins', 'sans-serif';
+    text-align: center;
+  }
   
   @media (max-width: 768px) {
     /* Show hamburger on mobile */

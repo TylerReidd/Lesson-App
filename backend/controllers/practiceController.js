@@ -35,7 +35,7 @@ export async function createPractice(req,res,next) {
       bpm: bpm ? Number(bpm) : null
     })
 
-    resstatus(201).json({message: 'Saved', log: doc})
+    res.status(201).json({message: 'Saved', log: doc})
   } catch (e) {next(e)}
 }
 
