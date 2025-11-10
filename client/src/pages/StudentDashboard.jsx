@@ -81,7 +81,7 @@ export default function StudentDashboard({ onLogout }) {
                 //   }}
                 //   />
               ) : (
-                <LinkTeacherForm onUnlinked={async () => {
+                <LinkTeacherForm onLinked={async () => {
                   const {data} = await axios.get('/auth/me/full');
                   setUser(data?.user ?? null)
                 }} 

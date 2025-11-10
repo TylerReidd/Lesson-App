@@ -1,35 +1,46 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { uploadAxios } from "../axios.js";
+import { AuthContext } from "../AuthContext";
 
-export default function StudentVideoUploadForm({ onUploadSuccess }) {
+export default function StudentVideoUploadForm({ onUploadSuccess, teacherId: teacherIdProp }) {
   const [file, setFile] = useState(null);
   const [msg, setMsg] = useState("");
   const [err, setErr] = useState("");
   const [uploadProgress, setUploadProgress] = useState(0);
   const [teacherId, setTeacherId] = useState(null);
+  const { user } = useContext(AuthContext);
 
-  // 🧠 Auto-fetch the student's assigned teacher
+  // 🧠 Resolve the student's assigned teacher (prop > context > fetch)
   useEffect(() => {
+    const resolved =
+      teacherIdProp ||
+      user?.assignedTeacher?._id ||
+      user?.assignedTeacher ||
+      user?.assignedTeacherId ||
+      null;
+
+    if (resolved) {
+      setTeacherId(resolved);
+      return;
+    }
+
     const fetchUser = async () => {
       try {
         const res = await uploadAxios.get("/auth/me", { withCredentials: true });
-        const user = res.data.user || res.data;
+        const current = res.data.user || res.data;
         setTeacherId(
-          user.assignedTeacher?._id ||
-          user.assignedTeacher ||
-          user.teacherId ||
-          null
+          current.assignedTeacher?._id ||
+            current.assignedTeacher ||
+            current.teacherId ||
+            null
         );
-        console.log("resolved teacherId: ",
-        user.assignedTeacher?._id,
-        user.assignedTeacher,
-        user.teacherId)
       } catch {
         setTeacherId(null);
       }
     };
+
     fetchUser();
-  }, []);
+  }, [teacherIdProp, user]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

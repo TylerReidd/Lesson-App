@@ -32,10 +32,12 @@ api.interceptors.response.use(
   }
 );
 
+const uploadBaseURL = import.meta.env.VITE_UPLOAD_URL || baseURL;
+
 export const uploadAxios = Axios.create({
-  baseURL: import.meta.env.VITE_UPLOAD_URL || "http://localhost:5001/api",
+  baseURL: uploadBaseURL,
   withCredentials: true,
-})
+});
 
 uploadAxios.interceptors.request.use((config) => {
   if(USE_BEARER) {

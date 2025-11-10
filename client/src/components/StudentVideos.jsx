@@ -1,14 +1,16 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext, useCallback } from "react";
 import axios from "../axios.js";
 import StudentVideosTabs from "./StudentVideosTabs.jsx";
 import StudentVideoUploadForm from "./StudentVideoUploadForm.jsx";
+import LinkTeacherForm from "./LinkTeacherForm.jsx";
+import { AuthContext } from "../AuthContext";
 
 export default function StudentVideos() {
   const [videos, setVideos] = useState([]);
   const [err, setErr] = useState("");
-  const [user, setUser] = useState(null);
+  const { user, setUser } = useContext(AuthContext);
 
-  const fetchVideos = async () => {
+  const fetchVideos = useCallback(async () => {
     try {
       const res = await axios.get("/resources/videos/private", { withCredentials: true });
       const data = res.data;
@@ -28,21 +30,11 @@ export default function StudentVideos() {
       console.error("Failed to load videos", e);
       setErr("Failed to load videos");
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchVideos();
-
-    axios
-      .get("/auth/me", { withCredentials: true })
-      .then(({ data }) => {
-        const id = data.id ?? data._id ?? data.user?.id ?? data.user?._id;
-        const role = data.role ?? data.user?.role;
-        const teacher = data.teacher ?? data.user?.teacher
-        setUser(id ? { id, role, teacher } : null);
-      })
-      .catch(() => setUser(null));
-  }, []);
+  }, [fetchVideos]);
 
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this video?")) return;
@@ -55,12 +47,34 @@ export default function StudentVideos() {
     }
   };
 
-  if (err) return <p style={{ color: "red" }}>{err}</p>;
+  const assignedTeacherId =
+    user?.assignedTeacher?._id ||
+    user?.assignedTeacher ||
+    user?.assignedTeacherId ||
+    null;
+  const needsLink = user?.role === "student" && !assignedTeacherId;
 
   return (
     <div className="panel">
       <h1>My Practice Videos</h1>
-      <StudentVideoUploadForm onUploadSuccess={fetchVideos} />
+      {needsLink && (
+        <div className="panel" style={{ marginBottom: 16 }}>
+          <div className="panel-h">Link Your Teacher</div>
+          <div className="panel-b">
+            <p style={{ marginTop: 0 }}>
+              Link a teacher to unlock video uploads and personalized feedback.
+            </p>
+            <LinkTeacherForm
+              onLinked={async () => {
+                const { data } = await axios.get("/auth/me/full", { withCredentials: true });
+                setUser(data?.user ?? null);
+              }}
+            />
+          </div>
+        </div>
+      )}
+      {err && <p style={{ color: "red" }}>{err}</p>}
+      <StudentVideoUploadForm onUploadSuccess={fetchVideos} teacherId={assignedTeacherId} />
       <h2 className="mt-4">Uploaded Videos</h2>
       {videos?.length ? (
         <StudentVideosTabs videos={videos} onDelete={handleDelete} currentUser={user} />

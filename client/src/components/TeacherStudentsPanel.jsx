@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from '../axios.js';
 
-export default function TeacherStudentsPanel() {
+export default function TeacherStudentsPanel({ refreshKey = 0 }) {
   const [students, setStudents] = useState([])
   const navigate = useNavigate();
 
@@ -40,7 +40,7 @@ export default function TeacherStudentsPanel() {
       }
     }
     fetchAll()
-  }, [])
+  }, [refreshKey])
 
   return (
     <div>
