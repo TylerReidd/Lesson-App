@@ -1,19 +1,20 @@
-// src/components/StudentVideos.jsx
 import React, { useState, useEffect } from "react";
 import axios from "../axios.js";
 import StudentVideosTabs from "./StudentVideosTabs.jsx";
+import StudentVideoUploadForm from "./StudentVideoUploadForm.jsx";
 
 export default function StudentVideos() {
   const [videos, setVideos] = useState([]);
   const [err, setErr] = useState("");
+  const [user, setUser] = useState(null);
 
   const fetchVideos = async () => {
     try {
-      const res = await axios.get("/resources/videos/private");
+      const res = await axios.get("/resources/videos/private", { withCredentials: true });
       const data = res.data;
-      const list = Array.isArray(data) ? data : (data.videos || data.items || []);
+      const list = Array.isArray(data.videos) ? data.videos : data.items || [];
       setVideos(
-        (list || []).map(v => ({
+        list.map((v) => ({
           id: v._id || v.id,
           url: v.url || v.path,
           filename: v.filename,
@@ -31,12 +32,22 @@ export default function StudentVideos() {
 
   useEffect(() => {
     fetchVideos();
+
+    axios
+      .get("/auth/me", { withCredentials: true })
+      .then(({ data }) => {
+        const id = data.id ?? data._id ?? data.user?.id ?? data.user?._id;
+        const role = data.role ?? data.user?.role;
+        const teacher = data.teacher ?? data.user?.teacher
+        setUser(id ? { id, role, teacher } : null);
+      })
+      .catch(() => setUser(null));
   }, []);
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to do that?")) return;
+    if (!window.confirm("Are you sure you want to delete this video?")) return;
     try {
-      await axios.delete(`/resources/videos/${id}`);
+      await axios.delete(`/resources/videos/${id}`, { withCredentials: true });
       fetchVideos();
     } catch (e) {
       console.error("Failed to delete video", e);
@@ -47,10 +58,12 @@ export default function StudentVideos() {
   if (err) return <p style={{ color: "red" }}>{err}</p>;
 
   return (
-    <div className="container video-page">
-      <h1>My Videos</h1>
+    <div className="panel">
+      <h1>My Practice Videos</h1>
+      <StudentVideoUploadForm onUploadSuccess={fetchVideos} />
+      <h2 className="mt-4">Uploaded Videos</h2>
       {videos?.length ? (
-        <StudentVideosTabs videos={videos} onDelete={handleDelete} />
+        <StudentVideosTabs videos={videos} onDelete={handleDelete} currentUser={user} />
       ) : (
         <p>No videos yet.</p>
       )}

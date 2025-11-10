@@ -32,7 +32,10 @@ export async function createPractice(req,res,next) {
       start, end, durationMin,
       focus, struggles, wins, notes,
       metronome: !!metronome,
-      bpm: bpm ? Number(bpm) : null
+      bpm: bpm ? Number(bpm) : null,
+      unreadForTeacher: true,
+      unreadForStudent: false,
+      status: 'submitted'
     })
 
     res.status(201).json({message: 'Saved', log: doc})
@@ -52,9 +55,15 @@ export async function getMyPractice(req,res,next) {
 export async function getStudentPracticeForTeacher(req,res,next) {
   try {
     const {studentId} = req.params;
+
     const list = await PracticeLog.find({student: studentId, teacher: req.user.id})
       .sort('-date -start')
       .limit(100)
+
+      await PracticeLog.updateMany(
+        {student: studentId, teacher: req.user.id, unreadForTeacher: true},
+        {$set: {unreadForTeacher: false}}
+      )
     res.json({logs: list})
   } catch (e) {next(e)}
 }

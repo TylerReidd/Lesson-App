@@ -25,6 +25,14 @@ const resourceSchema = new Schema({
     enum: ['public','private'],
     default: 'private'
   },
+  unreadForTeacher: {             // for private videos, has teacher viewed it
+    type: Boolean,
+    default: false
+  },
+  unreadForStudent: {             // for private videos, has student viewed it
+    type: Boolean,
+    default: false
+  },
   recipient: {                       // for private videos, who gets it
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'

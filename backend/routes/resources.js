@@ -27,7 +27,6 @@ router.get(
         .sort({createdAt: -1})
         return res.json({assignments: items})
       }
-
       const {studentId} = req.query;
       const q = {owner: req.user.id, type: 'assignment'};
       if (studentId) q.recipient = studentId;
@@ -49,11 +48,16 @@ router.get(
   isAuthenticated,
   async( req,res,next) => {
     try {
-      const {studentId} = req.query;
-      const q = {owner: req.user.id, type: 'video'}
-      if(studentId) q.recipient = studentId;
-      const items = await Resource.find(q).sort({ createdAt: - 1 });
-      res.json({videos: items})
+     let q = {type: 'video'};
+
+     if(req.user.role === 'teacher') {
+      q.owner = req.user.id
+     } else if (req.user.role === 'student') {
+      q.owner = req.user.id
+     }
+     const items = await Resource.find(q).sort({createdAt: -1})
+     res.json({videos: items})
+
     } catch (err) {
       next(err)
     }
@@ -62,65 +66,103 @@ router.get(
 
 router.post(
   '/upload',
-  isAuthenticated, isTeacher,
-  uploadMiddleware.single('file'),
+  isAuthenticated,
+  uploadMiddleware.fields([
+    {name: 'file', maxCount: 1},
+    {name: "teacherId"},
+    {name: 'teacherEmail'},
+    {name: 'recipient'},
+    {name: 'recipientEmail'},
+  ]),
   async (req, res, next) => {
     try {
-      const file     = req.file;
-      console.log(("[UPLOAD] hit /api/resources/upload"))
-      console.log("[UPLOAD] content-type=", req.headers["content-type"]);
-      console.log("[UPLOAD] req.file?", !!file, file?.fieldname, file?.mimetype, file?.filename);
-      console.log("[UPLOAD] req.body keys:", Object.keys(req.body || {}));
-      let studentId = req.body.recipient;
-      const recipientEmail = req.body.recipientEmail;
-      if(!file) {
-        return res.status(400).json({message: "No file provided"})
-      }
+      console.log("UPLOAD DEBUG:");
+      console.log("user:", req.user);
+      console.log("body:", req.body);
+      console.log("file:", req.files);
 
-      if(!studentId && recipientEmail) {
-        const student = await User.findOne({email: recipientEmail, role: 'student'})
-        if(!student) return res.status(404).json({message: "student not found"})
-        studentId = student._id.toString()
-      }
-      if(!studentId) {
-        return res.status(400).json({message: "No file or recipient"})
-      }
+      const file = req.files?.file?.[0];
+      if (!file) return res.status(400).json({ message: "No file provided" });
 
-      // build URL relative to /uploads
+      const user = req.user;
+      const role = (user.role || "").toLowerCase();
       const url = fileUrl(file.filename);
-      const type = file.mimetype.startsWith('video/') ? 'video' : 'assignment';
+      const type = file.mimetype.startsWith("video/") ? "video" : "assignment";
+      let recipientId;
+      const isStudentToTeacher = (role === 'student' && type === 'video');
+      const isTeacherToStudent = (role === 'teacher' && (type === 'video' || type === 'assignment'));
+      const notifyStudentForAssignment = (role === 'teacher' && type === 'assignment');
+
+      if (role === "teacher") {
+        let { recipient, recipientEmail } = req.body;
+        if (!recipient && recipientEmail) {
+          const student = await User.findOne({ email: recipientEmail, role: "student" });
+          if (!student) return res.status(404).json({ message: "student not found" });
+          recipient = student._id.toString();
+        }
+        if (!recipient) return res.status(400).json({ message: "Missing recipient ID or email" });
+        recipientId = recipient;
+
+      } else if (role === "student") {
+        let { teacherId, teacherEmail } = req.body;
+        if (!teacherId && teacherEmail) {
+          const teacher = await User.findOne({ email: teacherEmail, role: "teacher" });
+          if (!teacher) return res.status(404).json({ message: "teacher not found" });
+          teacherId = teacher._id.toString();
+        }
+        if (!teacherId) return res.status(400).json({ message: "Missing teacher ID or email" });
+        recipientId = teacherId;
+
+      } else {
+        return res.status(403).json({ message: "Invalid role for upload" });
+      }
 
       const resource = await Resource.create({
-        owner:      req.user.id,
-        recipient:  studentId,
-        filename:   file.originalname,
+        owner: user.id || user._id,
+        recipient: recipientId,
+        filename: file.originalname,
         url,
         type,
-        visibility: 'private'
+        visibility: "private",
+        unreadForTeacher: !!isStudentToTeacher,
+        unreadForStudent: !!(isTeacherToStudent || notifyStudentForAssignment),
       });
 
-      console.log('[UPLOAD] saved as:', resource._id.toString(), url);
-
-      const payload = {
-        id: resource.id,
-        filename: resource.filename,
-        url: resource.url,
-        uploadedAt: resource.createdAt,
-        type: resource.type
-      }
       res.status(201).json({
-        message: "Upload Successful",
-        resource: payload, 
-        ...(resource.type === 'video' 
-        ? {video: payload}
-        : {assignment: payload})
+        message: "Upload Successful!",
+        resource: {
+          id: resource._id || resource.id,
+          filename: resource.filename,
+          url: resource.url,
+          uploadedAt: resource.createdAt,
+          type: resource.type,
+        },
       });
     } catch (err) {
-      console.error("UPLOAD: error", err?.stack || err)
-      next(err);
+      console.error("💥 Upload error:", err);
+      console.error("💥 Stack:", err?.stack);
+      res.status(500).json({ error: err.message, stack: err.stack });
     }
   }
 );
+
+// router.get('/mine', isAuthenticated, async (req,res,next) => {
+//   try {
+//     const resources = await Resource.find({
+//       owner: req.user._id || req.user.id,
+//       type: 'video',
+//     }).sort({createdAt: -1})
+
+//     res.json(resources)
+//   } catch (err) {
+//     next(err)
+//   }
+// })
+
+// router.get('/to-me', isAuthenticated, asyn)
+
+
+
 router.delete(
   '/assignments/:id',
   isAuthenticated,
@@ -134,5 +176,6 @@ router.delete(
   isTeacherOrStudent,
   deleteVideo
 )
+
 
 export default router;

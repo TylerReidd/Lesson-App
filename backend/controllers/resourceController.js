@@ -58,6 +58,9 @@ export async function uploadAssignment(req, res, next) {
     if (!file)      return res.status(400).json({ message: "No PDF provided" });
     if (!recipient) return res.status(400).json({ message: "No recipient" });
 
+    const role = (req.user.role || "").toLowerCase();
+    const notifyStudent = role === 'teacher';
+
     // Absolute URL based on API_HOST
     const url = fileUrl(file.filename);
 
@@ -67,7 +70,8 @@ export async function uploadAssignment(req, res, next) {
       filename:   file.originalname,   // keep human-friendly display name
       url,                             // store absolute URL
       type:       'assignment',
-      visibility: 'private'
+      visibility: 'private',
+      unreadForStudent: !!notifyStudent,
     });
 
     return res.status(201).json({
@@ -84,10 +88,15 @@ export async function uploadAssignment(req, res, next) {
 // 🎥 Get private videos
 export async function getPrivateVideos(req, res, next) {
   try {
+    const userId = req.user.id;
+
     const list = await Resource.find({
-      recipient:  req.user.id,
       type:       'video',
-      visibility: 'private'
+      visibility: 'private',
+      $or: [
+        {recipient: userId},
+        {owner: userId}
+      ]
     }).sort('-createdAt');
 
     const out = list.map(r => ({
@@ -112,6 +121,10 @@ export async function uploadVideo(req, res, next) {
     if (!recipient) return res.status(400).json({ message: "No recipient" });
 
     // Absolute URL
+
+    const role = (req.user.role || "").toLowerCase();
+    const isStudentToTeacher = role === 'student'
+    const isTeacherToStudent = role === 'teacher'
     const url = fileUrl(file.filename);
 
     const video = await Resource.create({
@@ -120,7 +133,9 @@ export async function uploadVideo(req, res, next) {
       filename:   file.originalname,   // display name
       url,                             // absolute
       type:       'video',
-      visibility: 'private'
+      visibility: 'private',
+      unreadForTeacher: !!isStudentToTeacher,
+      unreadForStudent: !!isTeacherToStudent,
     });
 
     res.status(201).json({

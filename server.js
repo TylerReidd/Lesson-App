@@ -1,6 +1,6 @@
 // server.js
 import dotenv from 'dotenv';
-dotenv.config();
+
 
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -15,11 +15,18 @@ import resourceRoutes from './backend/routes/resources.js';
 import questionRoutes from './backend/routes/questions.js';
 import teacherRoutes from './backend/routes/teacher.js'
 import practiceRoutes from './backend/routes/practice.js'
+// import studentVideos from './backend/routes/studentVideos.js';
 
 // Resolve __dirname in ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+// top of server.js
+if (process.env.NODE_ENV !== 'production') {
+  const { default: dotenv } = await import('dotenv');
+  dotenv.config();
+}
 
+dotenv.config({path: path.resolve(__dirname, ".env")});
 // Uploads directory (persistent or local)
 // const UPLOADS_DIR =
 //   process.env.NODE_ENV === 'production'
@@ -272,6 +279,7 @@ app.use('/api/questions', questionRoutes);
 app.use('/api/teacher', teacherRoutes)
 app.use('/teacher', teacherRoutes)
 app.use('/api/practice', practiceRoutes);
+// app.use("/api/studentVideos", studentVideos)
 // Serve React client (assumes build output in client/dist)
 const CLIENT_DIST = path.join(__dirname, 'client', 'dist');
 app.use(express.static(CLIENT_DIST));

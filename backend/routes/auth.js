@@ -27,10 +27,18 @@ router.delete('/me/teacher' , isAuthenticated, isStudent, async(req,res,next) =>
 router.post('/signup', signup);
 
 // PROTECTED ROUTES
-router.get('/me', isAuthenticated, (req,res) => {
-  res.set('Cache-Control', 'no-store')
-  res.json({id: req.user.id, role: req.user.role})
-})
+router.get('/me', isAuthenticated, async (req, res, next) => {
+  try {
+    res.set('Cache-Control', 'no-store');
+    const user = await User.findById(req.user.id)
+      .select('_id name email role assignedTeacher')
+      .populate('assignedTeacher', '_id name email role');
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    res.json({ user });
+  } catch (e) {
+    next(e);
+  }
+});
 
 // More detailed profile (shows assignedTeacher)
 router.get('/me/full', isAuthenticated, async (req, res, next) => {

@@ -1,24 +1,47 @@
-import React, { useState } from "react";
+import React, {useEffect, useState } from "react";
 import TeacherStudentsPanel from "../components/TeacherStudentsPanel";
+import axios from "../axios.js"
 
 
 export default function TeacherDashboard({ onLogout }) {
-  const [activeStudent, setActiveStudent] = useState(null);
-  const [summary, setSummary] = useState({questions:0, videos:0, assignments:0});
+const [pendingCount, setPendingCount] = useState(0);
+
+useEffect(() => {
+  const fetchPending = async () => {
+    try {
+      const { data } = await axios.get("/questions/teacher/pending", {
+        withCredentials: true,
+      })
+      setPendingCount(data.pending || 0)
+    } catch (err) {
+      console.error("Failed to fetch pending questions", err)
+    }
+  }
+
+  fetchPending();
+  const interval = setInterval(fetchPending, 300000);
+  return () => clearInterval(interval)
+}, [])
 
   return (
     <div>
-    <main>
-      <div>
-        <section className="panel">
-          <div className="panel-h">My Students</div>
-          <div className="">
-            <TeacherStudentsPanel    
-            />
-          </div>
-        </section>
+      <header className="dashboard-header">
+      <h1>My Students</h1>
+      <div className="notifications">
+        {pendingCount > 0 && <span>{pendingCount}</span>}
       </div>
-    </main>
+    </header>
+      <main>
+        <div>
+          <section className="panel">
+            <div className="panel-h">My Students</div>
+            <div className="">
+              <TeacherStudentsPanel    
+              />
+            </div>
+          </section>
+        </div>
+      </main>
   </div>
   );
 }

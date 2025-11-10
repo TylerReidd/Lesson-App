@@ -17,6 +17,7 @@ api.interceptors.request.use((config) => {
   } else {
     if(config.headers?.Authorization) delete config.headers.Authorization
   }
+  console.log("AXIOS: sending ", config.method, config.url, config.headers)
   return config;
 });
 
@@ -30,6 +31,19 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+export const uploadAxios = Axios.create({
+  baseURL: import.meta.env.VITE_UPLOAD_URL || "http://localhost:5001/api",
+  withCredentials: true,
+})
+
+uploadAxios.interceptors.request.use((config) => {
+  if(USE_BEARER) {
+    const t = localStorage.getItem('token');
+    if(t) config.headers.Authorization = `Bearer ${t}`
+  }
+  return config;
+})
 
 export default api;
 export function setToken(token){ if (token) localStorage.setItem('token', token); }

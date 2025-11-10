@@ -16,6 +16,14 @@ const questionSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
+  unreadForTeacher: {
+    type: Boolean,
+    default: true
+  },
+  unreadforStudent: {
+    type: Boolean,
+    default: false
+  },
   answeredAt: {type: Date}
 }, {timestamps: true})
 

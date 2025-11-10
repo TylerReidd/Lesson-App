@@ -24,7 +24,9 @@ export async function postQuestion(req, res, next) {
     const question = new Question({
       student: student._id,
       teacher: student.assignedTeacher,
-      text
+      text,
+      unreadForTeacher: true,
+      unreadForStudent: false
     })
     await question.save()
 
@@ -85,8 +87,16 @@ export async function respondToQuestion (req,res,next) {
 
     // const teacherId = req.user.id
     const question = await Question.findOneAndUpdate(
-      {_id: id, teacher: req.user.id}, 
-      {answer, answeredAt: new Date()},
+      {
+        _id: id,
+        teacher: req.user.id, 
+      },
+      { 
+        answer, 
+        answeredAt: new Date(), 
+        unreadForStudent: true, 
+        unreadForTeacher: false
+      },
       {new:true}
     )
     if(!question) return res.status(404).json({message:"Question not found"})

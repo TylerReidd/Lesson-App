@@ -123,7 +123,7 @@ export default function TeacherVideos({studentId, defaultRecipientEmail}) {
     <div>
       {/* <Sidebar role='teacher' /> */}
       <div className="panel">
-        <h1>Manage Videos</h1>
+        <h1>Student Videos</h1>
 
         {/* Upload Section */}
         <div className="dashboard-section panel">
@@ -132,20 +132,20 @@ export default function TeacherVideos({studentId, defaultRecipientEmail}) {
 
           <form onSubmit={handleVideoUpload} className="form-grid form-centered">
             <div className="field">
-              <label className="label-lg">Student Email</label>
+              {/* <label className="label-lg">Student Email</label>
               <input
                 className="input-lg"
                 type="email"
                 value={videoEmail}
                 onChange={(e) => setVideoEmail(e.target.value)}
                 disabled={!!effectiveStudentId}
-              />
+              /> */}
             </div>
             <div className='field'>
-              <label className="label-lg" style={{marginLeft:"100px"}}>Select Video: </label>
+              <label className="label-lg" style={{marginLeft:"10px"}}>Select Video: </label>
               <input
                 className="input-lg"
-                
+                style={{alignItems: "center", justifyContent: 'center', margin:"10px"}}
                 type="file"
                 accept="video/*"
                 onChange={(e) => setVideoFile(e.target.files[0])}
@@ -154,7 +154,7 @@ export default function TeacherVideos({studentId, defaultRecipientEmail}) {
 
             {/* Progress bar */}
             {uploadProgress > 0 && (
-              <div style={{ margin: "8px 0" }}>
+              <div>
                 <div className="progress"
                   style={{
                    gridColumn: '1/-1'
@@ -171,7 +171,8 @@ export default function TeacherVideos({studentId, defaultRecipientEmail}) {
               </div>
             )}
             <div className="actons">
-              <button type="submit" className="button button-lg">
+              <button type="submit" className="button button-lg"
+              style={{}}>
                 Upload Video
               </button>
             </div>

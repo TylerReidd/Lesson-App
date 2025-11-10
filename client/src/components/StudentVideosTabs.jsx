@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 
-export default function StudentVideosTabs({ videos, onDelete}) {
+export default function StudentVideosTabs({ videos, onDelete, currentUser}) {
   const [activeIdx, setActiveIdx] = useState(0);
 
   useEffect(() => {
@@ -47,7 +47,8 @@ export default function StudentVideosTabs({ videos, onDelete}) {
           src={vid.url}
           className="video-player"
         />
-        <p>Uploaded: {vid.uploadedAt ? new Date(vid.uploadedAt).toLocaleDateString() : "Unknown"}</p>
+        <p>Uploaded by {vid.owner === currentUser?.id ? "You" : "Student"}</p>
+        <p>Uploade at: {vid.uploadedAt ? new Date(vid.uploadedAt).toLocaleDateString() : "Unknown"}</p>
         {typeof onDelete === 'function' && (
           <button onClick={() => onDelete(vid.id || vid._id)}>Delete Video</button>
         )}

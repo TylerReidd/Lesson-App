@@ -115,14 +115,14 @@ export default function TeacherAssignments({ studentId, defaultRecipientEmail })
         {pdfErr && <p style={{ color: "red" }}>{pdfErr}</p>}
         {pdfMsg && <p style={{ color: "green" }}>{pdfMsg}</p>}
 
-        <label>Student Email</label>
+        {/* <label>Student Email</label>
         <input
           type="email"
           value={pdfEmail}
           onChange={(e) => setPdfEmail(e.target.value)}
           placeholder="student@example.com"
           disabled={!!effectiveStudentId}
-        />
+        /> */}
 
         <label>Select PDF</label>
         <input

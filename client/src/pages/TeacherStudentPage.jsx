@@ -1,7 +1,6 @@
 import { useParams, Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import axios from "../axios.js";
-import Sidebar from "../components/Sidebar.jsx";
 import TeacherVideos from "../components/TeacherVideos.jsx";
 import TeacherAssignments from "../components/TeacherAssignment.jsx";
 import TeacherQuestions from "../components/TeacherQuestions.jsx";
@@ -48,10 +47,19 @@ export default function TeacherStudentPage() {
 
         {/* Tabs */}
         <div className="tabs" style={{ marginTop: 8 }}>
-          <button className={`tab ${tab==='videos'?'active':''}`} onClick={()=>setTab('videos')}>Videos</button>
-          <button className={`tab ${tab==='assignments'?'active':''}`} onClick={()=>setTab('assignments')}>Assignments</button>
-          <button className={`tab ${tab==='questions'?'active':''}`} onClick={()=>setTab('questions')}>Questions</button>
-          <button className={`tab ${tab==='practice' ? 'active': ''}`} onClick={() => setTab('practice')}>Practice</button>
+          <button 
+            className={`tab ${tab==='videos'?'active':''}`} onClick={()=>setTab('videos')}
+            style={{borderRadius: '5px', border: '1px solid black', padding: '8px 16px', marginRight: '8px'}}
+            >Videos</button>
+          <button 
+            className={`tab ${tab==='assignments'?'active':''}`} onClick={()=>setTab('assignments')}
+            style={{borderRadius: '5px', border: '1px solid black', padding: '8px 16px', marginRight: '8px'}}>Assignments</button>
+          <button 
+            className={`tab ${tab==='questions'?'active':''}`} onClick={()=>setTab('questions')}
+            style={{borderRadius: '5px', border: '1px solid black', padding: '8px 16px', marginRight: '8px'}}>Questions</button>
+          <button 
+            className={`tab ${tab==='practice' ? 'active': ''}`} onClick={() => setTab('practice')}
+            style={{borderRadius: '5px', border: '1px solid black', padding: '8px 16px', marginRight: '8px'}}>Practice</button>
         </div>
 
         {/* Body (reuse your components, just pass studentId) */}

@@ -51,7 +51,22 @@ const PracticeLogSchema = new mongoose.Schema({
   bpm: {
     type: Number,
     default: null
-  }
+  },
+  status: {
+    type: String,
+    enum: ['submitted', 'reviewed', 'needs attention'], default : 'submitted'
+  },
+  teacherComment: {
+    type: String, default: ''
+  },
+  unreadForStudent: {
+    type: Boolean,
+    default: false
+  },
+  unreadforTeacher: {
+    type: Boolean,
+    default: true
+  },
 
 }, {timestamps: true})
 

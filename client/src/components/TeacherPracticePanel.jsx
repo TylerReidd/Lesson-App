@@ -1,76 +1,202 @@
-import React, {useEffect, useState} from 'react';
-import axios from '../axios.js';
-import { useLocation } from 'react-router-dom';
+// src/components/TeacherPracticePanel.jsx
+import React, { useEffect, useState } from "react";
+import axios from "../axios.js";
 
+export default function TeacherPracticePanel({ studentId }) {
+  const [logs, setLogs] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState("");
+  const [reviewDraft, setReviewDraft] = useState({}); // { [logId]: { status, teacherComment } }
 
-export default function TeacherPracticePanel({studentId}) {
-    const [logs, setLogs] = useState([]);
-    const [loading, setLoading] = useState(true)
-    const [error, setError] = useState(null)
+  useEffect(() => {
+    if (!studentId) return;
+    fetchLogs(studentId);
+  }, [studentId]);
 
-    useEffect(() => {
-      if(!studentId) return;
-
-      setLoading(true)
-      axios
-        .get(`/practice/teacher/${studentId}`, {withCredentials: true})
-        .then((res) => {
-          setLogs(Array.isArray(res.data) ? res.data : []);
-        })
-        .catch((err) => {
-          console.error("Error fetching practice logs", err)
-          setError("Failed to load practice logs");
-          setLogs([])
-        })
-        .finally(() => setLoading(false))
-    }, [studentId])
-
-    if(!studentId) {
-      return <div className="panel">Select a student to view practice logs</div>
+  async function fetchLogs(sid) {
+    try {
+      setLoading(true);
+      setErr("");
+      const res = await axios.get(`/practice/teacher/${String(sid)}`, {
+        withCredentials: true,
+      });
+      const list = Array.isArray(res.data?.logs) ? res.data.logs : [];
+      setLogs(list);
+      // server may clear unread after fetch (recommended)
+    } catch (e) {
+      console.error("Failed to load practice logs", e);
+      setErr(e?.response?.data?.message || "Failed to load practice logs");
+    } finally {
+      setLoading(false);
     }
+  }
 
-    if(loading) return <div className="panel">Loading...</div>
-    if(error) return <div className="panel error">{error}</div>
+  async function submitReview(logId) {
+    const body = reviewDraft[logId] || {};
+    try {
+      await axios.put(`/practice/${String(logId)}/review`, body, {
+        withCredentials: true,
+      });
+      // Refresh list after review
+      await fetchLogs(studentId);
+      setReviewDraft((d) => ({
+        ...d,
+        [logId]: { status: "", teacherComment: "" },
+      }));
+    } catch (e) {
+      console.error("Failed to submit review", e);
+      setErr(e?.response?.data?.message || "Failed to submit review");
+    }
+  }
 
-    return (
-      <div className="panel">
-        <div className="panel-h">Practice Logs</div>
-        <div className="panel-b">
-          {logs.length === 0 ? (
-            <p className="subtle">No logs submitted yet...</p>
-          ) : (
-            <div className="practice-log-list">
-              {logs.map((log) => (
-                <div key={log._id} className="card mb-3">
-                  <div className="card-header">
-                    <span>{new Date(log.date).toLocaleDateString()}</span>
-                    <span className="subtle">- {log.lessonType || 'music'}</span>
+  if (!studentId) return <div>Select a student to view practice logs.</div>;
+
+  return (
+    <div
+      className="practice-panel"
+      style={{ justifyItems: "center", margin: "auto", fontSize: "25px" }}
+    >
+      <h2 className="text-xl font-semibold">Practice Logs</h2>
+      {err && <p className="text-red-600 mb-2">{err}</p>}
+      {loading && <p>Loading…</p>}
+      {!loading && logs.length === 0 && <p>No logs yet.</p>}
+
+      <div>
+        {logs.map((log) => {
+          const id = String(log._id || log.id);
+          const rd = reviewDraft[id] || {
+            status: log.status || "submitted",
+            teacherComment: "",
+          };
+
+          return (
+            <div key={id}>
+              <div>
+                <div>
+                  <div>
+                    {new Date(log.date).toLocaleDateString()}
+                    {" · "}
+                    {log.durationMin} min
                   </div>
-                  <div className="card-body">
-                    {log.durationMin && (
-                      <p><b>Duration:</b>{log.durationMin} minutes</p>
-                    )}
-                    {log.focus && (
-                      <p><b>Focus: </b>{log.focus}</p>
-                    )}
-                    {log.struggles && (
-                      <p><b>Struggles</b>{log.struggles}</p>
-                    )}
-                    {log.wins && (
-                      <p><b>Wins: </b>{logs.wins}</p>
-                    )}
-                    {log.notes && (
-                      <p><b>Notes:</b>{log.notes}</p>
-                    )}
-                    {log.bpm && (
-                      <p><b>Metronome: </b>{log.bpm}</p>
-                    )}
+                  <div>
+                    <>
+                      {log.focus && (
+                        <>
+                          <strong>Focus:</strong> {log.focus}
+                        </>
+                      )}
+                      {log.wins && (
+                        <>
+                          {" - "}
+                          <strong>Wins:</strong> {log.wins}
+                        </>
+                      )}
+                      {log.struggles && (
+                        <>
+                          {" - "}
+                          <strong>Struggles:</strong> {log.struggles}
+                        </>
+                      )}
+                      {log.notes && (
+                        <>
+                          {" - "}
+                          <strong>Notes:</strong> {log.notes}
+                        </>
+                      )}
+                    </>
+                  </div>
+                  {log.metronome && (
+                    <div className="text-xs text-slate-500">
+                      Metronome: {log.bpm ? `${log.bpm} bpm` : "on"}
+                    </div>
+                  )}
+                  <div>
+                    Status:{" "}
+                    <span className="font-semibold">
+                      {log.status || "submitted"}
+                    </span>
+                    {log.teacherComment
+                      ? ` · Comment: ${log.teacherComment}`
+                      : ""}
                   </div>
                 </div>
-              ))}
+                <div>
+                  {log.start ? new Date(log.start).toLocaleTimeString() : ""} –{" "}
+                  {log.end ? new Date(log.end).toLocaleTimeString() : ""}
+                </div>
+              </div>
+
+              {/* Review controls */}
+              <div className="mt-3 grid gap-2 md:grid-cols-3">
+                <select
+                  value={rd.status}
+                  onChange={(e) =>
+                    setReviewDraft((d) => ({
+                      ...d,
+                      [id]: { ...rd, status: e.target.value },
+                    }))
+                  }
+                  style={{
+                    width: "75%",
+                    margin: "auto",
+                    marginTop:'15px',
+                    height: "60px",
+                    borderRadius: "8px",
+                    boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+                    padding: "10px",
+                    fontSize: "22px",
+                    fontFamily: "inherit",
+                  }}
+                >
+                  <option value="submitted">Submitted</option>
+            
+                  <option value="approved">Approved</option>
+          
+                </select>
+                <input
+                  type="text"
+                  placeholder="Add a short comment"
+                  value={rd.teacherComment || ""}
+                  onChange={(e) =>
+                    setReviewDraft((d) => ({
+                      ...d,
+                      [id]: { ...rd, teacherComment: e.target.value },
+                    }))
+                  }
+                  style={{
+                    width: "75%",
+                    margin: "auto",
+                    marginTop: '10px',
+                    height: "100px",
+                    borderRadius: "8px",
+                    boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+                    padding: "10px",
+                    fontSize: "22px",
+                    fontFamily: "inherit",
+                  }}
+                />
+                <button
+                  onClick={() => submitReview(id)}
+                  style={{
+                    margin: "auto",
+                    marginTop:'10px', 
+                    width: "75%",
+                    borderRadius: "8px",
+                    boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+                    backgroundColor: "#162473ac",
+                    color: "white",
+                    padding: "10px 20px",
+                    fontSize: "26px",
+                    cursor: "pointer",
+                  }}
+                >
+                  Save Review
+                </button>
+              </div>
             </div>
-          )}
-        </div>
+          );
+        })}
       </div>
-    )
+    </div>
+  );
 }

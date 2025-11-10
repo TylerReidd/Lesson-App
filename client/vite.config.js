@@ -16,6 +16,13 @@ export default defineConfig({
         target: 'http://localhost:5001',
         changeOrigin: true,
         secure: false,
+        configure: (proxy, options) => {
+          proxy.on("proxyReq", (proxyReq, req,res) => {
+            if(req.body && req.headers["content-type"]?.includes("multipart/form-data")) {
+              delete req.headers["content-length"]
+            }
+          })
+        }
       },
       // NEW: proxy static uploads too
       '/uploads': {
