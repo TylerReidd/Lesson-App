@@ -64,7 +64,12 @@ export default function TeacherAssignments({ studentId, defaultRecipientEmail })
     setPdfErr("");
     setPdfMsg("");
 
-    if (!pdfFile) return setPdfErr("Select a PDF");
+    if (!pdfFile) return setPdfErr("Select a file to upload");
+    const isValidType =
+      pdfFile.type === "application/pdf" || pdfFile.type.startsWith("image/");
+    if (!isValidType) {
+      return setPdfErr("Only PDF or common image files can be uploaded.");
+    }
     if (!effectiveStudentId && !pdfEmail)
       return setPdfErr("Enter student email (or pick a student)");
 
@@ -124,14 +129,14 @@ export default function TeacherAssignments({ studentId, defaultRecipientEmail })
           disabled={!!effectiveStudentId}
         /> */}
 
-        <label>Select PDF</label>
+        <label>Select PDF or Image</label>
         <input
           type="file"
-          accept="application/pdf"
+          accept="application/pdf,image/*"
           onChange={(e) => setPdfFile(e.target.files[0])}
         />
 
-        <button type="submit" className="button">Upload PDF</button>
+        <button type="submit" className="button">Upload File</button>
       </form>
 
       {/* Assignments List */}

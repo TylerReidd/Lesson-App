@@ -16,17 +16,25 @@ if (!fs.existsSync(UPLOADS_DIR)) {
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => cb(null, UPLOADS_DIR),
   filename: (_req, file, cb) => {
-    const prefix = file.mimetype.startsWith("video/") ? "video" : "pdf";
+    let prefix = "file";
+    if (file.mimetype.startsWith("video/")) prefix = "video";
+    else if (file.mimetype.startsWith("image/")) prefix = "img";
+    else if (file.mimetype === "application/pdf") prefix = "pdf";
+
     const safe = file.originalname.replace(/\s+/g, "_");
     cb(null, `${Date.now()}-${prefix}-${safe}`);
   },
 });
 
 const fileFilter = (_req, file, cb) => {
-  if (file.mimetype.startsWith("video/") || file.mimetype === "application/pdf") {
+  if (
+    file.mimetype.startsWith("video/") ||
+    file.mimetype.startsWith("image/") ||
+    file.mimetype === "application/pdf"
+  ) {
     cb(null, true);
   } else {
-    cb(new Error("Only video or PDF files allowed"), false);
+    cb(new Error("Only video, PDF, or image files allowed"), false);
   }
 };
 

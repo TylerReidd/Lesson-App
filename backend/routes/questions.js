@@ -4,6 +4,8 @@ import {postQuestion, getMyQuestions, getAllQuestions, respondToQuestion, delete
 import Question from '../models/Question.js'
 import Thread from '../models/Thread.js' 
 import Message from '../models/Message.js'
+import { uploadMiddleware } from '../middleware/upload.js';
+import { fileUrl } from '../utils/urls.js';
 
 
 const router = express.Router()
@@ -59,15 +61,26 @@ router.get(
   }
   )
 
+  const replyUpload = uploadMiddleware.array('attachments', 5);
+
   router.post(
     '/:id/replies',
     isAuthenticated,
+    replyUpload,
     async (req,res,next) => {
       try {
         const {id} = req.params;
-        const {text} = req.body; 
+        const text = (req.body?.text || "").trim();
 
-        if(!text) return res.status(400).json({message: 'Reply text is required'});
+        const filesRaw = Array.isArray(req.files)
+          ? req.files
+          : Array.isArray(req.files?.attachments)
+          ? req.files.attachments
+          : [];
+
+        if(!text && filesRaw.length === 0) {
+          return res.status(400).json({message: 'Reply text or attachment is required'});
+        }
 
         const q = await Question.findById(id).select('student teacher')
         if(!q) return res.status(404).json({message: 'Question not found'});
@@ -91,11 +104,19 @@ router.get(
           }
 
           const role = isTeacher ? 'teacher' : 'student';
+          const attachments = filesRaw.map((file) => ({
+            filename: file.originalname,
+            url: fileUrl(file.filename),
+            mimetype: file.mimetype,
+            size: file.size
+          }));
+
           const msg = await Message.create({
             thread: thread._id,
             sender: req.user.id,
             role,
             text,
+            attachments,
             unreadForTeacher: role === 'student',
             unreadForStudent: role === 'teacher',
           })
@@ -115,7 +136,8 @@ router.get(
             id: msg._id, 
             text: msg.text, 
             createdAt: msg.createdAt, 
-            authorRole: role
+            authorRole: role,
+            attachments: msg.attachments || []
           }})
         } catch (e) {next(e)}
       }
@@ -150,7 +172,8 @@ router.get(
         id: m._id,
         text: m.text,
         createdAt: m.createdAt,
-        authorRole: m.role 
+        authorRole: m.role,
+        attachments: Array.isArray(m.attachments) ? m.attachments : []
       }));
   
       res.json({ replies });
@@ -165,6 +188,6 @@ router.put(
   )
 
 
-  router.delete('/:id', isAuthenticated, isStudent, deleteQuestion)
+router.delete('/:id', isAuthenticated, isStudent, deleteQuestion)
 
 export default router

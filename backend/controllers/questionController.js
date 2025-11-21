@@ -113,20 +113,29 @@ export async function respondToQuestion (req,res,next) {
 }
 
 
-export const deleteQuestion = async (req,res) => {
+export const deleteQuestion = async (req,res,next) => {
   try {
     const {id} = req.params;
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({error: "Invalid question ID"});
     }
 
-   const deleted = await Question.findOneAndDelete({_id: id, student:req.user.id})
-   if (!deleted) {
-    return res.status(404).json({error: "Question not found or not yours"})
-   }
-   res.json({message: "Deleted", id})
+    const filter = { _id: id };
+
+    if (req.user.role === 'student') {
+      filter.student = req.user.id;
+    } else if (req.user.role === 'teacher') {
+      filter.teacher = req.user.id;
+    } else {
+      return res.status(403).json({ error: "Forbidden" });
+    }
+
+    const deleted = await Question.findOneAndDelete(filter);
+    if (!deleted) {
+      return res.status(404).json({error: "Question not found or not yours"})
+    }
+    res.json({message: "Deleted", id: deleted._id})
   } catch (err) {
-    console.error(err);
-    res.status(500).json({error: 'Server Error'})
+    next(err);
   }
 }

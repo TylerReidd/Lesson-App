@@ -44,6 +44,7 @@
 // // Navbar.jsx
 import { Link, useNavigate } from "react-router-dom";
 import ThemeToggle from "./ThemeToggle.jsx";
+import NotificationBell from "./NotificationBell.jsx";
 import { AuthContext } from "../AuthContext.jsx";
 import { useContext } from "react";
 
@@ -75,6 +76,7 @@ export default function Navbar({ onMenu, isMenuOpen }) {
 
         <Link to={dashPath} className="brand">Forte</Link>
         <div className="spacer" />
+        <NotificationBell />
         <ThemeToggle />
         {user
           ? <button className="button-primary" onClick={handleLogout}>Log out</button>

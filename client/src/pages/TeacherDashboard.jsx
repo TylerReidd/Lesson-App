@@ -28,11 +28,8 @@ useEffect(() => {
   return (
     <div>
       <header className="dashboard-header">
-      <h1>My Students</h1>
-      <div className="notifications">
-        {pendingCount > 0 && <span>{pendingCount}</span>}
-      </div>
-    </header>
+        <h1>My Students</h1>
+      </header>
       <main>
         <div>
           <TeacherLinkStudentForm onLinked={() => setRefreshKey((k) => k + 1)} />

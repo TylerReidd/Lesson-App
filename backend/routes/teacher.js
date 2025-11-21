@@ -5,8 +5,16 @@ import User from '../models/User.js';
 import Question from '../models/Question.js'
 import Resource from '../models/Resource.js'
 import PracticeLog from '../models/PracticeLog.js';
+import { linkStudentByEmail } from '../controllers/teacherController.js';
 
 const router = express.Router()
+
+router.post(
+  '/students/link',
+  isAuthenticated,
+  isTeacher,
+  linkStudentByEmail
+);
 
 
 router.get('/students',isAuthenticated,isTeacher, async (req,res,next) => {

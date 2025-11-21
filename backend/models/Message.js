@@ -22,6 +22,17 @@ const messageSchema = new Schema({
   unreadForStudent: {
     type: Boolean,
     default: false
+  },
+  attachments: {
+    type: [
+      {
+        filename: { type: String, required: true },
+        url: { type: String, required: true },
+        mimetype: { type: String },
+        size: { type: Number }
+      }
+    ],
+    default: []
   }
 }, { timestamps: true });
 
