@@ -278,7 +278,6 @@ app.use('/api/auth', authRoutes);
 app.use('/api/resources', resourceRoutes);
 app.use('/api/questions', questionRoutes);
 app.use('/api/teacher', teacherRoutes)
-app.use('/teacher', teacherRoutes)
 app.use('/api/practice', practiceRoutes);
 app.use('/api/notifications', notificationRoutes);
 // app.use("/api/studentVideos", studentVideos)
