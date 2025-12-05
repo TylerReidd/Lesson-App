@@ -42,21 +42,14 @@
 //   );
 // }
 // // Navbar.jsx
-import { Link, useNavigate } from "react-router-dom";
-import ThemeToggle from "./ThemeToggle.jsx";
+import { Link } from "react-router-dom";
 import NotificationBell from "./NotificationBell.jsx";
 import { AuthContext } from "../AuthContext.jsx";
 import { useContext } from "react";
 
 export default function Navbar({ onMenu, isMenuOpen }) {
-  const { user, logout } = useContext(AuthContext);
-  const nav = useNavigate();
+  const { user } = useContext(AuthContext);
   const dashPath = user?.role === 'teacher' ? '/teacher' : '/student';
-
-  const handleLogout = async () => {
-    await logout();
-    nav('/login', { replace: true });
-  };
 
   return (
     <header className="topbar">
@@ -77,11 +70,6 @@ export default function Navbar({ onMenu, isMenuOpen }) {
         <Link to={dashPath} className="brand">Forte</Link>
         <div className="spacer" />
         <NotificationBell />
-        <ThemeToggle />
-        {user
-          ? <button className="button-primary" onClick={handleLogout}>Log out</button>
-          : <Link className="button" to="/login">Log in</Link>
-        }
       </div>
     </header>
   );

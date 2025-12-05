@@ -208,6 +208,11 @@ textarea {
   border-radius: 12px;
   color: var(--text);
   transition: 0.15s background;
+  border: 0;
+  background: transparent;
+  width: 100%;
+  cursor: pointer;
+  font: inherit;
 }
 
 .navitem:hover,
@@ -464,6 +469,7 @@ button:hover {
 /* === Notifications === */
 .notif-wrapper {
   position: relative;
+  flex-shrink: 0;
 }
 .notif-button {
   position: relative;
@@ -472,6 +478,8 @@ button:hover {
   border-radius: 999px;
   width: 40px;
   height: 40px;
+  min-height: 0;
+  padding: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -495,7 +503,7 @@ button:hover {
   position: absolute;
   right: 0;
   top: calc(100% + 10px);
-  width: 260px;
+  width: min(280px, calc(100vw - 32px));
   background: var(--panel);
   border: 1px solid var(--border);
   border-radius: 12px;
@@ -536,6 +544,10 @@ button:hover {
 }
 .notif-row:hover {
   background: var(--panel-2);
+}
+.notif-row:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 .notif-label {
   font-weight: 600;
@@ -682,7 +694,7 @@ button:hover {
 
 /* === Questions & Threads === */
 .questions-page {
-  max-width: 600px;
+  width: 100%;
   margin: 1rem auto;
   padding: 0 1rem;
 }
@@ -1238,6 +1250,12 @@ button:hover {
   .kpis {
     grid-template-columns: 1fr;
   }
+    .sidebar {
+    display: none !important;
+  }
+  .hamburger {
+    display: inline-flex;
+  }
 }
 
 @media (max-width: 1000px) {
@@ -1283,6 +1301,7 @@ button:hover {
     max-width: 95%;
     margin: 0 auto;
   }
+
   .kpi-grid {
     grid-template-columns: repeat(3, 1fr);
   }
@@ -1337,6 +1356,28 @@ button:hover {
 }
 
 @media (max-width: 480px) {
+  .topbar-inner {
+    padding: 10px 12px;
+  }
+  .topbar-inner .spacer {
+    display: none;
+  }
+  .notif-wrapper {
+    margin-left: auto;
+  }
+  .notif-button {
+    width: 32px;
+    height: 32px;
+    min-height: 0;
+    padding: 0;
+    margin-right: 0;
+  }
+  .notif-dropdown {
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    width: min(280px, calc(100vw - 24px));
+  }
   .workspace main {
     min-height: 100dvh;
     display: flex;
@@ -1407,7 +1448,7 @@ button:hover {
     width: 100%;
   }
   .sidebar-drawer .navitem {
-    justify-content: center;
+    justify-content: left;
   }
   .text-left {
     text-align: left !important;

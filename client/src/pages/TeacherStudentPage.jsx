@@ -1,5 +1,5 @@
-import { useParams, Link } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useParams, Link, useLocation } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
 import axios from "../axios.js";
 import TeacherVideos from "../components/TeacherVideos.jsx";
 import TeacherAssignments from "../components/TeacherAssignment.jsx";
@@ -8,9 +8,20 @@ import TeacherPracticePanel from "../components/TeacherPracticePanel.jsx";
 
 export default function TeacherStudentPage() {
   const { id } = useParams();
+  const location = useLocation();
   const [student, setStudent] = useState(null);
   const [summary, setSummary] = useState(null);
-  const [tab, setTab] = useState("videos"); // or persist via query if you like
+  const allowedTabs = ["videos", "assignments", "questions", "practice"];
+  const queryTab = useMemo(() => {
+    const params = new URLSearchParams(location.search);
+    const raw = params.get("tab");
+    return allowedTabs.includes(raw) ? raw : "videos";
+  }, [location.search]);
+  const [tab, setTab] = useState(queryTab);
+
+  useEffect(() => {
+    setTab(queryTab);
+  }, [queryTab, id]);
 
   useEffect(() => {
     // header details (optional)

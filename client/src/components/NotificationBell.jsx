@@ -26,11 +26,33 @@ const LABELS = {
   practice: "Practice Logs",
 };
 
+const TEACHER_TAB = {
+  videos: "videos",
+  assignments: "assignments",
+  questions: "questions",
+  practice: "practice",
+};
+
+const summaryMatches = (summaryData, type) => {
+  if (!summaryData) return false;
+  if (type === "questions") {
+    return (summaryData.questionsUnanswered ?? summaryData.questions ?? 0) > 0;
+  }
+  if (type === "assignments") {
+    return (summaryData.assignments ?? 0) > 0;
+  }
+  if (type === "videos") {
+    return (summaryData.videos ?? 0) > 0;
+  }
+  return false;
+};
+
 export default function NotificationBell() {
   const { user } = useContext(AuthContext);
   const [summary, setSummary] = useState(null);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [resolving, setResolving] = useState(false);
   const navigate = useNavigate();
 
   const fetchSummary = useCallback(async () => {
@@ -82,7 +104,69 @@ export default function NotificationBell() {
     }
   };
 
+  const resolveTeacherTarget = useCallback(
+    async (type) => {
+      try {
+        setResolving(true);
+        const { data } = await axios.get("/teacher/students", {
+          withCredentials: true,
+        });
+        const list = Array.isArray(data?.students) ? data.students : [];
+        for (const student of list) {
+          const sid = student._id || student.id;
+          if (!sid) continue;
+          try {
+            if (type === "practice") {
+              const logsRes = await axios.get(
+                `/practice/teacher/${sid}`,
+                { withCredentials: true }
+              );
+              const logs = Array.isArray(logsRes.data?.logs)
+                ? logsRes.data.logs
+                : [];
+              if (logs.some((log) => log?.unreadForTeacher)) {
+                return sid;
+              }
+              continue;
+            }
+            const { data: summaryData } = await axios.get(
+              `/teacher/students/${sid}/summary`,
+              { withCredentials: true }
+            );
+            if (summaryMatches(summaryData, type)) {
+              return sid;
+            }
+          } catch (err) {
+            console.error("Failed to inspect student notification state", err);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch teacher students", err);
+      } finally {
+        setResolving(false);
+      }
+      return null;
+    },
+    []
+  );
+
   const handleNavigate = async (type, path) => {
+    if (role === "teacher") {
+      const targetId = await resolveTeacherTarget(type);
+      await markRead([type]);
+      setOpen(false);
+      if (targetId) {
+        const tab = TEACHER_TAB[type];
+        navigate(
+          tab
+            ? `/teacher/students/${targetId}?tab=${tab}`
+            : `/teacher/students/${targetId}`
+        );
+      } else {
+        navigate(path || "/teacher");
+      }
+      return;
+    }
     setOpen(false);
     await markRead([type]);
     navigate(path);
@@ -130,6 +214,7 @@ export default function NotificationBell() {
               type="button"
               className="notif-row"
               onClick={() => handleNavigate(key, path)}
+              disabled={resolving && role === "teacher"}
             >
               <div>
                 <div className="notif-label">{label}</div>
