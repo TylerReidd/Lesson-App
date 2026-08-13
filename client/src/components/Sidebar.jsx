@@ -1,5 +1,5 @@
 // Sidebar.jsx
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink, useNavigate, Link, useLocation } from "react-router-dom";
 import ThemeToggle from "./ThemeToggle.jsx";
 import { useContext } from "react";
 import { AuthContext } from "../AuthContext.jsx";
@@ -52,38 +52,85 @@ function NavList({ items }) {
 }
 
 export default function Sidebar({ role, open, onClose }) {
-  const { logout } = useContext(AuthContext);
+  const { logout, user } = useContext(AuthContext);
   const nav = useNavigate();
+  const location = useLocation();
   const base = role === 'teacher' ? '/teacher' : '/student';
+  const roleLabel = role === "teacher" ? "Coach portal" : "Learner portal";
   const handleLogout = async () => {
     await logout();
     nav('/login', { replace: true });
   };
-  const items = [
-    { to: `${base}`, label:'Dashboard', icon:I.dash, exact:true },
-    { to: `${base}/videos`, label:'Videos', icon:I.vid },
-    { to: `${base}/assignments`, label:'Assignments', icon:I.doc },
-    { to: `${base}/questions`, label:'Questions', icon:I.q },
-    { to: '/privacy', label: 'Privay Policy', icon:I.doc },
-    { type: 'theme' },
-    { key: 'logout', label: 'Log out', icon: I.logout, action: handleLogout },
-  ];
+  const jumpToStudents = () => {
+    const scroll = () => {
+      const el = document.getElementById("students-section");
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    };
+
+    if (location.pathname !== "/teacher") {
+      nav("/teacher");
+      window.setTimeout(scroll, 120);
+    } else {
+      scroll();
+    }
+    onClose?.();
+  };
+
+  const items = role === "teacher"
+    ? [
+        { to: `${base}`, label: "Dashboard", icon: I.dash, exact: true },
+        { key: "students", label: "Students", icon: I.users, action: jumpToStudents },
+        { to: "/privacy", label: "Privacy", icon: I.doc },
+        { type: "theme" },
+        { key: "logout", label: "Log out", icon: I.logout, action: handleLogout },
+      ]
+    : [
+        { to: `${base}`, label: "Dashboard", icon: I.dash, exact: true },
+        { to: `${base}/videos`, label: "Videos", icon: I.vid },
+        { to: `${base}/assignments`, label: "Assignments", icon: I.doc },
+        { to: `${base}/questions`, label: "Questions", icon: I.q },
+        { to: "/privacy", label: "Privacy", icon: I.doc },
+        { type: "theme" },
+        { key: "logout", label: "Log out", icon: I.logout, action: handleLogout },
+      ];
+
+  const shell = (
+    <>
+      <div className="sidebar-brand">
+        <span className="sidebar-kicker">Forte Studio</span>
+        <div className="sidebar-name">{user?.name || "Workspace"}</div>
+        <div className="sidebar-role">{roleLabel}</div>
+      </div>
+
+      <NavList items={items} />
+
+      <div className="sidebar-panel">
+        <div className="sidebar-panel-title">Quick jump</div>
+        <p className="muted">Keep your teaching flow focused.</p>
+        <Link to={base}>{role === "teacher" ? "Open dashboard" : "Open workspace"}</Link>
+        {role === "teacher" ? (
+          <button type="button" className="sidebar-link-button" onClick={jumpToStudents}>
+            Jump to student list
+          </button>
+        ) : null}
+        <Link to="/privacy">Privacy and security</Link>
+      </div>
+    </>
+  );
 
   return (
     <>
-      {/* Desktop sidebar (hidden on mobile via CSS) */}
       <aside className="sidebar">
-        <NavList items={items} />
+        {shell}
       </aside>
 
-      {/* Mobile drawer + backdrop */}
       <div
         className={`sidebar-drawer ${open ? 'open' : ''}`}
         role="dialog"
         aria-modal="true"
         aria-label="Navigation"
       >
-        <NavList items={items} />
+        {shell}
       </div>
       <div
         className={`drawer-backdrop ${open ? 'show' : ''}`}

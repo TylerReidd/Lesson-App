@@ -52,16 +52,13 @@ export default function TeacherPracticePanel({ studentId }) {
   if (!studentId) return <div>Select a student to view practice logs.</div>;
 
   return (
-    <div
-      className="practice-panel"
-      style={{ justifyItems: "center", margin: "auto", fontSize: "25px" }}
-    >
+    <div className="practice-panel">
       <h2 className="text-xl font-semibold">Practice Logs</h2>
       {err && <p className="text-red-600 mb-2">{err}</p>}
       {loading && <p>Loading…</p>}
       {!loading && logs.length === 0 && <p>No logs yet.</p>}
 
-      <div>
+      <div className="practice-log-list">
         {logs.map((log) => {
           const id = String(log._id || log.id);
           const rd = reviewDraft[id] || {
@@ -70,15 +67,15 @@ export default function TeacherPracticePanel({ studentId }) {
           };
 
           return (
-            <div key={id}>
-              <div>
-                <div>
-                  <div>
+            <div key={id} className="practice-log">
+              <div className="practice-log-head">
+                <div className="practice-log-meta">
+                  <div className="font-semibold">
                     {new Date(log.date).toLocaleDateString()}
                     {" · "}
                     {log.durationMin} min
                   </div>
-                  <div>
+                  <div className="practice-log-details">
                     <>
                       {log.focus && (
                         <>
@@ -120,15 +117,15 @@ export default function TeacherPracticePanel({ studentId }) {
                       : ""}
                   </div>
                 </div>
-                <div>
+                <div className="muted">
                   {log.start ? new Date(log.start).toLocaleTimeString() : ""} –{" "}
                   {log.end ? new Date(log.end).toLocaleTimeString() : ""}
                 </div>
               </div>
 
-              {/* Review controls */}
-              <div className="mt-3 grid gap-2 md:grid-cols-3">
+              <div className="practice-review md:grid-cols-3">
                 <select
+                  className="select"
                   value={rd.status}
                   onChange={(e) =>
                     setReviewDraft((d) => ({
@@ -136,24 +133,12 @@ export default function TeacherPracticePanel({ studentId }) {
                       [id]: { ...rd, status: e.target.value },
                     }))
                   }
-                  style={{
-                    width: "75%",
-                    margin: "auto",
-                    marginTop:'15px',
-                    height: "60px",
-                    borderRadius: "8px",
-                    boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-                    padding: "10px",
-                    fontSize: "22px",
-                    fontFamily: "inherit",
-                  }}
                 >
                   <option value="submitted">Submitted</option>
-            
                   <option value="approved">Approved</option>
-          
                 </select>
                 <input
+                  className="input"
                   type="text"
                   placeholder="Add a short comment"
                   value={rd.teacherComment || ""}
@@ -163,32 +148,10 @@ export default function TeacherPracticePanel({ studentId }) {
                       [id]: { ...rd, teacherComment: e.target.value },
                     }))
                   }
-                  style={{
-                    width: "75%",
-                    margin: "auto",
-                    marginTop: '10px',
-                    height: "100px",
-                    borderRadius: "8px",
-                    boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-                    padding: "10px",
-                    fontSize: "22px",
-                    fontFamily: "inherit",
-                  }}
                 />
                 <button
+                  className="button-primary"
                   onClick={() => submitReview(id)}
-                  style={{
-                    margin: "auto",
-                    marginTop:'10px', 
-                    width: "75%",
-                    borderRadius: "8px",
-                    boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-                    backgroundColor: "#162473ac",
-                    color: "white",
-                    padding: "10px 20px",
-                    fontSize: "26px",
-                    cursor: "pointer",
-                  }}
                 >
                   Save Review
                 </button>

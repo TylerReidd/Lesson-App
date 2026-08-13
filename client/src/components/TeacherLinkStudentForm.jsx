@@ -31,24 +31,33 @@ export default function TeacherLinkStudentForm({ onLinked }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="form" style={{ marginBottom: 16 }}>
-      <h3 style={{ margin: "0 0 8px" }}>Link a Student by Email</h3>
-      <input
-        type="email"
-        className="input"
-        style={{ width: "25%", border: "1px solid #ccc", padding: "8px", margin: "auto" }}
-        placeholder="student@example.com"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        required
-      />
-      {error && <p style={{ color: "red", margin: "4px 0" }}>{error}</p>}
-      {success && <p style={{ color: "green", margin: "4px 0" }}>{success}</p>}
-      <button type="submit" className="button-primary" 
-        style={{width: '25%', margin:'auto'}}
-      disabled={loading}>
-        {loading ? "Linking..." : "Link Student"}
-      </button>
+    <form onSubmit={handleSubmit} className="form student-link-card">
+      <div className="dashboard-copy">
+        <span className="hero-eyebrow">Invite by email</span>
+        <h3 className="h2">Link a student</h3>
+        <p className="muted">Add a student with the email address they used to create their account.</p>
+      </div>
+
+      <label className="field">
+        <span>Email address</span>
+        <input
+          type="email"
+          className="input"
+          placeholder="student@example.com"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
+      </label>
+
+      {error && <p className="form-note error">{error}</p>}
+      {success && <p className="form-note success">{success}</p>}
+
+      <div className="students-actions">
+        <button type="submit" className="button-primary" disabled={loading}>
+          {loading ? "Linking..." : "Link Student"}
+        </button>
+      </div>
     </form>
   );
 }

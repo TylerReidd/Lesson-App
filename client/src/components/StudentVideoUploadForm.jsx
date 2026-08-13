@@ -8,6 +8,7 @@ export default function StudentVideoUploadForm({ onUploadSuccess, teacherId: tea
   const [err, setErr] = useState("");
   const [uploadProgress, setUploadProgress] = useState(0);
   const [teacherId, setTeacherId] = useState(null);
+  const [dragActive, setDragActive] = useState(false);
   const { user } = useContext(AuthContext);
 
   // 🧠 Resolve the student's assigned teacher (prop > context > fetch)
@@ -41,6 +42,29 @@ export default function StudentVideoUploadForm({ onUploadSuccess, teacherId: tea
 
     fetchUser();
   }, [teacherIdProp, user]);
+
+  const handleFilePicked = (nextFile) => {
+    if (!nextFile) return;
+    setFile(nextFile);
+    setErr("");
+    setMsg("");
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setDragActive(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    setDragActive(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setDragActive(false);
+    handleFilePicked(e.dataTransfer?.files?.[0]);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -77,28 +101,43 @@ export default function StudentVideoUploadForm({ onUploadSuccess, teacherId: tea
   };
 
   return (
-    <div className="panel">
+    <div className="panel video-upload-panel">
       <div className="panel-h">Upload Practice Video</div>
       <div className="panel-b">
-        {err && <p style={{ color: "red" }}>{err}</p>}
-        {msg && <p style={{ color: "green" }}>{msg}</p>}
-        <form onSubmit={handleSubmit} className="form-grid form-centered">
-          <div className="field">
-            <label className="label-lg">Select Video:</label>
-            <input
-              className="input-lg"
-              type="file"
-              accept="video/*"
-              onChange={(e) => setFile(e.target.files[0])}
-            />
+        {err && <p className="form-note error">{err}</p>}
+        {msg && <p className="form-note success">{msg}</p>}
+        <form onSubmit={handleSubmit} className="video-upload-form">
+          <div
+            className={`video-dropzone ${dragActive ? "active" : ""}`}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+          >
+            <label className="video-dropzone-label">
+              <span className="label-lg">Select Video</span>
+              <span className="video-dropzone-copy">
+                Drag and drop a practice clip here, or click to browse.
+              </span>
+              <input
+                className="video-file-input"
+                type="file"
+                accept="video/*"
+                onChange={(e) => handleFilePicked(e.target.files?.[0])}
+              />
+            </label>
+            <div className="video-dropzone-meta">
+              {file ? <span className="video-file-name">{file.name}</span> : <span className="muted">No video selected yet.</span>}
+            </div>
           </div>
           {uploadProgress > 0 && (
-            <div className="progress">
-              <div className="bar" style={{ width: `${uploadProgress}%` }} />
+            <div className="video-upload-progress">
+              <div className="progress">
+                <div className="bar" style={{ width: `${uploadProgress}%` }} />
+              </div>
               <small>{uploadProgress}%</small>
             </div>
           )}
-          <div className="actions">
+          <div className="video-upload-actions">
             <button type="submit" className="button button-lg">
               Upload Video
             </button>

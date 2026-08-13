@@ -17,7 +17,6 @@ api.interceptors.request.use((config) => {
   } else {
     if(config.headers?.Authorization) delete config.headers.Authorization
   }
-  console.log("AXIOS: sending ", config.method, config.url, config.headers)
   return config;
 });
 

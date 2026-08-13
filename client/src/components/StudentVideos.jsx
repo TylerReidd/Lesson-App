@@ -55,13 +55,19 @@ export default function StudentVideos() {
   const needsLink = user?.role === "student" && !assignedTeacherId;
 
   return (
-    <div className="panel">
-      <h1>My Practice Videos</h1>
+    <div className="panel video-page-panel">
+      <div className="video-page-header">
+        <span className="hero-eyebrow">Student workspace</span>
+        <h1 className="hero-title video-page-title">My practice videos</h1>
+        <p className="hero-subtitle video-page-subtitle">
+          Upload clips for feedback and keep your lesson videos organized in one centered workspace.
+        </p>
+      </div>
       {needsLink && (
-        <div className="panel" style={{ marginBottom: 16 }}>
+        <div className="panel video-link-panel">
           <div className="panel-h">Link Your Teacher</div>
           <div className="panel-b">
-            <p style={{ marginTop: 0 }}>
+            <p>
               Link a teacher to unlock video uploads and personalized feedback.
             </p>
             <LinkTeacherForm
@@ -73,14 +79,16 @@ export default function StudentVideos() {
           </div>
         </div>
       )}
-      {err && <p style={{ color: "red" }}>{err}</p>}
+      {err && <p className="form-note error">{err}</p>}
       <StudentVideoUploadForm onUploadSuccess={fetchVideos} teacherId={assignedTeacherId} />
-      <h2 className="mt-4">Uploaded Videos</h2>
-      {videos?.length ? (
-        <StudentVideosTabs videos={videos} onDelete={handleDelete} currentUser={user} />
-      ) : (
-        <p>No videos yet.</p>
-      )}
+      <div className="video-library">
+        <h2 className="mt-4">Uploaded Videos</h2>
+        {videos?.length ? (
+          <StudentVideosTabs videos={videos} onDelete={handleDelete} currentUser={user} />
+        ) : (
+          <p className="muted">No videos yet.</p>
+        )}
+      </div>
     </div>
   );
 }

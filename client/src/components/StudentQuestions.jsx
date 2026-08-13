@@ -10,6 +10,15 @@ export default function StudentQuestions() {
   const [openId, setOpenId] = useState(null);
   const [loading, setLoading] = useState(false);
   const [replyDrafts, setReplyDrafts] = useState({});
+  useEffect(() => {
+    if (!questions.length) {
+      setOpenId(null);
+      return;
+    }
+    if (!openId || !questions.some((q) => q.id === openId)) {
+      setOpenId(questions[0].id);
+    }
+  }, [questions, openId]);
 
   useEffect(() => {
     fetchQuestions();
@@ -22,7 +31,12 @@ export default function StudentQuestions() {
         ...q,
         id: String(q.id || q._id),
         replies: Array.isArray(q.replies) ? q.replies : [],
-      }));
+      })).sort((a, b) => {
+        const aAnswered = Boolean(a.answer);
+        const bAnswered = Boolean(b.answer);
+        if (aAnswered !== bAnswered) return aAnswered ? 1 : -1;
+        return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+      });
       setQuestions(items);
     } catch (err) {
       console.error("Failed to load questions", err);
@@ -95,62 +109,74 @@ export default function StudentQuestions() {
 
   return (
     <div className="questions-page">
-      <h1>Ask a Question</h1>
+      <div className="question-page-header">
+        <span className="hero-eyebrow">Student workspace</span>
+        <h1 className="hero-title question-page-title">Questions</h1>
+        <p className="hero-subtitle question-page-subtitle">
+          Keep open questions easy to find and work through the full thread in a cleaner split layout.
+        </p>
+      </div>
 
-      <form onSubmit={handleAsk} className="ask-form">
-        <textarea
-          rows={3}
-          placeholder="Type your question..."
-          value={newQuestion}
-          onChange={(e) => setNewQuestion(e.target.value)}
-        />
-        <button type="submit" disabled={loading} className="button">
-          {loading ? "Submitting..." : "Submit Question"}
-        </button>
-      </form>
+      <section className="panel">
+        <div className="panel-h">Ask a Question</div>
+        <div className="panel-b">
+          <form onSubmit={handleAsk} className="ask-form">
+            <textarea
+              rows={3}
+              placeholder="Type your question..."
+              value={newQuestion}
+              onChange={(e) => setNewQuestion(e.target.value)}
+            />
+            <button type="submit" disabled={loading} className="button">
+              {loading ? "Submitting..." : "Submit Question"}
+            </button>
+          </form>
+        </div>
+      </section>
 
-      <h2>Previous Questions</h2>
-      <div className="questions-list">
-        {questions.length === 0 && <p>No questions yet.</p>}
+      <div className="questions-layout">
+        <aside className="questions-sidebar">
+          <QuestionSection
+            title="Needs Response"
+            items={questions.filter((q) => !q.answer)}
+            openId={openId}
+            setOpenId={setOpenId}
+            loadReplies={loadReplies}
+            handleDelete={handleDelete}
+          />
+          <QuestionSection
+            title="Answered"
+            items={questions.filter((q) => q.answer)}
+            openId={openId}
+            setOpenId={setOpenId}
+            loadReplies={loadReplies}
+            handleDelete={handleDelete}
+          />
+        </aside>
 
-        {questions.map((q) => {
-          const id = String(q.id || q._id);
-          const isAnswered = Boolean(q.answer);
-          const questionText = q.text || q.question;
+        <section className="question-detail-panel">
+          {questions.length === 0 ? <p className="muted">No questions yet.</p> : null}
+          {questions
+            .filter((q) => q.id === openId)
+            .map((q) => {
+              const id = String(q.id || q._id);
+              const isAnswered = Boolean(q.answer);
+              const questionText = q.text || q.question;
 
-          return (
-            <div
-              key={id}
-              className={`q-card ${isAnswered ? "answered" : "unanswered"}`}
-            >
-              <div
-                className="q-summary"
-                onClick={async () => {
-                  const next = openId === id ? null : id;
-                  setOpenId(next);
-                  if (next) await loadReplies(id);
-                }}
-              >
-                <h3 className="q-text">{questionText}</h3>
-                <span className="badge">
-                  {isAnswered ? "Answered" : "Awaiting Response"}
-                </span>
-                <small className="ts">
-                  {new Date(q.createdAt).toLocaleString()}
-                </small>
-                <button
-                  className="delete-btn"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDelete(id);
-                  }}
-                >
-                  🗑️
-                </button>
-              </div>
+              return (
+                <div key={id} className="thread question-thread-panel">
+                  <div className="question-detail-header">
+                    <div>
+                      <h2 className="h2">{questionText}</h2>
+                      <p className="muted">
+                        {q.createdAt ? new Date(q.createdAt).toLocaleString() : ""}
+                      </p>
+                    </div>
+                    <span className={`question-status-pill ${isAnswered ? "answered" : "unanswered"}`}>
+                      {isAnswered ? "Answered" : "Awaiting Response"}
+                    </span>
+                  </div>
 
-              {openId === id && (
-                <div className="thread">
                   <div className="bubble student">
                     <p>{questionText}</p>
                     <small>{new Date(q.createdAt).toLocaleString()}</small>
@@ -182,27 +208,72 @@ export default function StudentQuestions() {
                       </div>
                     ))}
 
-                  <div className="form-centered" style={{ marginTop: 10 }}>
+                  <div className="question-reply-box">
                     <textarea
-                      rows={2}
+                      rows={3}
                       placeholder="Write a reply..."
                       value={replyDrafts[id] ?? ""}
                       onChange={(e) =>
                         setReplyDrafts((d) => ({ ...d, [id]: e.target.value }))
                       }
-                      style={{ width: "100%" }}
                     />
                     <button
                       className="button"
                       onClick={() => sendReply(id)}
-                      style={{ marginTop: 6 }}
                     >
                       Send Reply
                     </button>
                   </div>
                 </div>
-              )}
-            </div>
+              );
+            })}
+        </section>
+      </div>
+    </div>
+  );
+}
+
+function QuestionSection({ title, items, openId, setOpenId, loadReplies, handleDelete }) {
+  return (
+    <div className="question-section">
+      <div className="question-section-title">{title}</div>
+      <div className="question-list-compact">
+        {items.length === 0 ? <p className="muted">None</p> : null}
+        {items.map((q) => {
+          const id = String(q.id || q._id);
+          const isAnswered = Boolean(q.answer);
+          const questionText = q.text || q.question;
+          return (
+            <button
+              key={id}
+              type="button"
+              className={`question-list-card ${openId === id ? "active" : ""}`}
+              onClick={async () => {
+                setOpenId(id);
+                await loadReplies(id);
+              }}
+            >
+              <div className="question-list-card-top">
+                <span className={`question-status-pill ${isAnswered ? "answered" : "unanswered"}`}>
+                  {isAnswered ? "Answered" : "Open"}
+                </span>
+                <span
+                  className="question-list-delete"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDelete(id);
+                  }}
+                  role="button"
+                  tabIndex={0}
+                >
+                  ×
+                </span>
+              </div>
+              <div className="question-list-text">{questionText}</div>
+              <div className="question-list-meta">
+                {q.createdAt ? new Date(q.createdAt).toLocaleDateString() : ""}
+              </div>
+            </button>
           );
         })}
       </div>

@@ -5,6 +5,7 @@ import User from '../models/User.js';
 import Question from '../models/Question.js'
 import Resource from '../models/Resource.js'
 import PracticeLog from '../models/PracticeLog.js';
+import LessonNote from '../models/LessonNote.js';
 import { linkStudentByEmail } from '../controllers/teacherController.js';
 
 const router = express.Router()
@@ -152,6 +153,112 @@ async (req,res,next) => {
     next(e)
   }
 }
+);
+
+router.get(
+  '/students/:studentId/notes',
+  isAuthenticated,
+  isTeacher,
+  teacherHasStudent,
+  async (req, res, next) => {
+    try {
+      const notes = await LessonNote.find({
+        teacher: req.user.id,
+        student: req.params.studentId,
+      }).sort({ updatedAt: -1, createdAt: -1 });
+
+      res.json({ notes });
+    } catch (e) {
+      next(e);
+    }
+  }
+);
+
+router.post(
+  '/students/:studentId/notes',
+  isAuthenticated,
+  isTeacher,
+  teacherHasStudent,
+  async (req, res, next) => {
+    try {
+      const title = String(req.body?.title || '').trim();
+      const content = String(req.body?.content || '').trim();
+
+      if (!title || !content) {
+        return res.status(400).json({ message: 'Title and content are required' });
+      }
+
+      const note = await LessonNote.create({
+        teacher: req.user.id,
+        student: req.params.studentId,
+        title,
+        content,
+      });
+
+      res.status(201).json({ note });
+    } catch (e) {
+      next(e);
+    }
+  }
+);
+
+router.put(
+  '/students/:studentId/notes/:noteId',
+  isAuthenticated,
+  isTeacher,
+  teacherHasStudent,
+  async (req, res, next) => {
+    try {
+      const title = String(req.body?.title || '').trim();
+      const content = String(req.body?.content || '').trim();
+
+      if (!title || !content) {
+        return res.status(400).json({ message: 'Title and content are required' });
+      }
+
+      const note = await LessonNote.findOneAndUpdate(
+        {
+          _id: req.params.noteId,
+          teacher: req.user.id,
+          student: req.params.studentId,
+        },
+        { title, content },
+        { new: true, runValidators: true }
+      );
+
+      if (!note) {
+        return res.status(404).json({ message: 'Note not found' });
+      }
+
+      res.json({ note });
+    } catch (e) {
+      next(e);
+    }
+  }
+);
+
+router.delete(
+  '/students/:studentId/notes/:noteId',
+  isAuthenticated,
+  isTeacher,
+  teacherHasStudent,
+  async (req, res, next) => {
+    try {
+      const note = await LessonNote.findOneAndDelete({
+        _id: req.params.noteId,
+        teacher: req.user.id,
+        student: req.params.studentId,
+      });
+
+      if (!note) {
+        return res.status(404).json({ message: 'Note not found' });
+      }
+
+      res.json({ message: 'Note deleted' });
+    } catch (e) {
+      next(e);
+    }
+  }
 );
 
 export default router

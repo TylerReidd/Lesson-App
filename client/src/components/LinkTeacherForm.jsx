@@ -23,7 +23,6 @@ export default function LinkTeacherForm({onLinked}) {
       const me = data?.user
       ? data.user
       : (await axios.get('/auth/me/full', {withCredentials: true})).data?.user
-      console.log('linkTeacher response:', data);
       onLinked?.(me)
       setUser(me);
       setError(null);
@@ -37,18 +36,30 @@ export default function LinkTeacherForm({onLinked}) {
   };
 
   return (
-    <form onSubmit={handleLink}>
-      <h2>Link Your Teacher</h2>
-      <input
-        type="email"
-        value={email}
-        onChange={e => setEmail(e.target.value)}
-        placeholder="Teacher's email"
-        required
-      />
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-      <button type="submit">Link Teacher</button>
-      {success && <p style={{ color: 'green' }}>{success}</p>}
+    <form onSubmit={handleLink} className="form student-link-card">
+      <div className="dashboard-copy">
+        <h2 className="h2">Link your teacher</h2>
+        <p className="muted">Use your teacher&apos;s account email to connect your workspace.</p>
+      </div>
+
+      <label className="field">
+        <span>Teacher email</span>
+        <input
+          className="input"
+          type="email"
+          value={email}
+          onChange={e => setEmail(e.target.value)}
+          placeholder="teacher@example.com"
+          required
+        />
+      </label>
+
+      {error && <p className="form-note error">{error}</p>}
+      {success && <p className="form-note success">{success}</p>}
+
+      <div className="students-actions">
+        <button type="submit" className="button-primary">Link Teacher</button>
+      </div>
     </form>
   );
 }

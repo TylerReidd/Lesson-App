@@ -47,27 +47,32 @@ export default function PracticeForm() {
   };
 
   return (
-    <section >
+    <section>
       <div className="panel-h">Daily Practice / Study Log</div>
       <div className="panel-b">
-        <form onSubmit={submit} className="form-centered">
+        <form onSubmit={submit} className="form">
+          <div className="dashboard-copy">
+            <p className="muted">
+              Capture what you worked on, where you got stuck, and what felt stronger today.
+            </p>
+          </div>
           <div className="grid grid-sm-2">
-        
-            <label style={{flex:1}}>
+
+            <label>
               Date
               <input className="input" type="date" name="date" value={form.date} onChange={change} />
             </label>
-            <label style={{flex:1}}>
+            <label>
               Start
               <input className="input" type="time" name="startTime" value={form.startTime} onChange={change} />
             </label>
-            <label style={{flex:1}}>
+            <label>
               End
               <input className="input" type="time" name="endTime" value={form.endTime} onChange={change} />
             </label>
-            <div className="">
-              <div className="muted">Duration</div>
-              <div style={{marginLeft:8, fontWeight:700}}>{durationMin} min</div>
+            <div className="field">
+              <span>Duration</span>
+              <div className="duration-pill">{durationMin} min</div>
             </div>
 
             <label>
@@ -99,15 +104,15 @@ export default function PracticeForm() {
               </label> */}
 
             </div>
-            <label style={{marginTop:10}}>
+            <label>
               Session rating (1–5)
               <input className="input" name="rating" type="number" min="1" max="5" value={form.rating} onChange={change} />
             </label>
 
-          {msg && <div className="mt-12">{msg}</div>}
+          {msg && <div className={`form-note ${msg.startsWith("Saved") ? "success" : "error"}`}>{msg}</div>}
 
           </div>
-          <div className="mt-12">
+          <div className="actions">
             <button className="button-primary" type="submit" disabled={submitting}>
               {submitting ? 'Saving…' : 'Submit Practice Log'}
             </button>

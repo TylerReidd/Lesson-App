@@ -22,6 +22,15 @@ export default function TeacherQuestions({ studentId }) {
   const isAggregatedView = !effectiveStudentId;
 
   useEffect(() => { fetchQuestions(); }, [effectiveStudentId]);
+  useEffect(() => {
+    if (!questions.length) {
+      setOpenId(null);
+      return;
+    }
+    if (!openId || !questions.some((q) => q.id === openId)) {
+      setOpenId(questions[0].id);
+    }
+  }, [questions, openId]);
 
   async function fetchQuestions() {
     try {
@@ -46,7 +55,12 @@ export default function TeacherQuestions({ studentId }) {
         ...q,
         id: String(q.id || q._id),
         replies: Array.isArray(q.replies) ? q.replies : [],
-      }));
+      })).sort((a, b) => {
+        const aAnswered = Boolean(a.answer);
+        const bAnswered = Boolean(b.answer);
+        if (aAnswered !== bAnswered) return aAnswered ? 1 : -1;
+        return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+      });
       setQuestions(norm);
     } catch (e) {
       console.error("Failed to load questions", e);
@@ -203,7 +217,13 @@ export default function TeacherQuestions({ studentId }) {
 
   return (
     <div className="questions-page">
-      <h1>Student Questions</h1>
+      <div className="question-page-header">
+        <span className="hero-eyebrow">Student workspace</span>
+        <h1 className="hero-title question-page-title">Student questions</h1>
+        <p className="hero-subtitle question-page-subtitle">
+          Scan open questions quickly on the left, then work the selected thread in detail on the right.
+        </p>
+      </div>
 
       {err && (
         <p className="text-red-500" style={{ marginBottom: 8 }}>
@@ -216,191 +236,245 @@ export default function TeacherQuestions({ studentId }) {
         <p className="no-assignments">No questions yet.</p>
       )}
 
-      <div className="questions-list">
-        {questions.map((q) => {
+      {!!questions.length && (
+        <div className="questions-layout">
+          <aside className="questions-sidebar">
+            <QuestionSection
+              title="Needs Response"
+              items={questions.filter((q) => !q.answer)}
+              openId={openId}
+              setOpenId={setOpenId}
+              loadReplies={loadReplies}
+              isAggregatedView={isAggregatedView}
+              deleteQuestion={deleteQuestion}
+            />
+            <QuestionSection
+              title="Answered"
+              items={questions.filter((q) => q.answer)}
+              openId={openId}
+              setOpenId={setOpenId}
+              loadReplies={loadReplies}
+              isAggregatedView={isAggregatedView}
+              deleteQuestion={deleteQuestion}
+            />
+          </aside>
+
+          <section className="question-detail-panel">
+            {questions
+              .filter((q) => q.id === openId)
+              .map((q) => {
+                const id = String(q.id || q._id);
+                const isAnswered = Boolean(q.answer);
+                const questionText = q.text || q.question;
+                const pendingFiles = replyFiles[id] || [];
+
+                return (
+                  <div key={id} className="thread question-thread-panel">
+                    <div className="question-detail-header">
+                      <div>
+                        <h2 className="h2">{questionText}</h2>
+                        <p className="muted">
+                          {q.createdAt ? new Date(q.createdAt).toLocaleString() : ""}
+                        </p>
+                      </div>
+                      <span className={`question-status-pill ${isAnswered ? "answered" : "unanswered"}`}>
+                        {isAnswered ? "Answered" : "Awaiting Response"}
+                      </span>
+                    </div>
+
+                    <div className="bubble student">
+                      <p>{questionText}</p>
+                      <small>
+                        {q.createdAt
+                          ? new Date(q.createdAt).toLocaleString()
+                          : ""}
+                      </small>
+                    </div>
+
+                    {isAnswered && (
+                      <div className="bubble teacher">
+                        <p>{q.answer}</p>
+                        <small>
+                          {new Date(q.answeredAt || q.updatedAt).toLocaleString()}
+                        </small>
+                      </div>
+                    )}
+
+                    <div className="space-y-2" style={{ marginTop: 8 }}>
+                      {Array.isArray(q.replies) &&
+                        q.replies.map((m) => (
+                          <div
+                            key={m.id}
+                            className={`bubble ${
+                              m.authorRole === "teacher" ? "teacher" : "student"
+                            }`}
+                          >
+                            <p>{m.text}</p>
+                            {Array.isArray(m.attachments) && m.attachments.length > 0 && (
+                              <div className="message-attachments">
+                                {m.attachments.map((att) => {
+                                  const key = `${att.url}-${att.filename}`;
+                                  const isImage = att.mimetype?.startsWith("image/");
+                                  return (
+                                    <a
+                                      key={key}
+                                      href={att.url}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className={isImage ? "attachment-thumb" : "attachment-link"}
+                                    >
+                                      {isImage ? (
+                                        <img src={att.url} alt={att.filename || "Attachment"} />
+                                      ) : (
+                                        <>
+                                          📄 {att.filename || "Attachment"}
+                                        </>
+                                      )}
+                                    </a>
+                                  );
+                                })}
+                              </div>
+                            )}
+                            <small>
+                              {m.createdAt
+                                ? new Date(m.createdAt).toLocaleString()
+                                : ""}
+                            </small>
+                          </div>
+                        ))}
+                    </div>
+
+                    <div className="question-reply-box">
+                      <textarea
+                        rows={3}
+                        placeholder="Write a reply…"
+                        value={replyDrafts[id] ?? ""}
+                        onChange={(e) =>
+                          setReplyDrafts((d) => ({ ...d, [id]: e.target.value }))
+                        }
+                      />
+                      <div
+                        className={`attachment-dropzone ${
+                          dropActiveId === id ? "active" : ""
+                        }`}
+                        onDragOver={(e) => {
+                          e.preventDefault();
+                          setDropActiveId(id);
+                        }}
+                        onDragLeave={(e) => {
+                          e.preventDefault();
+                          const nextTarget = e.relatedTarget;
+                          if (
+                            dropActiveId === id &&
+                            (!nextTarget || !e.currentTarget.contains(nextTarget))
+                          ) {
+                            setDropActiveId(null);
+                          }
+                        }}
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          setDropActiveId(null);
+                          addFilesToReply(id, e.dataTransfer?.files);
+                        }}
+                        onClick={() => fileInputRefs.current[id]?.click()}
+                      >
+                        <input
+                          type="file"
+                          multiple
+                          accept="image/*,application/pdf"
+                          ref={(node) => attachInputRef(id, node)}
+                          style={{ display: "none" }}
+                          onChange={(e) => {
+                            addFilesToReply(id, e.target.files);
+                            e.target.value = "";
+                          }}
+                        />
+                        <p>Drag & drop images or PDFs, or click to browse.</p>
+                      </div>
+                      {pendingFiles.length > 0 && (
+                        <ul className="attachment-preview">
+                          {pendingFiles.map((file, idx) => (
+                            <li key={`${file.name}-${idx}`} className="attachment-chip">
+                              <span>{file.name}</span>
+                              <button
+                                type="button"
+                                aria-label="Remove attachment"
+                                onClick={() => removeAttachment(id, idx)}
+                              >
+                                ×
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                      <button
+                        className="button"
+                        onClick={() => sendReply(id)}
+                      >
+                        Send Reply
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+          </section>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function QuestionSection({
+  title,
+  items,
+  openId,
+  setOpenId,
+  loadReplies,
+  isAggregatedView,
+  deleteQuestion,
+}) {
+  return (
+    <div className="question-section">
+      <div className="question-section-title">{title}</div>
+      <div className="question-list-compact">
+        {items.length === 0 ? <p className="muted">None</p> : null}
+        {items.map((q) => {
           const id = String(q.id || q._id);
           const isAnswered = Boolean(q.answer);
           const questionText = q.text || q.question;
-          const pendingFiles = replyFiles[id] || [];
-
           return (
-            <div
+            <button
               key={id}
-              className={`q-card ${isAnswered ? "answered" : "unanswered"}`}
+              type="button"
+              className={`question-list-card ${openId === id ? "active" : ""}`}
+              onClick={async () => {
+                setOpenId(id);
+                await loadReplies(id);
+              }}
             >
-              {isAggregatedView && (
-                <button
-                  type="button"
-                  className="delete-btn"
-                  onClick={(evt) => {
-                    evt.stopPropagation();
-                    deleteQuestion(id);
-                  }}
-                  title="Delete question"
-                >
-                  ×
-                </button>
-              )}
-              <div
-                className="q-summary"
-                onClick={async () => {
-                  const next = openId === id ? null : id;
-                  setOpenId(next);
-                  if (next) await loadReplies(id); // lazy-load replies on open
-                }}
-              >
-                <h3 className="q-text">{questionText}</h3>
-                <span className="badge">
-                  {isAnswered ? "Answered" : "Awaiting Response"}
+              <div className="question-list-card-top">
+                <span className={`question-status-pill ${isAnswered ? "answered" : "unanswered"}`}>
+                  {isAnswered ? "Answered" : "Open"}
                 </span>
-                <small className="ts">
-                  {q.createdAt ? new Date(q.createdAt).toLocaleString() : ""}
-                </small>
+                {isAggregatedView ? (
+                  <span
+                    className="question-list-delete"
+                    onClick={(evt) => {
+                      evt.stopPropagation();
+                      deleteQuestion(id);
+                    }}
+                    role="button"
+                    tabIndex={0}
+                  >
+                    ×
+                  </span>
+                ) : null}
               </div>
-
-              {openId === id && (
-                <div className="thread">
-                  {/* Original student question */}
-                  <div className="bubble student">
-                    <p>{questionText}</p>
-                    <small>
-                      {q.createdAt
-                        ? new Date(q.createdAt).toLocaleString()
-                        : ""}
-                    </small>
-                  </div>
-
-                  {/* One-off teacher answer if you use it */}
-                  {isAnswered && (
-                    <div className="bubble teacher">
-                      <p>{q.answer}</p>
-                      <small>
-                        {new Date(q.answeredAt || q.updatedAt).toLocaleString()}
-                      </small>
-                    </div>
-                  )}
-
-                  {/* Threaded messages */}
-                  <div className="space-y-2" style={{ marginTop: 8 }}>
-                    {Array.isArray(q.replies) &&
-                      q.replies.map((m) => (
-                        <div
-                          key={m.id}
-                          className={`bubble ${
-                            m.authorRole === "teacher" ? "teacher" : "student"
-                          }`}
-                        >
-                          <p>{m.text}</p>
-                          {Array.isArray(m.attachments) && m.attachments.length > 0 && (
-                            <div className="message-attachments">
-                              {m.attachments.map((att) => {
-                                const key = `${att.url}-${att.filename}`;
-                                const isImage = att.mimetype?.startsWith("image/");
-                                return (
-                                  <a
-                                    key={key}
-                                    href={att.url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className={isImage ? "attachment-thumb" : "attachment-link"}
-                                  >
-                                    {isImage ? (
-                                      <img src={att.url} alt={att.filename || "Attachment"} />
-                                    ) : (
-                                      <>
-                                        📄 {att.filename || "Attachment"}
-                                      </>
-                                    )}
-                                  </a>
-                                );
-                              })}
-                            </div>
-                          )}
-                          <small>
-                            {m.createdAt
-                              ? new Date(m.createdAt).toLocaleString()
-                              : ""}
-                          </small>
-                        </div>
-                      ))}
-                  </div>
-
-                  {/* Threaded reply input (teacher) */}
-                  <div className="form-centered" style={{ marginTop: 10 }}>
-                    <textarea
-                      rows={2}
-                      placeholder="Write a reply…"
-                      value={replyDrafts[id] ?? ""}
-                      onChange={(e) =>
-                        setReplyDrafts((d) => ({ ...d, [id]: e.target.value }))
-                      }
-                      style={{ width: "100%" }}
-                    />
-                    <div
-                      className={`attachment-dropzone ${
-                        dropActiveId === id ? "active" : ""
-                      }`}
-                      onDragOver={(e) => {
-                        e.preventDefault();
-                        setDropActiveId(id);
-                      }}
-                      onDragLeave={(e) => {
-                        e.preventDefault();
-                        const nextTarget = e.relatedTarget;
-                        if (
-                          dropActiveId === id &&
-                          (!nextTarget || !e.currentTarget.contains(nextTarget))
-                        ) {
-                          setDropActiveId(null);
-                        }
-                      }}
-                      onDrop={(e) => {
-                        e.preventDefault();
-                        setDropActiveId(null);
-                        addFilesToReply(id, e.dataTransfer?.files);
-                      }}
-                      onClick={() => fileInputRefs.current[id]?.click()}
-                    >
-                      <input
-                        type="file"
-                        multiple
-                        accept="image/*,application/pdf"
-                        ref={(node) => attachInputRef(id, node)}
-                        style={{ display: "none" }}
-                        onChange={(e) => {
-                          addFilesToReply(id, e.target.files);
-                          e.target.value = "";
-                        }}
-                      />
-                      <p>Drag & drop images or PDFs, or click to browse.</p>
-                    </div>
-                    {pendingFiles.length > 0 && (
-                      <ul className="attachment-preview">
-                        {pendingFiles.map((file, idx) => (
-                          <li key={`${file.name}-${idx}`} className="attachment-chip">
-                            <span>{file.name}</span>
-                            <button
-                              type="button"
-                              aria-label="Remove attachment"
-                              onClick={() => removeAttachment(id, idx)}
-                            >
-                              ×
-                            </button>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                    <button
-                      className="button"
-                      onClick={() => sendReply(id)}
-                      style={{ marginTop: 6 }}
-                    >
-                      Send Reply
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
+              <div className="question-list-text">{questionText}</div>
+              <div className="question-list-meta">
+                {q.createdAt ? new Date(q.createdAt).toLocaleDateString() : ""}
+              </div>
+            </button>
           );
         })}
       </div>

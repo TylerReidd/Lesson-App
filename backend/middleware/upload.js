@@ -38,4 +38,14 @@ const fileFilter = (_req, file, cb) => {
   }
 };
 
-export const uploadMiddleware = multer({ storage, fileFilter });
+const maxUploadMb = Number.parseInt(process.env.MAX_UPLOAD_MB || "250", 10);
+
+export const uploadMiddleware = multer({
+  storage,
+  fileFilter,
+  limits: {
+    fileSize: Math.max(1, maxUploadMb) * 1024 * 1024,
+    files: 5,
+    fields: 20,
+  },
+});

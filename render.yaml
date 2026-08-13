@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: lesson-app
+    runtime: node
+    plan: starter
+    rootDir: .
+    buildCommand: npm install
+    startCommand: npm start
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: CLIENT_ORIGIN
+        sync: false
+      - key: MONGO_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: PERSISTENT_UPLOADS_PATH
+        value: /opt/render/project/src/backend/uploads
+      - key: MAX_UPLOAD_MB
+        value: "250"

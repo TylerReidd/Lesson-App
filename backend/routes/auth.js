@@ -3,15 +3,21 @@ import express from 'express'
 import User from '../models/User.js';
 import { signup, logout, me, getUserByEmail, linkTeacher, login } from '../controllers/authController.js';
 import { isAuthenticated, isStudent, isTeacher } from '../middleware/auth.js';
+import { createRateLimiter } from '../middleware/rateLimit.js';
 
 
 const router = express.Router();
+const authWriteRateLimit = createRateLimiter({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  message: 'Too many auth attempts. Please try again later.',
+});
 
 // PUBLIC ROUTES
 router.get('/user', isAuthenticated, isTeacher, getUserByEmail)
 
 
-router.post('/login', login);
+router.post('/login', authWriteRateLimit, login);
 
 router.put('/me/teacher', isAuthenticated, isStudent, linkTeacher)
 
@@ -24,7 +30,7 @@ router.delete('/me/teacher' , isAuthenticated, isStudent, async(req,res,next) =>
 })
 
 
-router.post('/signup', signup);
+router.post('/signup', authWriteRateLimit, signup);
 
 // PROTECTED ROUTES
 router.get('/me', isAuthenticated, async (req, res, next) => {

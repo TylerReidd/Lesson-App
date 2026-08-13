@@ -113,73 +113,82 @@ export default function TeacherAssignments({ studentId, defaultRecipientEmail })
 
   return (
     <div className="assignments-page">
-      <h1>Manage Assignments</h1>
+      <div className="assignment-page-header">
+        <span className="hero-eyebrow">Student workspace</span>
+        <h1 className="hero-title assignment-page-title">Assignment library</h1>
+        <p className="hero-subtitle assignment-page-subtitle">
+          Upload PDFs or images, keep them centered, and review shared materials in a cleaner library view.
+        </p>
+      </div>
 
-      {/* Upload Section */}
-      <form onSubmit={handlePdfUpload} className="form-centered">
-        {pdfErr && <p style={{ color: "red" }}>{pdfErr}</p>}
-        {pdfMsg && <p style={{ color: "green" }}>{pdfMsg}</p>}
+      <section className="panel assignment-upload-panel">
+        <div className="panel-h">Upload Assignment</div>
+        <div className="panel-b">
+          <form onSubmit={handlePdfUpload} className="assignment-upload-form">
+            {pdfErr && <p className="form-note error">{pdfErr}</p>}
+            {pdfMsg && <p className="form-note success">{pdfMsg}</p>}
 
-        {/* <label>Student Email</label>
-        <input
-          type="email"
-          value={pdfEmail}
-          onChange={(e) => setPdfEmail(e.target.value)}
-          placeholder="student@example.com"
-          disabled={!!effectiveStudentId}
-        /> */}
+            <label className="field">
+              <span>Select PDF or image</span>
+              <input
+                className="input-lg"
+                type="file"
+                accept="application/pdf,image/*"
+                onChange={(e) => setPdfFile(e.target.files[0])}
+              />
+            </label>
 
-        <label>Select PDF or Image</label>
-        <input
-          type="file"
-          accept="application/pdf,image/*"
-          onChange={(e) => setPdfFile(e.target.files[0])}
-        />
+            <div className="assignment-upload-actions">
+              <button type="submit" className="button">
+                Upload File
+              </button>
+            </div>
+          </form>
+        </div>
+      </section>
 
-        <button type="submit" className="button">Upload File</button>
-      </form>
-
-      {/* Assignments List */}
-      <h2>Uploaded Assignments</h2>
-      <div className="assignments-list">
+      <div className="assignment-library">
+        <h2>Uploaded Assignments</h2>
         {assignments.length > 0 ? (
-          assignments.map((f) => {
-            const id = f.id || f._id;
-            const canDelete =
-              user?.role === "teacher" ||
-              String(f.owner) === String(user?.id) ||
-              String(f.recipient) === String(user?.id);
+          <div className="assignment-grid">
+            {assignments.map((f) => {
+              const id = f.id || f._id;
+              const canDelete =
+                user?.role === "teacher" ||
+                String(f.owner) === String(user?.id) ||
+                String(f.recipient) === String(user?.id);
 
-            return (
-              <div key={id} className="assignment-card">
-                {canDelete && (
-                  <button
-                    onClick={() => handleDelete(id)}
-                    className="delete-btn"
-                    aria-label="Delete Assignment"
+              return (
+                <div key={id} className="assignment-card assignment-library-card">
+                  {canDelete && (
+                    <button
+                      onClick={() => handleDelete(id)}
+                      className="delete-btn"
+                      aria-label="Delete Assignment"
+                    >
+                      🗑️
+                    </button>
+                  )}
+                  <a
+                    href={f.url || f.path}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="assignment-link assignment-library-link"
                   >
-                    🗑️
-                  </button>
-                )}
-                <a
-                  href={f.url || f.path}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="assignment-link"
-                >
-                  <div className="assignment-icon">📄</div>
-                  <div className="assignment-info">
-                    <span className="assignment-title">
-                      {f.filename || f.title || "Assignment"}
-                    </span>
-                    <span className="assignment-date">
-                      {new Date(f.uploadedAt).toLocaleDateString()}
-                    </span>
-                  </div>
-                </a>
-              </div>
-            );
-          })
+                    <div className="assignment-icon">📄</div>
+                    <div className="assignment-info">
+                      <span className="assignment-title">
+                        {f.filename || f.title || "Assignment"}
+                      </span>
+                      <span className="assignment-date">
+                        {new Date(f.uploadedAt).toLocaleDateString()}
+                      </span>
+                    </div>
+                  </a>
+                </div>
+              );
+            })}
+          </div>
         ) : (
           <p className="no-assignments">No assignments yet.</p>
         )}

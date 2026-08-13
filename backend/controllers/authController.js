@@ -82,7 +82,6 @@ export async function login(req, res) {
       role: user.role,
     };
 
-    console.log('User role before token: ', user.role)
     const token = signToken(payload);
 
     res

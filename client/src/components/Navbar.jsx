@@ -50,6 +50,7 @@ import { useContext } from "react";
 export default function Navbar({ onMenu, isMenuOpen }) {
   const { user } = useContext(AuthContext);
   const dashPath = user?.role === 'teacher' ? '/teacher' : '/student';
+  const roleLabel = user?.role === "teacher" ? "Teacher workspace" : "Student workspace";
 
   return (
     <header className="topbar">
@@ -67,7 +68,10 @@ export default function Navbar({ onMenu, isMenuOpen }) {
           </svg>
         </button>
 
-        <Link to={dashPath} className="brand">Forte</Link>
+        <div className="brand-wrap">
+          <Link to={dashPath} className="brand">Forte</Link>
+          <span className="brand-meta">{roleLabel}</span>
+        </div>
         <div className="spacer" />
         <NotificationBell />
       </div>

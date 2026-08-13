@@ -5,11 +5,7 @@ export default function FileUpload({ onUpload }) {
     const file = e.target.files[0]
     if (!file) return;
 
-    try {
     await onUpload(file)
-    } catch (err) {
-      console.log("upload failed in FileUpload.jsx", err)
-    }
   }
 
   return (

@@ -17,6 +17,7 @@ export default function TeacherVideos({studentId, defaultRecipientEmail}) {
   
   // new state for upload progress
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [dragActive, setDragActive] = useState(false);
 
   const fetchVideos = async () => {
     const url = effectiveStudentId
@@ -45,7 +46,6 @@ export default function TeacherVideos({studentId, defaultRecipientEmail}) {
   
     axios.get("/auth/me", { withCredentials: true })
       .then(({ data }) => {
-        console.log("[/auth/me] body:", data);
         const id   = data.id ?? data._id ?? data.user?.id ?? data.user?._id;
         const role = data.role ?? data.user?.role;
         setUser(id ? { id, role } : null);
@@ -101,17 +101,37 @@ export default function TeacherVideos({studentId, defaultRecipientEmail}) {
       setUploadProgress(0);
     }
   };
-  
+
+  const handleFilePicked = (nextFile) => {
+    if (!nextFile) return;
+    setVideoFile(nextFile);
+    setVideoErr("");
+    setVideoMsg("");
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setDragActive(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    setDragActive(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setDragActive(false);
+    handleFilePicked(e.dataTransfer?.files?.[0]);
+  };
 
   const handleDelete = async (id) => {
     const safeId = id || (typeof id === 'object' ? id?.id || id?._id : null)
-    console.log("[DELETE click] got id=", id, "safeId=", safeId);
     if(!safeId) {console.warn("Delete clicked with no Id", id); return }
     if (!window.confirm("Are you sure you want to delete this video?")) return;
 
     try {
-      const resp = await axios.delete(`/resources/videos/${safeId}`, { withCredentials: true });
-      console.log("[DELETE resp]", resp.status, resp.data)
+      await axios.delete(`/resources/videos/${safeId}`, { withCredentials: true });
       fetchVideos();
     } catch (err) {
       console.error("Failed to delete video", err);
@@ -120,66 +140,61 @@ export default function TeacherVideos({studentId, defaultRecipientEmail}) {
   };
 
   return (
-    <div>
-      {/* <Sidebar role='teacher' /> */}
-      <div className="panel">
-        <h1>Student Videos</h1>
+    <div className="video-page-shell">
+      <div className="panel video-page-panel">
+        <div className="video-page-header">
+          <span className="hero-eyebrow">Student workspace</span>
+          <h1 className="hero-title video-page-title">Student videos</h1>
+          <p className="hero-subtitle video-page-subtitle">
+            Upload lesson material, review recent practice clips, and keep everything easier to scan.
+          </p>
+        </div>
 
-        {/* Upload Section */}
-        <div className="dashboard-section panel">
-          {videoErr && <p style={{ color: "red" }}>{videoErr}</p>}
-          {videoMsg && <p style={{ color: "green" }}>{videoMsg}</p>}
+        <div className="dashboard-section panel video-upload-panel">
+          {videoErr && <p className="form-note error">{videoErr}</p>}
+          {videoMsg && <p className="form-note success">{videoMsg}</p>}
 
-          <form onSubmit={handleVideoUpload} className="form-grid form-centered">
-            <div className="field">
-              {/* <label className="label-lg">Student Email</label>
-              <input
-                className="input-lg"
-                type="email"
-                value={videoEmail}
-                onChange={(e) => setVideoEmail(e.target.value)}
-                disabled={!!effectiveStudentId}
-              /> */}
+          <form onSubmit={handleVideoUpload} className="video-upload-form">
+            <div
+              className={`video-dropzone ${dragActive ? "active" : ""}`}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+            >
+              <label className="video-dropzone-label">
+                <span className="label-lg">Select video</span>
+                <span className="video-dropzone-copy">
+                  Drag and drop a video here, or click to browse.
+                </span>
+                <input
+                  className="video-file-input"
+                  type="file"
+                  accept="video/*"
+                  onChange={(e) => handleFilePicked(e.target.files?.[0])}
+                />
+              </label>
+              <div className="video-dropzone-meta">
+                {videoFile ? <span className="video-file-name">{videoFile.name}</span> : <span className="muted">No video selected yet.</span>}
+              </div>
             </div>
-            <div className='field'>
-              <label className="label-lg" style={{marginLeft:"10px"}}>Select Video: </label>
-              <input
-                className="input-lg"
-                style={{alignItems: "center", justifyContent: 'center', margin:"10px"}}
-                type="file"
-                accept="video/*"
-                onChange={(e) => setVideoFile(e.target.files[0])}
-              />
-            </div>
 
-            {/* Progress bar */}
             {uploadProgress > 0 && (
-              <div>
-                <div className="progress"
-                  style={{
-                   gridColumn: '1/-1'
-                  }}
-                >
-                  <div
-                    className="bar"
-                    style={{
-                     width: `${uploadProgress}%` 
-                    }}
-                  />
+              <div className="video-upload-progress">
+                <div className="progress">
+                  <div className="bar" style={{ width: `${uploadProgress}%` }} />
                 </div>
                 <small>{uploadProgress}%</small>
               </div>
             )}
-            <div className="actons">
-              <button type="submit" className="button button-lg"
-              style={{}}>
+            <div className="video-upload-actions">
+              <button type="submit" className="button button-lg">
                 Upload Video
               </button>
             </div>
           </form>
         </div>
 
-        <div className="container video-page">
+        <div className="video-library">
           <h2>Uploaded Videos</h2>
           <StudentVideosTabs videos={videos} onDelete={handleDelete} currentUser={user} />
         </div>

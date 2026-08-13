@@ -10,11 +10,17 @@ import {
   
 } from '../controllers/resourceController.js';
 import { uploadMiddleware } from '../middleware/upload.js';
+import { createRateLimiter } from '../middleware/rateLimit.js';
 import { fileUrl } from '../utils/urls.js';
 import User from '../models/User.js';
 
 
 const router = express.Router();
+const uploadRateLimit = createRateLimiter({
+  windowMs: 15 * 60 * 1000,
+  max: 40,
+  message: "Too many uploads. Please wait a few minutes and try again.",
+});
 
 // PDF routes
 router.get(
@@ -67,6 +73,7 @@ router.get(
 router.post(
   '/upload',
   isAuthenticated,
+  uploadRateLimit,
   uploadMiddleware.fields([
     {name: 'file', maxCount: 1},
     {name: "teacherId"},
@@ -76,11 +83,6 @@ router.post(
   ]),
   async (req, res, next) => {
     try {
-      console.log("UPLOAD DEBUG:");
-      console.log("user:", req.user);
-      console.log("body:", req.body);
-      console.log("file:", req.files);
-
       const file = req.files?.file?.[0];
       if (!file) return res.status(400).json({ message: "No file provided" });
 

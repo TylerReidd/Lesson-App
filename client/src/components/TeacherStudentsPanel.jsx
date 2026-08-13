@@ -13,7 +13,6 @@ export default function TeacherStudentsPanel({ refreshKey = 0 }) {
           withCredentials: true,
         })
         const list = Array.isArray(data?.students) ? data.students : [];
-        console.log("[teacher/students] raw: ", data, "list length: ", list.length)
 
         // fetching the summaries for every student individually
         const studSummaries = await Promise.all(
@@ -47,74 +46,33 @@ export default function TeacherStudentsPanel({ refreshKey = 0 }) {
       {(!Array.isArray(students) || students.length === 0 ? (
         <p className="muted">No linked students yet.</p>
       ) : (
-        <div 
-          className="students-cards-grid"
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
-            gap: "5px",
-            marginTop: "16px"
-          }}
-        >
+        <div className="students-cards-grid">
           {(Array.isArray(students) ? students : []).map((s) => (
-            <div 
-              key={s._id}
-              className="student-card assignment-card"
-              style={{
-                padding: "16px",
-                borderRadius: "12px",
-                background: "#fff",
-                boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
-              }}
-            >
-              <div style={{marginBottom: "8px"}}>
-                <div style={{fontWeight: 600, fontSize: "1.1rem", color: "#000",}}>
+            <div key={s._id} className="student-card assignment-card">
+              <div className="student-card-top">
+                <div className="student-card-name">
                   {s.name}
                 </div>
-                {/* May want to delete the email display eventually */}
-                <div style={{
-                  color: "#000", 
-                  fontSize: "1.2rem",
-                  wordBreak: 'break-word',
-                  overflowWrap: 'anywhere'}}>
+                <div className="student-card-email">
                   {s.email}
                 </div>
               </div>
 
-              <div 
-                className="kpi-grid"
-                style={{
-                  display: "flex",
-                  justifyContent:"space-between",
-                  marginBottom: "12px"
-                }}
-              >
+              <div className="student-summary-grid">
                 <Stat label="Qs" value={s.summary?.questionsUnanswered} />
                 <Stat label="Videos" value={s.summary?.videos} />
                 <Stat label="Assign." value={s.summary?.assignments} />
               </div>
 
-              <button
-                className="button-primary"
-                style={{
-                  width:"100%",
-                  padding: "8px",
-                  borderRadius: "8px",
-                  background: "#3b82f6", 
-                  color: "white",
-                  fontWeight: 600,
-                  cursor: "pointer",
-                }}
-                onClick={() => navigate(`/teacher/students/${s._id}`)}
-              >
-                View Details
-              </button>
-              {/* <buton 
-                className='button-primary'
-                onClick={() => setStudents(s._id)}>
-                  View Practice
-                </buton> */}
+              <div className="student-card-actions">
+                <button
+                  className="button-primary"
+                  onClick={() => navigate(`/teacher/students/${s._id}`)}
+                >
+                  View Details
+                </button>
               </div>
+            </div>
           ))}
         </div>
       ))}
@@ -124,9 +82,9 @@ export default function TeacherStudentsPanel({ refreshKey = 0 }) {
 
 function Stat ({label, value}) {
   return (
-    <div style={{textAlign: "center", flex: 1}}>
-      <div style={{fontSize: "0.8rem", color: "#666"}}>{label}</div>
-      <div style={{fontWeight: 700}}>{value ?? 0}</div>
+    <div className="kpi">
+      <div className="label">{label}</div>
+      <div className="value">{value ?? 0}</div>
     </div>
   )
 }

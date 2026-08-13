@@ -1,46 +1,31 @@
-import React, {useEffect, useState } from "react";
+import React, { useState } from "react";
 import TeacherStudentsPanel from "../components/TeacherStudentsPanel";
 import TeacherLinkStudentForm from "../components/TeacherLinkStudentForm.jsx";
-import axios from "../axios.js"
-
+import TeacherSchedulePanel from "../components/TeacherSchedulePanel.jsx";
 
 export default function TeacherDashboard({ onLogout }) {
-const [pendingCount, setPendingCount] = useState(0);
 const [refreshKey, setRefreshKey] = useState(0);
 
-useEffect(() => {
-  const fetchPending = async () => {
-    try {
-      const { data } = await axios.get("/questions/teacher/pending", {
-        withCredentials: true,
-      })
-      setPendingCount(data.pending || 0)
-    } catch (err) {
-      console.error("Failed to fetch pending questions", err)
-    }
-  }
-
-  fetchPending();
-  const interval = setInterval(fetchPending, 300000);
-  return () => clearInterval(interval)
-}, [])
-
   return (
-    <div>
+    <div className="dashboard-shell">
       <header className="dashboard-header">
-        <h1>My Students</h1>
+        <span className="hero-eyebrow">Teacher dashboard</span>
+        <h1 className="hero-title">Guide your students with less friction.</h1>
+        <p className="hero-subtitle">
+          Manage student connections, review activity, and keep the studio organized from one workspace.
+        </p>
       </header>
-      <main>
-        <div>
-          <TeacherLinkStudentForm onLinked={() => setRefreshKey((k) => k + 1)} />
-          <section className="panel">
-            <div className="panel-h">My Students</div>
-            <div className="">
-              <TeacherStudentsPanel    
-              refreshKey={refreshKey}
-              />
+
+      <main className="dashboard-stack">
+        <TeacherSchedulePanel />
+        <div className="dashboard-split">
+          <section className="panel student-list-card" id="students-section">
+            <div className="panel-h">Your students</div>
+            <div className="panel-b">
+              <TeacherStudentsPanel refreshKey={refreshKey} />
             </div>
           </section>
+          <TeacherLinkStudentForm onLinked={() => setRefreshKey((k) => k + 1)} />
         </div>
       </main>
   </div>

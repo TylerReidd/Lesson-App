@@ -203,9 +203,6 @@ export const deleteVideo = async (req, res) => {
     const isOwner = String(doc.owner) === req.user.id;
     const isRecipient = String(doc.recipient) === req.user.id;
 
-    console.log("[DELETE video] user=", req.user.id, req.user.role,
-                "owner=", String(doc.owner), "recipient=", String(doc.recipient));
-
     if (!isTeacher && !isOwner && !isRecipient) {
       return res.status(403).json({ error: "Not authorized to delete this file" });
     }
@@ -218,4 +215,3 @@ export const deleteVideo = async (req, res) => {
     return res.status(200).json({ message: "Video deleted (file may have already been removed)" });
   }
 };
-

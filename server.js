@@ -16,13 +16,15 @@ import questionRoutes from './backend/routes/questions.js';
 import teacherRoutes from './backend/routes/teacher.js'
 import practiceRoutes from './backend/routes/practice.js'
 import notificationRoutes from './backend/routes/notifications.js';
+import scheduleRoutes from './backend/routes/schedule.js';
 // import studentVideos from './backend/routes/studentVideos.js';
 
 // Resolve __dirname in ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const isProd = process.env.NODE_ENV === 'production';
 // top of server.js
-if (process.env.NODE_ENV !== 'production') {
+if (!isProd) {
   const { default: dotenv } = await import('dotenv');
   dotenv.config();
 }
@@ -93,7 +95,6 @@ mongoose
     mongoose.connection.host,
     mongoose.connection.name
     )
-    console.log('[db] URI ', process.env.MONGO_URI)
   })
 
 
@@ -102,7 +103,8 @@ try { fs.mkdirSync(UPLOADS_DIR, { recursive:true }); fs.accessSync(UPLOADS_DIR, 
 
   app.set('trust proxy', 1)
 
-  // server.js (debug route)
+  // --- DEV DEBUG: DB + users + seed helper (safe to keep; only active in non-prod) ---
+if (!isProd) {
   app.get('/debug/uploads', (req, res) => {
     try {
       res.json({
@@ -110,15 +112,12 @@ try { fs.mkdirSync(UPLOADS_DIR, { recursive:true }); fs.accessSync(UPLOADS_DIR, 
         exists: fs.existsSync(UPLOADS_DIR),
         files: fs.readdirSync(UPLOADS_DIR),
         nodeEnv: process.env.NODE_ENV,
-        apiHost: process.env.API_HOST
       });
     } catch (e) {
       res.status(500).json({ error: e.message, UPLOADS_DIR });
     }
   });
 
-  // --- DEV DEBUG: DB + users + seed helper (safe to keep; only active in non-prod) ---
-if (process.env.NODE_ENV !== 'production') {
   // Shows which DB you're actually connected to, and collection counts
   app.get('/debug/db', async (_req, res) => {
     try {
@@ -132,8 +131,7 @@ if (process.env.NODE_ENV !== 'production') {
       }
       res.json({
         host: mongoose.connection.host,
-        name: mongoose.connection.name,   // <-- the DB name actually in use
-        uri: process.env.MONGO_URI,       // <-- the exact URI the server used
+        name: mongoose.connection.name,
         collections: names,
         counts
       });
@@ -189,16 +187,29 @@ if (process.env.NODE_ENV !== 'production') {
   
 
 // Middleware
-app.use(express.json());
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+  if (isProd) {
+    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  }
+  next();
+});
+
+app.use(express.json({ limit: '2mb' }));
 app.use(cookieParser());
 
 // CORS configuration
-const CLIENT_ORIGIN =
-  process.env.NODE_ENV === 'production'
-    ? process.env.CLIENT_ORIGIN
-    : 'http://localhost:5173';
+const CLIENT_ORIGIN = isProd ? process.env.CLIENT_ORIGIN : 'http://localhost:5173';
+const allowedOrigins = new Set([CLIENT_ORIGIN].filter(Boolean));
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', CLIENT_ORIGIN);
+  const requestOrigin = req.headers.origin;
+  if (requestOrigin && allowedOrigins.has(requestOrigin)) {
+    res.header('Access-Control-Allow-Origin', requestOrigin);
+    res.header('Vary', 'Origin');
+  }
   res.header('Access-Control-Allow-Credentials', 'true');
   res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Content-Type,Authorization,Range');
@@ -255,11 +266,6 @@ app.get('/uploads/:filename', (req,res) => {
 })
 
 // Serve uploads as static files
-// Debug static file requests
-app.use('/uploads', (req, res, next) => {
-  console.log(`[STATIC DEBUG] ${req.method} ${req.originalUrl}`);
-  next();
-});
 app.use(
   '/uploads',
   express.static(UPLOADS_DIR, {
@@ -280,6 +286,7 @@ app.use('/api/questions', questionRoutes);
 app.use('/api/teacher', teacherRoutes)
 app.use('/api/practice', practiceRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/schedule', scheduleRoutes);
 // app.use("/api/studentVideos", studentVideos)
 // Serve React client (assumes build output in client/dist)
 const CLIENT_DIST = path.join(__dirname, 'client', 'dist');
@@ -290,6 +297,15 @@ app.get('*', (req, res) => {
 
 // Global error handler — logs stack so Render shows why you got a 500
 app.use((err, req, res, _next) => {
+  if (err?.code === 'LIMIT_FILE_SIZE') {
+    const maxUploadMb = Number.parseInt(process.env.MAX_UPLOAD_MB || '250', 10);
+    return res.status(413).json({
+      error: `File exceeds the ${maxUploadMb}MB upload limit.`,
+    });
+  }
+  if (err?.type === 'entity.too.large') {
+    return res.status(413).json({ error: 'Request body too large.' });
+  }
   console.error("[ERROR]", req.method, req.originalUrl, err?.stack || err);
   res.status(500).json({ error: "Server error", detail: err?.message || "unknown" });
 });
