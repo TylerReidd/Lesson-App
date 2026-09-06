@@ -4,6 +4,11 @@ import { AuthContext } from "../AuthContext";
 import LinkTeacherForm from "../components/LinkTeacherForm.jsx";
 import PracticeForm from "../components/PracticeForm.jsx";
 import StudentSchedulePanel from "../components/StudentSchedulePanel.jsx";
+import StudentAssignedQuizzesPanel from "../components/StudentAssignedQuizzesPanel.jsx";
+import PracticeClipRecorder from "../components/PracticeClipRecorder.jsx";
+import StudentPracticeClipLibrary from "../components/StudentPracticeClipLibrary.jsx";
+import StudentGoalsPanel from "../components/StudentGoalsPanel.jsx";
+import CollapsiblePanel from "../components/CollapsiblePanel.jsx";
 
 export default function StudentDashboard({ onLogout }) {
   const { user, setUser, loading } = useContext(AuthContext);
@@ -58,32 +63,43 @@ export default function StudentDashboard({ onLogout }) {
         </p>
       </header>
 
-      <StudentSchedulePanel />
+      <div className="student-dashboard-sections">
+        <StudentSchedulePanel />
 
-      <div className="kpis">
-        <div className="dashboard-stat">
-          <div className="label">Private videos</div>
-          <div className="value">{videos.length}</div>
-          <div className="helper">Uploaded practice videos available to review.</div>
-        </div>
-        <div className="dashboard-stat">
-          <div className="label">Assignments</div>
-          <div className="value">{assignments.length}</div>
-          <div className="helper">Resources and documents shared with you.</div>
-        </div>
-        <div className="dashboard-stat">
-          <div className="label">Teacher status</div>
-          <div className="value">{user?.assignedTeacher ? "Linked" : "Open"}</div>
-          <div className="helper">
-            {user?.assignedTeacher ? "Your teacher connection is active." : "Link your teacher to unlock shared resources."}
+        <StudentGoalsPanel />
+
+        <StudentAssignedQuizzesPanel />
+
+        <PracticeClipRecorder />
+
+        <StudentPracticeClipLibrary />
+
+        <CollapsiblePanel title="Progress snapshot">
+          <div className="kpis">
+            <div className="dashboard-stat">
+              <div className="label">Private videos</div>
+              <div className="value">{videos.length}</div>
+              <div className="helper">Uploaded practice videos available to review.</div>
+            </div>
+            <div className="dashboard-stat">
+              <div className="label">Assignments</div>
+              <div className="value">{assignments.length}</div>
+              <div className="helper">Resources and documents shared with you.</div>
+            </div>
+            <div className="dashboard-stat">
+              <div className="label">Teacher status</div>
+              <div className="value">{user?.assignedTeacher ? "Linked" : "Open"}</div>
+              <div className="helper">
+                {user?.assignedTeacher ? "Your teacher connection is active." : "Link your teacher to unlock shared resources."}
+              </div>
+            </div>
           </div>
-        </div>
+        </CollapsiblePanel>
       </div>
 
       <div className="dashboard-grid">
-        <section className="panel student-link-card">
-          <div className="panel-h">Teacher connection</div>
-          <div className="panel-b">
+        <CollapsiblePanel title="Teacher connection" className="student-link-card">
+          <div>
             {user?.role === 'student' && (
               user.assignedTeacher ? (
                 <div className="stack-sm">
@@ -97,11 +113,11 @@ export default function StudentDashboard({ onLogout }) {
               )
             )}
           </div>
-        </section>
+        </CollapsiblePanel>
 
-        <section className="panel practice-card">
+        <div className="practice-card">
           <PracticeForm />
-        </section>
+        </div>
       </div>
 
       {err && <p className="form-note error">{err}</p>}

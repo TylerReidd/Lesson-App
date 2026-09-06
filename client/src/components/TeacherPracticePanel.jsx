@@ -77,8 +77,14 @@ export default function TeacherPracticePanel({ studentId }) {
                   </div>
                   <div className="practice-log-details">
                     <>
+                      {log.clipTitle && (
+                        <>
+                          <strong>Clip:</strong> {log.clipTitle}
+                        </>
+                      )}
                       {log.focus && (
                         <>
+                          {log.clipTitle ? " - " : ""}
                           <strong>Focus:</strong> {log.focus}
                         </>
                       )}
@@ -112,6 +118,7 @@ export default function TeacherPracticePanel({ studentId }) {
                     <span className="font-semibold">
                       {log.status || "submitted"}
                     </span>
+                    {log.goal?.title ? ` · Lesson Lab: ${log.goal.title}` : ""}
                     {log.teacherComment
                       ? ` · Comment: ${log.teacherComment}`
                       : ""}
@@ -122,6 +129,19 @@ export default function TeacherPracticePanel({ studentId }) {
                   {log.end ? new Date(log.end).toLocaleTimeString() : ""}
                 </div>
               </div>
+
+              {log.clipUrl ? (
+                <div className="practice-clip-review">
+                  <audio controls src={log.clipUrl} className="practice-clip-player">
+                    Your browser does not support audio playback.
+                  </audio>
+                  <div className="quiz-library-meta">
+                    {log.clipDurationSec ? <span>{log.clipDurationSec}s</span> : null}
+                    {log.clipFilename ? <span>{log.clipFilename}</span> : null}
+                    {log.goal?.title ? <span>Lesson Lab: {log.goal.title}</span> : null}
+                  </div>
+                </div>
+              ) : null}
 
               <div className="practice-review md:grid-cols-3">
                 <select

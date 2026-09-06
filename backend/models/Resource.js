@@ -36,6 +36,11 @@ const resourceSchema = new Schema({
   recipient: {                       // for private videos, who gets it
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
+  },
+  goal: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Goal',
+    default: null
   }
 }, { timestamps: true });
 
@@ -44,4 +49,3 @@ const Resource = mongoose.models.Resource
 : mongoose.model('Resource', resourceSchema)
 
 export default Resource
-

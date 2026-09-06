@@ -1,5 +1,6 @@
 // routes/resources.js
 import express from 'express';
+import Goal from '../models/Goal.js';
 import Resource from '../models/Resource.js';
 import { isAuthenticated, isStudent, isTeacher, isTeacherOrStudent } from '../middleware/auth.js';
 import {
@@ -30,13 +31,16 @@ router.get(
     try {
       if(req.user.role === 'student') {
         const items = await Resource.find({recipient: req.user.id, type: 'assignment'})
+        .populate('goal', '_id title status category')
         .sort({createdAt: -1})
         return res.json({assignments: items})
       }
       const {studentId} = req.query;
       const q = {owner: req.user.id, type: 'assignment'};
       if (studentId) q.recipient = studentId;
-      const items = await Resource.find(q).sort({createdAt: -1})
+      const items = await Resource.find(q)
+      .populate('goal', '_id title status category')
+      .sort({createdAt: -1})
       res.json({assignments: items})
     } catch (e) {next(e)}
   }
@@ -90,6 +94,7 @@ router.post(
       const role = (user.role || "").toLowerCase();
       const url = fileUrl(file.filename);
       const type = file.mimetype.startsWith("video/") ? "video" : "assignment";
+      const goalId = String(req.body?.goalId || "").trim();
       let recipientId;
       const isStudentToTeacher = (role === 'student' && type === 'video');
       const isTeacherToStudent = (role === 'teacher' && (type === 'video' || type === 'assignment'));
@@ -119,9 +124,25 @@ router.post(
         return res.status(403).json({ message: "Invalid role for upload" });
       }
 
+      let goal = null;
+      if (goalId) {
+        if (!(role === "teacher" && type === "assignment")) {
+          return res.status(400).json({ message: "Goals can only be linked to teacher assignments." });
+        }
+        goal = await Goal.findOne({
+          _id: goalId,
+          teacher: user.id || user._id,
+          student: recipientId,
+        }).select("_id title status category");
+        if (!goal) {
+          return res.status(404).json({ message: "Goal not found for this student." });
+        }
+      }
+
       const resource = await Resource.create({
         owner: user.id || user._id,
         recipient: recipientId,
+        goal: goal?._id || null,
         filename: file.originalname,
         url,
         type,
@@ -138,12 +159,12 @@ router.post(
           url: resource.url,
           uploadedAt: resource.createdAt,
           type: resource.type,
+          goal,
         },
       });
     } catch (err) {
-      console.error("💥 Upload error:", err);
-      console.error("💥 Stack:", err?.stack);
-      res.status(500).json({ error: err.message, stack: err.stack });
+      console.error("Upload error:", err);
+      res.status(500).json({ error: "Upload failed." });
     }
   }
 );

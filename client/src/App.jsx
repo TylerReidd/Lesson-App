@@ -21,6 +21,8 @@ import StudentDashboard from './pages/StudentDashboard';
 import TeacherDashboard from './pages/TeacherDashboard';
 import TeacherStudentPage from './pages/TeacherStudentPage';
 import PrivacyPage from './pages/PrivacyPage';
+import TeacherQuizzesPage from './pages/TeacherQuizzesPage';
+import StudentTakeQuizPage from './pages/StudentTakeQuizPage';
 
 
 function App() {
@@ -53,6 +55,7 @@ function App() {
             }
           >
             <Route index element={<StudentDashboard /> } /> 
+            <Route path='quizzes/:assignmentId' element={<StudentTakeQuizPage />} />
             <Route path='videos' element={<StudentVideos />} />
             <Route path='assignments' element={<StudentAssignments/>} />
             <Route path='questions' element={<StudentQuestions />} />
@@ -68,6 +71,7 @@ function App() {
           >
             <Route index element={<TeacherDashboard /> } /> 
             <Route path="students/:id" element={<TeacherStudentPage /> } />
+            <Route path='quizzes' element={<TeacherQuizzesPage />} />
             <Route path='videos' element={<TeacherVideos />} />
             <Route path='assignments' element={<TeacherAssignments />} />
             <Route path='questions' element={<TeacherQuestions />} />

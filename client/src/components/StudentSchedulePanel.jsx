@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "../axios.js";
+import CollapsiblePanel from "./CollapsiblePanel.jsx";
 
 export default function StudentSchedulePanel() {
   const [lessons, setLessons] = useState([]);
@@ -29,9 +30,8 @@ export default function StudentSchedulePanel() {
   const nextLesson = lessons[0];
 
   return (
-    <section className="panel student-schedule-panel">
-      <div className="panel-h">Upcoming lessons</div>
-      <div className="panel-b schedule-panel-body">
+    <CollapsiblePanel title="Upcoming lessons" className="student-schedule-panel">
+      <div className="schedule-panel-body">
         {error ? <p className="form-note error">{error}</p> : null}
         {loading ? <p className="muted">Loading lessons…</p> : null}
 
@@ -78,6 +78,6 @@ export default function StudentSchedulePanel() {
           </div>
         ) : null}
       </div>
-    </section>
+    </CollapsiblePanel>
   );
 }

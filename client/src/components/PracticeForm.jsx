@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from "react";
 import axios from "../axios.js";
+import CollapsiblePanel from "./CollapsiblePanel.jsx";
 
 const todayISO = () => new Date().toISOString().slice(0,10); // YYYY-MM-DD
 
@@ -47,9 +48,8 @@ export default function PracticeForm() {
   };
 
   return (
-    <section>
-      <div className="panel-h">Daily Practice / Study Log</div>
-      <div className="panel-b">
+    <CollapsiblePanel title="Daily practice log" defaultOpen={false}>
+      <div>
         <form onSubmit={submit} className="form">
           <div className="dashboard-copy">
             <p className="muted">
@@ -119,6 +119,6 @@ export default function PracticeForm() {
           </div>
         </form>
       </div>
-    </section>
+    </CollapsiblePanel>
   );
 }

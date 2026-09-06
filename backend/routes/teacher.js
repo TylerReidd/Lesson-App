@@ -66,7 +66,7 @@ router.get('/inbox',isAuthenticated,isTeacher, async (req,res,next) => {
     
     const[questions, videos, logs] = await Promise.all([
       Question.countDocuments({teacher, unreadForTeacher: true}),
-      Resource.countDocuments({recipient: teacher, type: 'video', unreadforTeacher: true}),
+      Resource.countDocuments({recipient: teacher, type: 'video', unreadForTeacher: true}),
       PracticeLog.countDocuments({teacher, unreadForTeacher: true})
     ])
     

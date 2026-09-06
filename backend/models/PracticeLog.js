@@ -12,17 +12,22 @@ const PracticeLogSchema = new mongoose.Schema({
     ref: 'User',
     required: true
   },
+  goal: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Goal',
+    default: null
+  },
   date: {
     type: Date, 
     requred: true
   },
   start: {
     type: Date,
-    require: true
+    default: null
   },
   end: {
     type: Date, 
-    required: true
+    default: null
   },
   durationMin: {
     type: Number,
@@ -44,6 +49,33 @@ const PracticeLogSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
+  clipTitle: {
+    type: String,
+    default: '',
+    trim: true
+  },
+  clipUrl: {
+    type: String,
+    default: ''
+  },
+  clipFilename: {
+    type: String,
+    default: '',
+    trim: true
+  },
+  clipMimeType: {
+    type: String,
+    default: '',
+    trim: true
+  },
+  clipDurationSec: {
+    type: Number,
+    default: null
+  },
+  savedToLibrary: {
+    type: Boolean,
+    default: true
+  },
   metronome: {
     type: Boolean,
     default: false
@@ -54,7 +86,7 @@ const PracticeLogSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['submitted', 'reviewed', 'needs attention'], default : 'submitted'
+    enum: ['submitted', 'approved', 'needs attention'], default : 'submitted'
   },
   teacherComment: {
     type: String, default: ''
@@ -63,7 +95,7 @@ const PracticeLogSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
-  unreadforTeacher: {
+  unreadForTeacher: {
     type: Boolean,
     default: true
   },
@@ -71,5 +103,6 @@ const PracticeLogSchema = new mongoose.Schema({
 }, {timestamps: true})
 
 PracticeLogSchema.index({teacher: 1, student: 1, date: -1})
+PracticeLogSchema.index({student: 1, goal: 1, date: -1})
 
 export default mongoose.model('PracticeLog', PracticeLogSchema)

@@ -100,7 +100,7 @@ export default function LessonNotesPanel({ studentId }) {
         <div className="notes-copy">
           <h2 className="h2">{editingId ? "Update note" : "Add a lesson note"}</h2>
           <p className="muted">
-            Keep private notes for this student: lesson focus, goals, reminders, and follow-up points.
+            Keep private notes for this student: lesson focus, lesson lab items, reminders, and follow-up points.
           </p>
         </div>
 

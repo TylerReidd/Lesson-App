@@ -10,6 +10,7 @@ const I = {
   vid:  <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M17 10V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-3l4 3V7z"/></svg>,
   doc:  <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M14 2H6a2 2 0 0 0-2 2v16l4-4h6a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2z"/></svg>,
   q:    <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Zm1 15h-2v-2h2Zm2.07-7.75-.9.92A3.5 3.5 0 0 0 12 14h-1v-1a2.5 2.5 0 0 1 .73-1.77l1.24-1.26a1.5 1.5 0 1 0-2.12-2.12 1.49 1.49 0 0 0-.43 1.06H8a3.5 3.5 0 1 1 7 0 3.2 3.2 0 0 1-.93 2.24Z"/></svg>,
+  quiz: <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M7 3h10a2 2 0 0 1 2 2v14l-3-2-3 2-3-2-3 2V5a2 2 0 0 1 2-2Zm1 4v2h8V7Zm0 4v2h5v-2Z"/></svg>,
   logout: <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M13 3a1 1 0 0 1 1 1v2h-2V5H6v14h6v-1h2v2a1 1 0 0 1-1 1H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Zm5.59 7.17 1.41 1.41-4.95 4.95L14 15.38 16.38 13H11v-2h5.38L14 8.62l1.05-1.05Z"/></svg>,
 };
 
@@ -80,6 +81,7 @@ export default function Sidebar({ role, open, onClose }) {
     ? [
         { to: `${base}`, label: "Dashboard", icon: I.dash, exact: true },
         { key: "students", label: "Students", icon: I.users, action: jumpToStudents },
+        { to: `${base}/quizzes`, label: "Quizzes", icon: I.quiz },
         { to: "/privacy", label: "Privacy", icon: I.doc },
         { type: "theme" },
         { key: "logout", label: "Log out", icon: I.logout, action: handleLogout },

@@ -29,6 +29,7 @@ const storage = multer.diskStorage({
 const fileFilter = (_req, file, cb) => {
   if (
     file.mimetype.startsWith("video/") ||
+    file.mimetype.startsWith("audio/") ||
     file.mimetype.startsWith("image/") ||
     file.mimetype === "application/pdf"
   ) {

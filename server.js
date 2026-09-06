@@ -17,6 +17,8 @@ import teacherRoutes from './backend/routes/teacher.js'
 import practiceRoutes from './backend/routes/practice.js'
 import notificationRoutes from './backend/routes/notifications.js';
 import scheduleRoutes from './backend/routes/schedule.js';
+import quizRoutes from './backend/routes/quizzes.js';
+import goalRoutes from './backend/routes/goals.js';
 // import studentVideos from './backend/routes/studentVideos.js';
 
 // Resolve __dirname in ES modules
@@ -287,6 +289,8 @@ app.use('/api/teacher', teacherRoutes)
 app.use('/api/practice', practiceRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/schedule', scheduleRoutes);
+app.use('/api/quizzes', quizRoutes);
+app.use('/api/goals', goalRoutes);
 // app.use("/api/studentVideos", studentVideos)
 // Serve React client (assumes build output in client/dist)
 const CLIENT_DIST = path.join(__dirname, 'client', 'dist');

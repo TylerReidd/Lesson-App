@@ -26,7 +26,7 @@ export async function getNotificationSummary(req, res, next) {
         }),
         PracticeLog.countDocuments({
           teacher: userId,
-          unreadforTeacher: true,
+          unreadForTeacher: true,
         }),
       ]);
 
@@ -94,8 +94,8 @@ export async function markNotificationsRead(req, res, next) {
       if (types.includes("practice")) {
         updates.push(
           PracticeLog.updateMany(
-            { teacher: userId, unreadforTeacher: true },
-            { $set: { unreadforTeacher: false } }
+            { teacher: userId, unreadForTeacher: true },
+            { $set: { unreadForTeacher: false } }
           )
         );
       }

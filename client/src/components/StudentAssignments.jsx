@@ -65,6 +65,9 @@ export default function StudentAssignments() {
                       ? new Date(a.uploadedAt).toLocaleDateString()
                       : ""}
                   </span>
+                  {a.goal?.title ? (
+                    <span className="assignment-date">Lesson Lab: {a.goal.title}</span>
+                  ) : null}
                 </div>
               </a>
             </div>
